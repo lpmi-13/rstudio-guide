@@ -1,0 +1,10 @@
+order_id,region,status,amount
+1001,North,completed,120.50
+1002,South,completed,80.00
+1002,South,completed,80.00
+1003,East,cancelled,200.00
+1004,West,completed,
+1005,North,completed,99.99
+1006,East,completed,64.25
+1007,South,cancelled,15.00
+1008,West,completed,40.00

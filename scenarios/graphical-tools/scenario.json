@@ -1,0 +1,45 @@
+{
+  "id": "graphical-tools",
+  "title": "Graphical tools in base R",
+  "mode": "demonstration",
+  "script": "graphical-tools.R",
+  "source": "Code from \"Statistical Analysis using RStudio\", UP Mindanao SPARCS on dev.to (April 2025)",
+  "intro": "Watch RStudio draw four kinds of chart. For each line, the coach selects it in graphical-tools.R and presses Run. It explains the result after the chart appears in the Plots pane.",
+  "steps": [
+    {
+      "id": "plot",
+      "title": "Plots: plot()",
+      "runs": [
+        {"code": "plot(5, 5)", "evidence": "plot"}
+      ],
+      "explain": "`plot()` drew one point at x = 5, y = 5. It chooses what to draw from the data you give it, and two single numbers make one point. Both axes are labelled 5 because `plot()` uses the code you passed in as the axis labels."
+    },
+    {
+      "id": "lines",
+      "title": "Lines: type = \"l\"",
+      "runs": [
+        {"code": "plot(1:10, type=\"l\")", "evidence": "plot"}
+      ],
+      "explain": "`1:10` is the whole numbers 1 to 10. When you give `plot()` one vector, it puts the values on the y-axis and their positions on the x-axis, labelled Index. `type=\"l\"` joins the points with a line instead of drawing circles. `plot()` always starts a new chart. To add a line to a chart that is already drawn, use `lines()`."
+    },
+    {
+      "id": "pie",
+      "title": "Pie chart: pie()",
+      "runs": [
+        {"code": "slices <- c(50, 20, 30) # Creating a vector", "evidence": "console", "show": "environment"},
+        {"code": "pie(slices) # Creating a pie chart with the values of vector slices", "evidence": "plot"}
+      ],
+      "explain": "`c()` combined 50, 20 and 30 into a vector called `slices`, which now appears in the Environment pane. `pie()` sizes each slice by its share of the total, so 50 fills half the circle. The slices are labelled 1, 2 and 3 because the vector has no names."
+    },
+    {
+      "id": "barplot",
+      "title": "Bar graph: barplot()",
+      "runs": [
+        {"code": "frequencies <- c(3, 6, 9) # Y - axis of the bar graph", "evidence": "console", "show": "environment"},
+        {"code": "label <- c(\"X\", \"Y\", \"Z\") # X - axis of the bar graph", "evidence": "console", "show": "environment"},
+        {"code": "barplot(frequencies, names.arg = label)", "evidence": "plot"}
+      ],
+      "explain": "`frequencies` sets the bar heights: 3, 6 and 9. `names.arg = label` writes X, Y and Z under the bars. All the bars start from the same baseline, so their heights are easier to compare than pie slices."
+    }
+  ]
+}

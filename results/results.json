@@ -1,0 +1,299 @@
+{
+  "when": "2026-11-19T13:19:22.904Z",
+  "passed": 21,
+  "failed": 0,
+  "metrics": {
+    "gatewayLoadMs": 2856,
+    "directLoadMs": 2065
+  },
+  "warnings": [],
+  "results": [
+    {
+      "name": "sign in through gateway and IDE loads",
+      "ok": true,
+      "ms": 2975,
+      "detail": {
+        "loadMs": 2856,
+        "title": "regional-revenue · RStudio Server"
+      }
+    },
+    {
+      "name": "coach mounts once in the top window only",
+      "ok": true,
+      "ms": 19,
+      "detail": {
+        "session": {
+          "run_id": "04ab9d38",
+          "scenario": "regional-revenue",
+          "title": "Regional revenue",
+          "mode": "guided"
+        },
+        "frames": 3,
+        "goalsDone": [
+          "project"
+        ]
+      }
+    },
+    {
+      "name": "coach docks in the sidebar and covers no other pane",
+      "ok": true,
+      "ms": 3,
+      "detail": {
+        "parent": "rstudio_Sidebar_pane",
+        "placement": "docked",
+        "fills": true,
+        "sidebar": [
+          1048,
+          67,
+          384,
+          826
+        ]
+      }
+    },
+    {
+      "name": "R runs in the Console (event long-poll through gateway)",
+      "ok": true,
+      "ms": 458,
+      "detail": {
+        "environmentShowsOrders": true
+      }
+    },
+    {
+      "name": "open analysis.R from the Files pane; coach observes it",
+      "ok": true,
+      "ms": 374,
+      "detail": {
+        "goalsDone": [
+          "project",
+          "script"
+        ],
+        "sourcePaneId": true
+      }
+    },
+    {
+      "name": "edit and save analysis.R in Source pane (saved to disk)",
+      "ok": true,
+      "ms": 427,
+      "detail": {
+        "onDisk": true
+      }
+    },
+    {
+      "name": "unsaved edit stays off disk and RStudio shows its unsaved marker",
+      "ok": true,
+      "ms": 880,
+      "detail": {
+        "shownWhenClean": "analysis.R",
+        "shownWhenUnsaved": "analysis.R*"
+      }
+    },
+    {
+      "name": "RStudio shortcuts pressed in the coach textarea (key shield on)",
+      "ok": true,
+      "ms": 5955,
+      "detail": {
+        "Control+Enter": "none",
+        "Control+1": "none",
+        "Control+2": "none",
+        "Control+l": "none",
+        "Control+Period": "none",
+        "Control+Shift+n": "none",
+        "Alt+Shift+k": "none",
+        "F1": "none",
+        "Escape": "none"
+      }
+    },
+    {
+      "name": "typing in coach is isolated from RStudio (key shield on)",
+      "ok": true,
+      "ms": 719,
+      "detail": {
+        "label": "shield-on",
+        "valueOk": true,
+        "value": "North leads? 3 < 4 & (x)\nline two still-here",
+        "focusInCoach": true,
+        "consoleChanged": false,
+        "sourceChanged": false
+      }
+    },
+    {
+      "name": "coach keeps focus while R prints output",
+      "ok": true,
+      "ms": 509,
+      "detail": {
+        "value": "typing while R works and after",
+        "focusInCoach": true
+      }
+    },
+    {
+      "name": "Check work round-trips to coach service",
+      "ok": true,
+      "ms": 263,
+      "detail": {
+        "http": 200,
+        "status": "Grading is not part of this spike. Save analysis.R first."
+      }
+    },
+    {
+      "name": "highlight attaches to Console and does not block clicks",
+      "ok": true,
+      "ms": 1628,
+      "detail": {
+        "hidden": false,
+        "dx": 0,
+        "dy": 0,
+        "dw": 0
+      }
+    },
+    {
+      "name": "sidebar hidden: coach floats, collapses and drags; shown again: re-docks",
+      "ok": true,
+      "ms": 1120,
+      "detail": {
+        "collapsedHeight": 37,
+        "movedTo": {
+          "x": 474,
+          "y": 228,
+          "w": 340,
+          "h": 351
+        },
+        "redocked": true,
+        "mounts": 1
+      }
+    },
+    {
+      "name": "Help pane iframe renders without the coach",
+      "ok": true,
+      "ms": 410,
+      "detail": {
+        "helpUrl": "/help/library/base/html/mean.html"
+      }
+    },
+    {
+      "name": "Terminal works (WebSocket through gateway)",
+      "ok": true,
+      "ms": 2379,
+      "detail": {
+        "written": "ws-ok-42",
+        "sockets": [
+          {
+            "url": "/p/3c74409e/terminal/545DA627/",
+            "frames": 7
+          }
+        ],
+        "renderer": {
+          "canvas": true,
+          "domRows": 0
+        }
+      }
+    },
+    {
+      "name": "reload: coach re-mounts once, R session and open file survive",
+      "ok": true,
+      "ms": 2564,
+      "detail": {
+        "hosts": 1,
+        "mounts": 1,
+        "goalsDone": [
+          "project",
+          "script"
+        ]
+      }
+    },
+    {
+      "name": "A/B: without key shield, does RStudio interfere with coach typing?",
+      "ok": true,
+      "ms": 10927,
+      "detail": {
+        "typing": {
+          "label": "shield-off",
+          "valueOk": false,
+          "value": "North leads? 3 < 4 & (x)\nline two",
+          "focusInCoach": false,
+          "consoleChanged": true,
+          "sourceChanged": false
+        },
+        "matrix": {
+          "Control+Enter": "console output",
+          "Control+1": "focus left coach",
+          "Control+2": "focus left coach",
+          "Control+l": "focus left coach; console cleared",
+          "Control+Period": "focus left coach; popup opened",
+          "Control+Shift+n": "none",
+          "Alt+Shift+k": "focus left coach; popup opened",
+          "F1": "none",
+          "Escape": "none"
+        }
+      }
+    },
+    {
+      "name": "no AI assistant even after the learner re-enables one in their preferences",
+      "ok": true,
+      "ms": 4375,
+      "detail": {
+        "toolbarButton": false,
+        "sidebarTabs": [],
+        "placement": "docked"
+      }
+    },
+    {
+      "name": "viewport 1366x768: panel fits and IDE usable",
+      "ok": true,
+      "ms": 2761,
+      "detail": {
+        "placement": "docked",
+        "panel": {
+          "x": 995,
+          "y": 68,
+          "w": 362,
+          "h": 692
+        },
+        "panePercentCovered": {}
+      }
+    },
+    {
+      "name": "viewport 1920x1080: panel fits and IDE usable",
+      "ok": true,
+      "ms": 2913,
+      "detail": {
+        "placement": "docked",
+        "panel": {
+          "x": 1400,
+          "y": 68,
+          "w": 511,
+          "h": 1004
+        },
+        "panePercentCovered": {}
+      }
+    },
+    {
+      "name": "baseline: direct RStudio (no gateway) for comparison",
+      "ok": true,
+      "ms": 2383,
+      "detail": {
+        "loadMs": 2065,
+        "coachPresent": false
+      }
+    }
+  ],
+  "gateway": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "websockets": [
+      {
+        "url": "ws://127.0.0.1:8788/p/3c74409e/terminal/545DA627/",
+        "frames": 7,
+        "closed": false
+      }
+    ],
+    "httpErrors": [],
+    "failedRequests": []
+  },
+  "direct": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "websockets": [],
+    "httpErrors": [],
+    "failedRequests": []
+  }
+}

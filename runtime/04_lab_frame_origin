@@ -1,0 +1,9 @@
+#!/usr/bin/with-contenv bash
+# Let a learning platform show RStudio inside an iframe (for example an iximiuz Labs
+# tab). run.sh sets these from FRAME_ORIGIN and SAME_SITE; unset means RStudio keeps
+# its default X-Frame-Options: DENY.
+set -euo pipefail
+conf=/etc/rstudio/rserver.conf
+sed -i '/^www-frame-origin=/d;/^www-same-site=/d' "$conf"
+if [ -n "${RSTUDIO_FRAME_ORIGIN:-}" ]; then echo "www-frame-origin=${RSTUDIO_FRAME_ORIGIN}" >> "$conf"; fi
+if [ -n "${RSTUDIO_SAME_SITE:-}" ]; then echo "www-same-site=${RSTUDIO_SAME_SITE}" >> "$conf"; fi

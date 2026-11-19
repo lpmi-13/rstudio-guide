@@ -1,0 +1,189 @@
+{
+  "when": "2026-11-19T13:20:58.203Z",
+  "passed": 12,
+  "failed": 0,
+  "warnings": [],
+  "pageErrors": [],
+  "results": [
+    {
+      "name": "graphical: sign in; coach docks in the sidebar and covers no other pane",
+      "ok": true,
+      "ms": 3236,
+      "detail": {
+        "parent": "rstudio_Sidebar_pane",
+        "fills": true,
+        "panel": [
+          1049,
+          68,
+          382,
+          824
+        ],
+        "overlaps": {}
+      }
+    },
+    {
+      "name": "graphical: a changed demo script stops step 1 visibly",
+      "ok": true,
+      "ms": 1769,
+      "detail": {
+        "message": "The demonstration stopped at this step. graphical-tools.R no longer contains the line plot(5, 5). Start a new run to restore the demonstration script."
+      }
+    },
+    {
+      "name": "graphical: after the script is restored, \"Try this step again\" passes",
+      "ok": true,
+      "ms": 4307,
+      "detail": {
+        "explain": "plot() drew one point at x = 5, y = 5. It chooses what to dr"
+      }
+    },
+    {
+      "name": "graphical: steps 2-3 each explained only after a new chart is on screen",
+      "ok": true,
+      "ms": 8075,
+      "detail": [
+        {
+          "step": 2,
+          "s": 2.9,
+          "quoted": []
+        },
+        {
+          "step": 3,
+          "s": 5.2,
+          "quoted": []
+        }
+      ]
+    },
+    {
+      "name": "graphical: hiding and re-showing the sidebar mid-step keeps the same coach and finishes step 4",
+      "ok": true,
+      "ms": 7797,
+      "detail": {
+        "mounts": 1,
+        "panel": [
+          1049,
+          68,
+          382,
+          824
+        ]
+      }
+    },
+    {
+      "name": "graphical: reload keeps progress; Stop during a step halts RStudio actions",
+      "ok": true,
+      "ms": 7650,
+      "detail": {
+        "restoredGo": "Demonstration complete",
+        "actionsAtStop": 1,
+        "actionsAfter": 1
+      }
+    },
+    {
+      "name": "statistical (1366x768): docked coach covers no other pane",
+      "ok": true,
+      "ms": 4040,
+      "detail": {
+        "parent": "rstudio_Sidebar_pane",
+        "fills": true,
+        "panel": [
+          995,
+          68,
+          362,
+          692
+        ],
+        "overlaps": {}
+      }
+    },
+    {
+      "name": "statistical: steps 1-2 explained with values the Console printed",
+      "ok": true,
+      "ms": 12198,
+      "detail": [
+        {
+          "step": 1,
+          "s": 9.4,
+          "quoted": [
+            "max=97",
+            "min=56"
+          ]
+        },
+        {
+          "step": 2,
+          "s": 2.8,
+          "quoted": [
+            "mean=77.88235"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "statistical: reload resumes at step 3",
+      "ok": true,
+      "ms": 2015,
+      "detail": {
+        "go": "Next: step 3"
+      }
+    },
+    {
+      "name": "statistical: an R error stops step 3 visibly (learner removed sample_data)",
+      "ok": true,
+      "ms": 2851,
+      "detail": {
+        "message": "The demonstration stopped at this step. R reported: Error: object 'sample_data' not found"
+      }
+    },
+    {
+      "name": "statistical: Start over recreates the data and finishes all 5 steps",
+      "ok": true,
+      "ms": 21171,
+      "detail": [
+        {
+          "step": 2,
+          "s": 2.7,
+          "quoted": [
+            "mean=77.88235"
+          ]
+        },
+        {
+          "step": 3,
+          "s": 2.8,
+          "quoted": [
+            "median=79",
+            "mean=77.88235"
+          ]
+        },
+        {
+          "step": 4,
+          "s": 5.3,
+          "quoted": [
+            "p25=72",
+            "p75=85",
+            "p45=78"
+          ]
+        },
+        {
+          "step": 5,
+          "s": 2.7,
+          "quoted": [
+            "s_min=56.00",
+            "s_q1=72.00",
+            "s_median=79.00",
+            "s_mean=77.88",
+            "s_q3=85.00",
+            "s_max=97.00",
+            "mean=77.88235",
+            "s_mean=77.88"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "statistical: demo script was never modified by the demonstration",
+      "ok": true,
+      "ms": 2,
+      "detail": {
+        "visibleUnsavedMarkers": 0
+      }
+    }
+  ]
+}

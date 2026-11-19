@@ -1,0 +1,33 @@
+name: rstudio-guide
+
+services:
+  rstudio:
+    image: rstudio-guide-runtime:local
+    build:
+      context: .
+      dockerfile: runtime/Dockerfile
+    environment:
+      PASSWORD: ${RSTUDIO_PASSWORD:?start with ./run.sh up}
+      LAB_PROJECT: /home/rstudio/${LAB_SCENARIO:?start with ./run.sh up}/${LAB_SCENARIO}.Rproj
+      # Rocker re-creates the rstudio user with these IDs when they differ from 1000.
+      USERID: ${HOST_UID:-1000}
+      GROUPID: ${HOST_GID:-1000}
+      # Empty unless a platform needs to show RStudio in an iframe.
+      RSTUDIO_FRAME_ORIGIN: ${FRAME_ORIGIN:-}
+      RSTUDIO_SAME_SITE: ${SAME_SITE:-}
+    volumes:
+      - ./run/project:/home/rstudio/${LAB_SCENARIO}
+    ports:
+      # Direct access for a no-gateway baseline. Loopback only.
+      - "127.0.0.1:18787:8787"
+
+  gateway:
+    image: nginx:1.27.3-alpine
+    depends_on: [rstudio]
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./gateway/rstudio-proxy.conf:/etc/nginx/rstudio-proxy.conf:ro
+      - ./coach:/usr/share/nginx/html/coach:ro
+      - ./run/public:/usr/share/nginx/html/coach-run:ro
+    ports:
+      - "${GATEWAY_BIND:-127.0.0.1}:8788:8788"

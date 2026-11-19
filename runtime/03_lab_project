@@ -1,0 +1,6 @@
+#!/usr/bin/with-contenv bash
+# Open this run's project on first sign-in. Compose sets LAB_PROJECT.
+set -euo pipefail
+target=/home/rstudio/.local/share/rstudio/projects_settings/last-project-path
+printf '%s' "${LAB_PROJECT:?LAB_PROJECT must be set}" > "$target"
+chown rstudio:rstudio "$target"
