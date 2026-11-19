@@ -1,64 +1,61 @@
-# iximiuz Labs playground for the RStudio coach. The drive is the rootfs image built by
-# iximiuz/build-rootfs-image.sh; iximiuz/publish-rootfs-image.sh bumps its tag here.
-#
-#   Public playground:   https://labs.iximiuz.com/playgrounds/rstudio-guide-16afe14e
-#                        (name: below; publish-rootfs-image.sh keeps it in sync)
-#   Start it:            labctl playground start rstudio-guide-16afe14e
-#   Throwaway session:   labctl playground start docker -f iximiuz/manifest.yaml
 kind: playground
 name: rstudio-guide-16afe14e
 base: docker
 title: RStudio coach
 description: RStudio Server with an in-IDE coach and two demonstrations (graphical and statistical tools in base R).
 categories:
-  - linux
-markdown: |
-  RStudio Server with a coach docked in its sidebar.
+    - linux
+markdown: |-
+    RStudio Server with a coach docked in its sidebar.
 
-  1. The **Terminal** tab shows the RStudio username and password.
-  2. Open the **RStudio** tab and sign in.
+    1. The **Terminal** tab shows the RStudio username and password.
+    2. Open the **RStudio** tab and sign in.
 playground:
-  networks:
-    - name: local
-      subnet: 172.16.0.0/24
-  machines:
-    - name: docker-01
-      users:
-        - name: root
-        - name: laborant
-          default: true
-      drives:
-        - source: oci://ghcr.io/lpmi-13/rstudio-guide-rootfs:v2
-          mount: /
-          size: 20GiB
-      network:
-        interfaces:
-          - network: local
-      resources:
-        cpuCount: 2
-        ramSize: 4GiB
-  tabs:
-    - id: terminal
-      kind: terminal
-      name: Terminal
-      machine: docker-01
-    - id: rstudio
-      kind: http-port
-      name: RStudio
-      machine: docker-01
-      number: 8788
-      access: private
-  initTasks:
-    init_start_rstudio:
-      name: init_start_rstudio
-      machine: docker-01
-      init: true
-      user: laborant
-      timeout_seconds: 600
-      run: |
-        set -eu
-        /home/laborant/rstudio-guide/iximiuz/start-lab.sh graphical-tools
-  accessControl:
-    canList: [anyone]
-    canRead: [anyone]
-    canStart: [anyone]
+    networks:
+        - name: local
+          subnet: 172.16.0.0/24
+    machines:
+        - name: docker-01
+          users:
+            - name: root
+            - name: laborant
+              default: true
+          drives:
+            - source: oci://ghcr.io/lpmi-13/rstudio-guide-rootfs:v2
+              mount: /
+              size: 20GiB
+          network:
+            interfaces:
+                - network: local
+          resources:
+            cpuCount: 2
+            ramSize: 4GiB
+    tabs:
+        - id: terminal
+          kind: terminal
+          name: Terminal
+          machine: docker-01
+        - id: rstudio
+          kind: http-port
+          name: RStudio
+          machine: docker-01
+          number: 8788
+          access: private
+    initTasks:
+        init_start_rstudio:
+            name: init_start_rstudio
+            machine: docker-01
+            init: true
+            user: laborant
+            timeout_seconds: 600
+            run: |
+                set -eu
+                /home/laborant/rstudio-guide/iximiuz/start-lab.sh graphical-tools
+    initConditions: {}
+    accessControl:
+        canList:
+            - anyone
+        canRead:
+            - anyone
+        canStart:
+            - anyone
