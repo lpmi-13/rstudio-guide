@@ -16,6 +16,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 REPO = "ghcr.io/lpmi-13/rstudio-guide-rootfs"
+# The custom playground's name, as iximiuz assigned it (e.g. rstudio-guide-16afe14e).
+PLAYGROUND = re.search(r"^name:\s*(\S+)", (ROOT / "iximiuz/manifest.yaml").read_text(), re.M).group(1)
 SKIP = {".git", ".claude", "run", "results", "tests", ".playwright-cli", "__pycache__", "lab.env"}
 
 
@@ -128,7 +130,7 @@ esac
         calls = self._calls()
         self.assertEqual(calls[:3], ["labctl auth whoami", "labctl auth login", "labctl auth whoami"])
         self.assertTrue(calls[3].startswith("docker build "))
-        self.assertTrue(calls[-1].startswith("labctl playground update rstudio-guide --file "))
+        self.assertTrue(calls[-1].startswith(f"labctl playground update {PLAYGROUND} --file "))
 
     def test_rootfs_gets_iximiuz_settings_but_no_run_state_or_audits(self):
         self.auth_marker.touch()

@@ -1,11 +1,12 @@
 # iximiuz Labs playground for the RStudio coach. The drive is the rootfs image built by
 # iximiuz/build-rootfs-image.sh; iximiuz/publish-rootfs-image.sh bumps its tag here.
 #
+#   Public playground:   https://labs.iximiuz.com/playgrounds/rstudio-guide-16afe14e
+#                        (name: below; publish-rootfs-image.sh keeps it in sync)
+#   Start it:            labctl playground start rstudio-guide-16afe14e
 #   Throwaway session:   labctl playground start docker -f iximiuz/manifest.yaml
-#   Custom playground:   labctl playground create --base docker -f iximiuz/manifest.yaml rstudio-guide
-#                        (then set name: below to the name it prints)
 kind: playground
-name: rstudio-guide
+name: rstudio-guide-16afe14e
 base: docker
 title: RStudio coach
 description: RStudio Server with an in-IDE coach and two demonstrations (graphical and statistical tools in base R).
@@ -58,6 +59,6 @@ playground:
         set -eu
         /home/laborant/rstudio-guide/iximiuz/start-lab.sh graphical-tools
   accessControl:
-    canList: [owner]
-    canRead: [owner]
-    canStart: [owner]
+    canList: [anyone]
+    canRead: [anyone]
+    canStart: [anyone]

@@ -2,6 +2,8 @@
 
 RStudio Server with an in-IDE coach, two demonstrations, and an iximiuz Labs playground. It began as the feasibility spike for `plan-docs/R_STUDIO_WRAPPED.md` §6 (probes "Proxy and coach" and "Demonstration control"). This README is also the spike's decision record, dated 19 November 2026.
 
+**Try it in your browser:** [RStudio coach on iximiuz Labs](https://labs.iximiuz.com/playgrounds/rstudio-guide-16afe14e). It needs a free iximiuz account. Starting it takes about a minute. The **Terminal** tab then shows the RStudio password; open the **RStudio** tab and sign in.
+
 | Question | Answer |
 | --- | --- |
 | Can the coach run inside the RStudio IDE tab without breaking RStudio? | **Yes.** It needs a capture-phase keyboard shield that loads before RStudio's own code. |
@@ -159,7 +161,9 @@ At every explanation, the audit takes its own snapshot of the Console and Plots 
 
 ## Remote playground (iximiuz Labs)
 
-The playground runs from a published **rootfs image**, `ghcr.io/lpmi-13/rstudio-guide-rootfs`. It is built on iximiuz's Docker base (`ubuntu-docker-c36cb070`) and carries this repository, the terminal banner, and the RStudio runtime and gateway images, preloaded so no Docker Hub pull is needed. Publishing works like argo-remotelab's `scripts/publish-rootfs-image.sh`.
+The public playground is [`rstudio-guide-16afe14e`](https://labs.iximiuz.com/playgrounds/rstudio-guide-16afe14e). Anyone can list, view and start it (`accessControl: anyone` in `iximiuz/manifest.yaml`); each session runs on the quota of the person who starts it.
+
+It runs from a published **rootfs image**, `ghcr.io/lpmi-13/rstudio-guide-rootfs`. It is built on iximiuz's Docker base (`ubuntu-docker-c36cb070`) and carries this repository, the terminal banner, and the RStudio runtime and gateway images, preloaded so no Docker Hub pull is needed. Publishing works like argo-remotelab's `scripts/publish-rootfs-image.sh`.
 
 ### Publish a new rootfs version
 
@@ -181,9 +185,11 @@ Use a fresh tag for each release, so new playground sessions pull the new image.
 ### Start a playground
 
 ```bash
-labctl playground start docker -f iximiuz/manifest.yaml                        # throwaway session
-labctl playground create --base docker -f iximiuz/manifest.yaml rstudio-guide  # custom playground, once
+labctl playground start rstudio-guide-16afe14e            # the public playground
+labctl playground start docker -f iximiuz/manifest.yaml   # throwaway session from the local manifest
 ```
+
+The public playground was created once with `labctl playground create --base docker -f iximiuz/manifest.yaml rstudio-guide`. iximiuz added the `-16afe14e` suffix, and `name:` in the manifest records it, so later publishes update that playground. Don't run `create` again: it would make a second playground with a new link.
 
 **What a learner sees:** the playground opens on **Terminal**, which prints the RStudio username and this run's password. If RStudio is still starting, the terminal waits and then prints them. A second tab, **RStudio**, shows the IDE inside the playground page with the coach docked. That makes one click plus sign-in. To switch scenario, run `./run.sh up statistical-tools`; a new terminal then shows the new password.
 
@@ -191,7 +197,7 @@ labctl playground create --base docker -f iximiuz/manifest.yaml rstudio-guide  #
 
 - **Init:** the manifest's single init task runs `iximiuz/start-lab.sh`. On first start it does `docker load` on `/opt/rstudio-guide/images.tar`, then runs `./run.sh up graphical-tools`.
 - **`lab.env`** is baked into the rootfs with `FRAME_ORIGIN=https://labs.iximiuz.com`, `GATEWAY_BIND=0.0.0.0` and `LAB_PREBUILT=1`. Every later `./run.sh up` keeps these, so switching scenario keeps the RStudio tab working and never rebuilds or pulls. Values set in the environment still win.
-- **The RStudio tab** is an `http-port` tab on 8788 with private (owner-only) access. RStudio allows `labs.iximiuz.com` to frame it via `www-frame-origin`, set at container start by `runtime/04_lab_frame_origin`. The coach skips only frames nested *inside* RStudio, so it runs when RStudio itself is framed.
+- **The RStudio tab** is an `http-port` tab on 8788 with private access: only the person who started that session can open it, even though anyone can start the playground. RStudio allows `labs.iximiuz.com` to frame it via `www-frame-origin`, set at container start by `runtime/04_lab_frame_origin`. The coach skips only frames nested *inside* RStudio, so it runs when RStudio itself is framed.
 - **Earlier approach:** the first tests below packed the repository into the manifest as a startup file, because iximiuz allows at most 20 startup files. The rootfs image replaced that.
 
 ### Results: rootfs image
@@ -208,6 +214,8 @@ Tested on 19 November 2026 with throwaway sessions from `iximiuz/manifest.yaml`.
 | Graphical demo, all 4 steps (each explained only after a new chart loaded) | Pass | Pass |
 | Statistics demo, all 5 steps (values match the Console and the article) | Pass | Pass |
 | Layout in the VM | `~/rstudio-guide/spike/coach-in-ide` | `~/rstudio-guide`, the same as this repository |
+
+**The public playground** (`rstudio-guide-16afe14e`, v2) was started with `labctl playground start --as-free-tier-user` on 19 November 2026. The init task completed and the command returned in **62 s**. The terminal banner showed the graphical-tools sign-in, and the gateway answered by machine name. The playground page loaded without an iximiuz login.
 
 **The v2 fix:** the build script makes the archive `0644`, and the rootfs build now fails if `laborant` can't read the archive, run `start-lab.sh` or write the repository. That check caught a second bug before anything was pushed. `COPY --chmod=0644` also gives the directory it creates mode `0644`, which `laborant` can't enter, so the Dockerfile doesn't use it.
 
@@ -229,7 +237,6 @@ From the version that packed the code into the manifest, on the official `docker
 
 ### Not done yet
 
-- A saved custom playground (`labctl playground create --base docker -f iximiuz/manifest.yaml rstudio-guide`). Once it exists, `publish-rootfs-image.sh` also updates it.
 - The RStudio tab on v2, signed in by hand. The same mechanism was confirmed on the earlier version.
 
 ## Plan deviations and open points
