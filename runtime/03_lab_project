@@ -1,6 +1,7 @@
 #!/usr/bin/with-contenv bash
 # Open this run's project on first sign-in. Compose sets LAB_PROJECT.
+# Write as rstudio, never as root: the learner owns this folder, and a symlink left here would
+# send a root write (and chown) to any file in the container at the next container start.
 set -euo pipefail
 target=/home/rstudio/.local/share/rstudio/projects_settings/last-project-path
-printf '%s' "${LAB_PROJECT:?LAB_PROJECT must be set}" > "$target"
-chown rstudio:rstudio "$target"
+runuser -u rstudio -- sh -c 'rm -f "$1" && printf %s "$2" > "$1"' _ "$target" "${LAB_PROJECT:?LAB_PROJECT must be set}"

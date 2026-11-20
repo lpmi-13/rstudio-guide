@@ -56,11 +56,22 @@ build_context="$(mktemp -d "${TMPDIR:-/tmp}/rstudio-guide-rootfs-build.XXXXXX")"
 trap 'rm -rf "${build_context}"' EXIT
 
 # The learner-facing files only: no per-run state, results, local audits or site settings.
+# Only files git tracks, as they are in the working tree (uncommitted edits included), so an
+# untracked file such as a scratch .env or notes can never reach this public image. `git stash
+# create` snapshots tracked changes without touching the working tree, index or stash list.
+prefix="$(git rev-parse --show-prefix 2>/dev/null)" && [[ -z "${prefix}" ]] || {
+  echo "error: ${repo_root} is not the top of a git checkout; the rootfs is built from tracked files." >&2
+  exit 1
+}
+untracked="$(git ls-files --others --exclude-standard)"
+if [[ -n "${untracked}" ]]; then
+  echo "warning: these untracked files are not published (git add them if the playground needs them):" >&2
+  sed 's/^/  /' <<<"${untracked}" >&2
+fi
+snapshot="$(git -c user.name=build-rootfs -c user.email=build-rootfs@localhost stash create)"
 mkdir -p "${build_context}/rstudio-guide"
-tar -C "${repo_root}" \
-  --exclude=./.git --exclude=./.claude --exclude=./run --exclude=./results --exclude=./tests \
-  --exclude=./lab.env --exclude=./.playwright-cli --exclude='__pycache__' \
-  -cf - . | tar -C "${build_context}/rstudio-guide" -xf -
+git archive --format=tar "${snapshot:-HEAD}" -- . ':(exclude)tests' ':(exclude).claude' \
+  | tar -C "${build_context}/rstudio-guide" -xf -
 # Settings every ./run.sh up in the playground keeps (see run.sh and the README).
 printf '%s\n' \
   'FRAME_ORIGIN=https://labs.iximiuz.com' \

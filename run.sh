@@ -63,7 +63,8 @@ case "${1:-up}" in
     mkdir -p run
     password=$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 20)
     # HOST_UID/GID: RStudio's user must own the bind-mounted project to save into it.
-    # GATEWAY_BIND: loopback by default; a remote VM behind its own proxy may need 0.0.0.0.
+    # GATEWAY_BIND: loopback by default. 0.0.0.0 serves plain HTTP on every interface (and Docker
+    # bypasses ufw), so only behind a TLS proxy such as iximiuz's tab; otherwise use an SSH tunnel.
     # FRAME_ORIGIN / SAME_SITE: let a platform (e.g. https://labs.iximiuz.com) frame RStudio.
     (umask 077; printf 'RSTUDIO_PASSWORD=%s\nLAB_SCENARIO=%s\nHOST_UID=%s\nHOST_GID=%s\nGATEWAY_BIND=%s\nFRAME_ORIGIN=%s\nSAME_SITE=%s\n' \
       "$password" "$project" "$(id -u)" "$(id -g)" "${GATEWAY_BIND:-127.0.0.1}" "${FRAME_ORIGIN:-}" "${SAME_SITE:-}" > run/.env)

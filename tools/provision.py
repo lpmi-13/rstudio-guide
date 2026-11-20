@@ -102,7 +102,8 @@ def reference_run(scenario, workdir, root, image):
         (workdir / f"run-{index:03d}.R").write_text(run["code"] + "\n")
     command = [
         "docker", "run", "--rm", "--network", "none", "--user", f"{os.getuid()}:{os.getgid()}",
-        "--memory", "512m", "--cpus", "1",
+        "--memory", "512m", "--cpus", "1", "--pids-limit", "256",
+        "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--read-only", "--tmpfs", "/tmp",
         "-v", f"{workdir}:/ref",
         "-v", f"{root / 'runtime' / 'reference.R'}:/opt/lab/reference.R:ro",
         image, "timeout", "60", "Rscript", "/opt/lab/reference.R", "/ref",
@@ -139,6 +140,9 @@ def load(root, scenario_id):
     modes = scenario.get("modes") or []
     if not modes or any(mode not in MODES for mode in modes):
         fail(f"{scenario_id}: modes must be a non-empty list drawn from {', '.join(MODES)}; got {modes!r}")
+    script = scenario.get("script")
+    if script is not None and (not isinstance(script, str) or Path(script).name != script or script in (".", "..")):
+        fail(f"{scenario_id}: script must be a plain file name in the project; got {script!r}")
     return scenario, source / "project"
 
 
@@ -146,6 +150,9 @@ def copy_project(source, project, skip=()):
     """Copy a scenario's static files into the run's project, refusing to overwrite."""
     for path in sorted(source.rglob("*")):
         rel = path.relative_to(source)
+        # A symlink would copy whatever it points to on this machine into the learner's project.
+        if path.is_symlink():
+            fail(f"{rel} in {source} is a symlink; lesson files must be regular files")
         if path.is_dir() or str(rel) in skip:
             continue
         target = project / rel

@@ -18,7 +18,6 @@ ROOT = Path(__file__).resolve().parents[1]
 REPO = "ghcr.io/lpmi-13/rstudio-guide-rootfs"
 # The custom playground's name, as iximiuz assigned it (e.g. rstudio-guide-16afe14e).
 PLAYGROUND = re.search(r"^name:\s*(\S+)", (ROOT / "iximiuz/manifest.yaml").read_text(), re.M).group(1)
-SKIP = {".git", ".claude", "run", "results", "tests", ".playwright-cli", "__pycache__", "lab.env"}
 
 
 class PublishRootfsImageTests(unittest.TestCase):
@@ -29,7 +28,14 @@ class PublishRootfsImageTests(unittest.TestCase):
         self.root = self.fixture / "rstudio-guide"
         self.bin_dir = self.fixture / "bin"
         self.bin_dir.mkdir()
-        shutil.copytree(ROOT, self.root, ignore=lambda _d, names: [n for n in names if n in SKIP])
+        # A git checkout of the tracked files as they are now: the rootfs is built from tracked files only.
+        tracked = subprocess.run(["git", "-C", str(ROOT), "ls-files", "-z"], check=True, capture_output=True, text=True).stdout
+        for rel in filter(None, tracked.split("\0")):
+            (self.root / rel).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ROOT / rel, self.root / rel)
+        git = ["git", "-C", str(self.root), "-c", "user.name=test", "-c", "user.email=test@localhost", "-c", "commit.gpgsign=false"]
+        for args in (["init", "-q"], ["add", "-A"], ["commit", "-q", "--no-verify", "-m", "fixture"]):
+            subprocess.run([*git, *args], check=True, capture_output=True)
         # Per-run state that must never reach the rootfs.
         (self.root / "run").mkdir()
         (self.root / "run/.env").write_text("RSTUDIO_PASSWORD=secret\n")
@@ -44,7 +50,9 @@ case "$1" in
     context="${@: -1}"
     if [[ -f "$context/images.tar" ]]; then
       (cd "$context" && find . -maxdepth 2 | sort > "$CONTEXT_LOG" && cat rstudio-guide/lab.env >> "$CONTEXT_LOG" \
-        && echo "images.tar mode $(stat -c %a images.tar)" >> "$CONTEXT_LOG")
+        && echo "images.tar mode $(stat -c %a images.tar)" >> "$CONTEXT_LOG" \
+        && grep -h '^readonly ROOTFS_IMAGE_TAG=' rstudio-guide/iximiuz/versions.sh >> "$CONTEXT_LOG" \
+        && if test -x rstudio-guide/iximiuz/start-lab.sh; then echo "start-lab.sh executable" >> "$CONTEXT_LOG"; fi)
     fi ;;
   push) if [[ "$2" == *-rootfs:* && "${FAIL_ROOTFS_PUSH:-0}" == 1 ]]; then exit 53; fi ;;
 esac
@@ -134,14 +142,26 @@ esac
 
     def test_rootfs_gets_iximiuz_settings_but_no_run_state_or_audits(self):
         self.auth_marker.touch()
+        (self.root / "notes.env").write_text("SECRET=stray\n")  # untracked: must never reach the public image
         result = self._run(test_tag="v1")
         self.assertEqual(result.returncode, 0, result.stderr)
         context = self.context_log.read_text()
         for expected in ("./Dockerfile", "./images.tar", "./rstudio-guide/iximiuz", "./rstudio-guide/runtime", "images.tar mode 644",
-                         "FRAME_ORIGIN=https://labs.iximiuz.com", "GATEWAY_BIND=0.0.0.0", "LAB_PREBUILT=1"):
+                         "FRAME_ORIGIN=https://labs.iximiuz.com", "GATEWAY_BIND=0.0.0.0", "LAB_PREBUILT=1",
+                         # setUp's uncommitted edit to a tracked file is published, as before.
+                         'readonly ROOTFS_IMAGE_TAG="v0"', "start-lab.sh executable"):
             self.assertIn(expected, context)
-        for unexpected in ("./rstudio-guide/run", "./rstudio-guide/tests", "./rstudio-guide/results", "./rstudio-guide/.git"):
+        for unexpected in ("./rstudio-guide/run", "./rstudio-guide/tests", "./rstudio-guide/results", "./rstudio-guide/.git",
+                           "./rstudio-guide/notes.env"):
             self.assertNotIn(unexpected, context.splitlines())
+        self.assertIn("  notes.env", result.stderr)  # named, in case it was meant to be published
+
+    def test_refuses_to_build_outside_a_git_checkout(self):
+        shutil.rmtree(self.root / ".git")
+        result = self._run("v1", test_tag="v1")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("not the top of a git checkout", result.stderr)
+        self.assertFalse(any(c.startswith("docker push") for c in self._calls()))
 
     def test_failed_rootfs_push_does_not_change_refs_or_update_playground(self):
         self.auth_marker.touch()
