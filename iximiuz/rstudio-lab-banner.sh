@@ -3,6 +3,10 @@
 # starting, it waits (Ctrl+C skips) and prints the details once run.sh reports ready.
 case $- in *i*) ;; *) return 0 ;; esac
 
+# ~/.bashrc prints and deletes ~/.welcome (the iximiuz Docker playground's tool list) after
+# this script; drop it first so the sign-in details are the only startup text.
+rm -f "$HOME/.welcome"
+
 lab_dir=/home/laborant/rstudio-guide
 if [ ! -e "$lab_dir/run/ready" ]; then
   printf '\n  RStudio is starting. Its password will appear here when it is ready (Ctrl+C to skip).\n'
