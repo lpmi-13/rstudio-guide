@@ -197,6 +197,44 @@ function verifyTyping(rec, since, until, codes) {
   return {keys: keys.length, chars, medianGapMs: Math.round(median)};
 }
 
+// What a fresh start resets, as RStudio shows it: the script in the Source pane (and whether Ctrl+Z
+// could bring older text back), the Console, the Environment, and whether the Plots pane shows a chart.
+const rstudioState = page => page.evaluate(() => {
+  const editor = [...document.querySelectorAll('#rstudio_Source_pane .ace_editor')].find(e => e.offsetParent && e.env?.editor)?.env.editor;
+  const tab = [...document.querySelectorAll('#rstudio_Source_pane [role="tab"]')].find(t => t.getAttribute('aria-selected') === 'true');
+  let chart = false;
+  for (const f of document.querySelectorAll('#rstudio_workbench_panel_plots iframe')) {
+    try {
+      const img = f.contentDocument.querySelector('img');
+      if (img && img.naturalWidth > 0 && getComputedStyle(img).display !== 'none') chart = true;
+    } catch (_e) { /* ignore */ }
+  }
+  return {tab: tab?.innerText.trim(), script: editor ? editor.getValue() : null, canUndo: editor ? editor.session.getUndoManager().hasUndo() : null,
+    console: document.getElementById('rstudio_console_output')?.textContent ?? '',
+    environment: document.getElementById('rstudio_workbench_panel_environment')?.innerText.replace(/\s+/g, ' ').trim() ?? '',
+    chart};
+});
+// The coach has just started `lesson` afresh: its script, open and saved, holds only the step
+// headings with no undo history, and R's Console, Environment and Plots are empty.
+function verifyFresh(state, lesson, scriptPath) {
+  assert(state.tab === lesson.script, `the Source pane shows ${state.tab}, not ${lesson.script}`);
+  assert(state.script === lesson.starter, `${lesson.script} was not reset to its step headings: ${JSON.stringify(state.script)}`);
+  assert(state.canUndo === false, `Ctrl+Z in ${lesson.script} could bring back the code from before`);
+  assert(fs.readFileSync(scriptPath, 'utf8') === lesson.starter, `${lesson.script} on disk was not reset`);
+  assert(!state.console.trim(), `the Console still shows ${JSON.stringify(state.console.slice(-120))}`);
+  assert(/Environment is empty/.test(state.environment), `the Environment is not empty: ${state.environment.slice(-80)}`);
+  assert(!state.chart, 'the Plots pane still shows a chart from before');
+}
+// Wait for the coach's fresh start number `n` to finish, and return when (performance.now()).
+// It must have met no problems.
+async function waitForFreshStart(page, n) {
+  const done = await page.waitForFunction(n => (window.__rsCoach.fresh.count >= n ? {t: performance.now(), last: window.__rsCoach.fresh.last} : null),
+    n, {timeout: 60000, polling: 20}).then(h => h.jsonValue());
+  assert(done.last.problems.length === 0, `the fresh start met problems: ${done.last.problems.join(' ')}`);
+  return done;
+}
+const freshStarts = page => page.evaluate(() => window.__rsCoach.fresh.count);
+
 const plotSrc = page => page.evaluate(() => {
   for (const f of document.querySelectorAll('#rstudio_workbench_panel_plots iframe')) {
     try { const img = f.contentDocument.querySelector('img'); if (img) return img.src; } catch (_e) { /* ignore */ }
@@ -226,4 +264,5 @@ async function dockedGeometry(page) {
 module.exports = {
   ROOT, GATEWAY, audit, assert, tokens, provision, warnings, signIn, waitForCoach, coachEl,
   installRecorder, now, record, editorLines, verifyPointer, verifyTyping, verifySpotlight, overlayState, plotSrc, dockedGeometry,
+  rstudioState, verifyFresh, waitForFreshStart, freshStarts,
 };

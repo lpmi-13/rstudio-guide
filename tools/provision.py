@@ -6,6 +6,7 @@ Writes:
                        for each lesson with steps, the generated script)
   run/public/          what the gateway serves to the coach: session.json and,
                        for lessons with steps, steps.json with the expected output
+                       and each script's starting text
   run/private/         the reference run's working files (never mounted)
 
 Several lessons with steps can share one run and project; the learner chooses a
@@ -174,14 +175,16 @@ def prepare_lesson(scenario, project, workdir, root, image):
                      f"\"Writing code to <purpose>\" while they type it")
     if (project / scenario["script"]).exists():
         fail(f"two lessons both use {scenario['script']}")
-    (project / scenario["script"]).write_text(render_script(scenario))
+    # The coach puts the script back to this text whenever a mode starts afresh.
+    scenario["starter"] = render_script(scenario)
+    (project / scenario["script"]).write_text(scenario["starter"])
     reference_run(scenario, workdir, root, image)
     for number, step in enumerate(scenario["steps"], start=1):
         step["heading"] = heading(number, step)
         for run in step["runs"]:
             run["hint_partial"] = partial(run["code"])
             run["hint_line"] = strip_comment(run["code"])
-    return {key: scenario[key] for key in ("id", "title", "summary", "source", "script", "modes", "steps")}
+    return {key: scenario[key] for key in ("id", "title", "summary", "source", "script", "starter", "modes", "steps")}
 
 
 def render_readme(lessons):

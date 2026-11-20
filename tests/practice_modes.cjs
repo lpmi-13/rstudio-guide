@@ -15,8 +15,13 @@
 // - Solo discloses nothing until Check my work, counts hints, and never counts
 //   lines run before Solo was chosen, even after a reload refills the Console;
 // - reload keeps the chosen mode and progress, and Change mode returns to the picker;
+// - choosing a mode starts the lesson afresh, whatever ran before, in any mode or lesson:
+//   the script holds only its step headings (saved, with no undo history), the Console,
+//   Environment and Plots are empty, and progress starts over.
+//   Demonstration then Guided is the case a learner reported: step 1's line was already
+//   written. Back on the picker returns to the mode just left, as it was;
 // - the default run holds both lessons: lesson cards sit above the mode cards, all
-//   in view, and each lesson keeps its own mode and progress.
+//   in view.
 //
 //   NODE_PATH=$(npm root -g) node tests/practice_modes.cjs [results-dir]
 const {chromium} = require('@playwright/test');
@@ -25,6 +30,7 @@ const path = require('path');
 const {
   ROOT, audit, assert, provision, warnings, signIn, waitForCoach, coachEl,
   now, record, editorLines, verifyPointer, verifyTyping, verifySpotlight, overlayState, plotSrc, dockedGeometry,
+  rstudioState, verifyFresh, waitForFreshStart, freshStarts,
 } = require('./lib.cjs');
 
 const OUT = path.resolve(process.argv[2] || path.join(ROOT, 'results'));
@@ -47,6 +53,7 @@ const pickerView = page => page.evaluate(() => {
     }),
     cardBottom: Math.round(Math.max(...cards.map(c => c.getBoundingClientRect().bottom))),
     switchLabel: root.querySelector('button.switch')?.textContent,
+    back: root.querySelector('button.back')?.textContent ?? null,
     started: Boolean(window.__rsCoach.demo || window.__rsCoach.guided || window.__rsCoach.solo),
   };
 });
@@ -119,7 +126,7 @@ const waitGuided = (page, fn, arg, timeout = 20000) => page.waitForFunction(fn, 
       await signIn(page, password, null);
       lesson = await page.evaluate(() => fetch('/coach/api/steps').then(r => r.json()).then(s => s.lessons[0]));
       const view = await pickerView(page);
-      assert(view.mode === null && view.label === 'Choose a mode', JSON.stringify(view));
+      assert(view.mode === null && view.label === 'Choose a mode' && view.back === null, JSON.stringify(view));
       assert(view.cards.join() === 'Demonstration,Guided,Solo', `cards: ${view.cards}`);
       assert(view.inView.every(Boolean), `cards not all in view without scrolling: ${JSON.stringify(view)}`);
       const g = await dockedGeometry(page);
@@ -226,12 +233,17 @@ const waitGuided = (page, fn, arg, timeout = 20000) => page.waitForFunction(fn, 
       return {debrief: view.debrief};
     });
 
-    await probe('solo: Change mode returns to the picker; Solo lists every task and discloses nothing until checked', async () => {
+    await probe('solo: Change mode returns to the picker; Solo starts afresh (Guided\'s lines, objects and chart are gone), lists every task and discloses nothing until checked', async () => {
+      const before = await rstudioState(page);
+      assert(before.chart && /frequencies/.test(before.environment) && /barplot/.test(before.console), `Guided left nothing to reset: ${JSON.stringify(before).slice(0, 300)}`);
+      const fresh = await freshStarts(page);
       await coachEl(page, 'button.switch').click();
       const picker = await pickerView(page);
-      assert(picker.mode === null && picker.cards.length === 3 && !picker.started, JSON.stringify(picker));
+      assert(picker.mode === null && picker.cards.length === 3 && !picker.started && picker.back === 'Back to Guided', JSON.stringify(picker));
       await coachEl(page, 'button.mode-card[data-mode="solo"]').click();
+      const {last} = await waitForFreshStart(page, fresh + 1);
       await waitGuided(page, () => window.__rsCoach.solo);
+      verifyFresh(await rstudioState(page), lesson, scriptPath);
       const start = await soloView(page);
       const total = lesson.steps.reduce((n, s) => n + s.runs.length, 0);
       assert(Object.keys(start.lines).length === total && Object.values(start.lines).every(c => c === 'pending') && !start.results, JSON.stringify(start));
@@ -240,10 +252,10 @@ const waitGuided = (page, fn, arg, timeout = 20000) => page.waitForFunction(fn, 
       await page.waitForTimeout(500);
       const quiet = await soloView(page);
       assert(Object.values(quiet.lines).every(c => c === 'pending') && !quiet.results, `Solo disclosed a result before Check: ${JSON.stringify(quiet)}`);
-      return {lines: total, seenButHidden: quiet.seen};
+      return {resetMs: last.ms, lines: total, seenButHidden: quiet.seen};
     });
 
-    await probe('solo: after a reload, lines run before Solo (the Guided ones) still do not count', async () => {
+    await probe('solo: after a reload, Solo keeps what it saw, and nothing run in Guided counts', async () => {
       await page.reload();
       await page.waitForSelector('#rstudio_console_input', {timeout: 90000});
       await waitForCoach(page, 'solo');
@@ -304,10 +316,14 @@ const waitGuided = (page, fn, arg, timeout = 20000) => page.waitForFunction(fn, 
       return {seen: view.seen};
     });
 
-    await probe('statistical guided: Show me reports an R error without counting, then runs the line already in the script', async () => {
+    await probe('statistical guided: starts afresh after Solo (sample_data is gone); Show me reports an R error without counting, then runs the line already in the script', async () => {
+      const lesson = await page.evaluate(() => fetch('/coach/api/steps').then(r => r.json()).then(s => s.lessons[0]));
+      const fresh = await freshStarts(page);
       await coachEl(page, 'button.switch').click();
       await coachEl(page, 'button.mode-card[data-mode="guided"]').click();
+      await waitForFreshStart(page, fresh + 1);
       await waitGuided(page, () => window.__rsCoach.guided);
+      verifyFresh(await rstudioState(page), lesson, path.join(ROOT, 'run/project/statistical-tools.R'));
       await consoleRun(page, 'sample_data <- airquality');
       await waitGuided(page, () => window.__rsCoach.guided.done['0.0']);
       await consoleRun(page, 'rm(sample_data)');
@@ -392,7 +408,7 @@ const waitGuided = (page, fn, arg, timeout = 20000) => page.waitForFunction(fn, 
       return {tab, clicks, ...typing};
     });
 
-    await probe('two lessons: reload reopens Graphical Demonstration; Statistical Solo kept what it had seen', async () => {
+    await probe('two lessons: reload reopens Graphical Demonstration where it was; Back on the picker returns to it without a reset', async () => {
       await page.reload();
       await page.waitForSelector('#rstudio_console_input', {timeout: 90000});
       await waitForCoach(page, 'demonstration');
@@ -400,13 +416,53 @@ const waitGuided = (page, fn, arg, timeout = 20000) => page.waitForFunction(fn, 
       const go = await coachText('button.go');
       assert(lesson === 'graphical-tools' && go === 'Next: step 2', `${lesson}, ${go}`);
       await coachEl(page, 'button.switch').click();
+      const picker = await pickerView(page);
+      assert(picker.back === 'Back to Demonstration: Graphical tools in base R', JSON.stringify(picker));
+      await coachEl(page, 'button.back').click();
+      await waitGuided(page, () => window.__rsCoach.demo);
+      const back = await coachText('button.go');
+      const state = await rstudioState(page);
+      const fresh = await freshStarts(page);
+      assert(back === 'Next: step 2' && state.script.includes('\nplot(5, 5)\n') && state.chart && fresh === 0, `after Back: ${back}, ${fresh} fresh starts, ${JSON.stringify(state).slice(0, 300)}`);
+      return {graphical: go, back};
+    });
+
+    await probe('two lessons: Demonstration then Guided starts afresh: step 1\'s line is gone from the script, and the Console, Environment and Plots are empty', async () => {
+      const [graphical] = await page.evaluate(() => fetch('/coach/api/steps').then(r => r.json()).then(s => s.lessons));
+      const scriptPath = path.join(ROOT, 'run/project/graphical-tools.R');
+      const before = await rstudioState(page);
+      assert(before.script.includes('\nplot(5, 5)\n') && before.console.includes('> plot(5, 5)') && before.chart, `the demonstration left nothing to reset: ${JSON.stringify(before).slice(0, 300)}`);
+      await coachEl(page, 'button.switch').click();
+      await coachEl(page, 'button.mode-card[data-mode="guided"]').click();
+      const {last} = await waitForFreshStart(page, 1);
+      await waitGuided(page, () => window.__rsCoach.guided);
+      verifyFresh(await rstudioState(page), graphical, scriptPath);
+      const start = await guidedView(page);
+      assert(start.step === 0 && Object.keys(start.done).length === 0 && start.tasks.join() === 'active', JSON.stringify(start));
+      await page.screenshot({path: path.join(OUT, 'lessons-guided-after-demo.png')});
+      // The learner writes step 1's line themselves, and it counts as theirs.
+      await scriptRun(page, graphical.steps[0].heading, 'plot(5, 5)');
+      await waitGuided(page, () => window.__rsCoach.guided.done['0.0']);
+      const view = await guidedView(page);
+      assert(view.done['0.0'] === 'learner', JSON.stringify(view));
+      assert(last.charts, 'the coach did not clear the demonstration\'s chart');
+      return {resetMs: last.ms, step1: view.done['0.0']};
+    });
+
+    await probe('two lessons: Statistical Solo starts afresh too: Graphical\'s chart is gone, and what Solo saw before no longer counts', async () => {
+      const [, statistical] = await page.evaluate(() => fetch('/coach/api/steps').then(r => r.json()).then(s => s.lessons));
+      await coachEl(page, 'button.switch').click();
+      const picker = await pickerView(page);
+      assert(picker.back === 'Back to Guided: Graphical tools in base R', JSON.stringify(picker));
       await coachEl(page, '.lesson-card[data-lesson="statistical-tools"]').click();
       await coachEl(page, 'button.mode-card[data-mode="solo"]').click();
+      await waitForFreshStart(page, 2);
       await waitGuided(page, () => window.__rsCoach.solo);
+      verifyFresh(await rstudioState(page), statistical, path.join(ROOT, 'run/project/statistical-tools.R'));
       await coachEl(page, 'button.check').click();
       const view = await soloView(page);
-      assert(/^1 of 8 lines done/.test(view.results) && view.lines['0.1'] === 'done', JSON.stringify(view));
-      return {graphical: go, statistical: view.results.slice(0, 18)};
+      assert(/^0 of 8 lines done/.test(view.results) && view.seen.length === 0, JSON.stringify(view));
+      return {statistical: view.results.slice(0, 18)};
     });
     await context.close();
   }

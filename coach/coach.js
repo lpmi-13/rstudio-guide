@@ -13,6 +13,9 @@
 //   coach ticks it once RStudio shows the reference result, and offers hints and
 //   Show me (a one-line demonstration).
 // - Solo lists every task; results are disclosed only when the learner checks.
+// Choosing a mode, or Start over, starts the lesson afresh: its script goes back to the
+// step headings, and the Console, Environment and Plots are emptied, so nothing from an
+// earlier mode or lesson carries over.
 // regional-revenue (no steps yet) has a Guided stub with a Check work button.
 //
 // Guided and Solo confirm lines from what RStudio shows, in the page, because
@@ -35,6 +38,7 @@
     session: null,
     placement: null,
     demo: null,
+    fresh: {count: 0, last: null}, // fresh starts done, and what the last one found
     log: [],
   });
   const note = (type, detail = {}) => {
@@ -85,16 +89,29 @@
     console: () => byId('rstudio_Console_pane') || byId('rstudio_workbench_panel_console'),
     consoleText: () => document.getElementById('rstudio_console_output')?.textContent || '',
     source: () => byId('rstudio_Source_pane'),
+    consoleClear: () => byId('rstudio_tb_consoleclear'),
     files: () => byId('rstudio_workbench_panel_files'),
     filesTab: () => byId('rstudio_workbench_tab_files'),
+    filesHome: () => [...document.querySelectorAll('#rstudio_workbench_panel_files button[title="Go to project directory"]')].find(shown),
     plots: () => byId('rstudio_workbench_panel_plots'),
+    plotsTab: () => byId('rstudio_workbench_tab_plots'),
     environment: () => byId('rstudio_workbench_panel_environment'),
+    // RStudio removes this label once the global environment holds an object (shown or not).
+    environmentEmpty: () => [...(document.getElementById('rstudio_workbench_panel_environment')?.querySelectorAll('*') || [])]
+      .some(el => el.childElementCount === 0 && el.textContent.trim() === 'Environment is empty'),
+    chartShown: () => {
+      const img = ide.plotImage();
+      return Boolean(img && img.naturalWidth > 0 && img.ownerDocument.defaultView.getComputedStyle(img).display !== 'none');
+    },
     runButton: () => ide.sourceButton(/^Run\b/),
     saveButton: () => ide.sourceButton(/^Save current document\b/),
     sourceButton: title => [...document.querySelectorAll('#rstudio_Source_pane button')]
       .find(b => shown(b) && title.test(b.getAttribute('title') || '')),
     sourceTab: name => [...document.querySelectorAll('#rstudio_Source_pane [role="tab"]')]
       .find(t => shown(t) && t.textContent.trim().replace(/\*$/, '') === name),
+    unsaved: name => (ide.sourceTab(name)?.innerText || '').includes('*'),
+    // The editor for `name`, once its tab is the one shown in the Source pane.
+    scriptEditor: name => (ide.sourceTab(name)?.getAttribute('aria-selected') === 'true' ? ide.activeEditor() : null),
     fileLink: name => {
       const panel = ide.files();
       return panel && [...panel.querySelectorAll('*')].find(el => el.childElementCount === 0 && el.textContent.trim() === name && shown(el));
@@ -597,7 +614,10 @@
 
   // Several lessons can share a run (one RStudio project). The picker then offers the lessons
   // first, as compact cards, and the modes of the selected one below them. The chosen lesson,
-  // each lesson's mode and each mode's progress are kept per run in sessionStorage.
+  // its mode and the mode's progress are kept per run in sessionStorage, so a reload returns to
+  // them as they were. Choosing a mode starts it afresh (see freshStart), and forgets every
+  // other mode's progress, which no longer matches the script or R. Back on the picker returns
+  // to the mode just left, as it was.
   function startLessons(root, session, lessons, status) {
     const content = root.querySelector('.content');
     const read = key => { try { return sessionStorage.getItem(key); } catch (_error) { return null; } }; // storage blocked
@@ -606,25 +626,65 @@
     };
     const lessonKey = `rsCoachLesson:${session.run_id}`;
     const modeKey = l => `rsCoachMode:${session.run_id}:${l.id}`;
+    const forgetProgress = () => {
+      const progress = new RegExp(`^rsCoach(?:Mode|Demo|Guided|Solo):${session.run_id}:`);
+      try { for (const key of Object.keys(sessionStorage)) if (progress.test(key)) sessionStorage.removeItem(key); } catch (_error) { /* storage blocked */ }
+    };
     const modesOf = l => l.modes.filter(mode => mode in MODES);
     const switchLabel = lessons.length > 1 ? 'Change lesson or mode' : 'Change mode';
+    const setHeader = text => { root.querySelector('.mode').textContent = text; };
     let lesson = lessons.find(l => l.id === read(lessonKey)) || lessons[0];
     let teardown = () => {};
-    function open(mode, restored = false) {
-      teardown();
-      teardown = () => {};
+    let resume = null; // {lesson, mode}: what Back on the picker returns to
+    const leave = () => { teardown(); teardown = () => {}; };
+
+    // A mode as it stands: reopened after a reload or by Back, or just reset by start().
+    function open(mode, {restored = false, autostart = false} = {}) {
+      leave();
       Object.assign(coach, {mode, lesson: lesson.id});
-      root.querySelector('.mode').textContent = mode ? MODES[mode].label : lessons.length > 1 ? 'Choose a lesson and mode' : 'Choose a mode';
+      setHeader(mode ? MODES[mode].label : lessons.length > 1 ? 'Choose a lesson and mode' : 'Choose a mode');
       write(lessonKey, lesson.id);
       write(modeKey(lesson), mode);
       status(`Run ${session.run_id} · ${mode ? lesson.title : `${lessons.length} lesson${lessons.length > 1 ? 's' : ''}`}`);
-      note('mode', {lesson: lesson.id, mode});
+      note('mode', {lesson: lesson.id, mode, restored});
       content.replaceChildren();
       if (!mode) { renderPicker(); return; }
       const render = {demonstration: renderDemo, guided: renderGuided, solo: renderSolo}[mode];
       const storeKey = name => `rsCoach${name}:${session.run_id}:${lesson.id}`;
-      teardown = render({content, session, lesson, status, restored, storeKey, switchLabel, changeMode: () => open(null)}) || teardown;
+      // Back on the picker can return to this mode, unless the learner ended it (Stop).
+      const changeMode = (resumable = true) => {
+        resume = resumable ? {lesson, mode} : null;
+        open(null);
+      };
+      teardown = render({content, session, lesson, status, restored, autostart, storeKey, switchLabel, changeMode,
+        startOver: () => start(mode, {autostart: true})}) || teardown;
     }
+
+    // A mode chosen on the picker, or Start over: reset RStudio, then open the mode from scratch.
+    // The panel says what is happening and offers nothing to press until RStudio is ready.
+    async function start(mode, {autostart = false} = {}) {
+      leave();
+      resume = null;
+      forgetProgress();
+      Object.assign(coach, {mode, lesson: lesson.id});
+      setHeader(MODES[mode].label);
+      status(`Run ${session.run_id} · ${lesson.title}`);
+      content.innerHTML = `
+        <h2>${escapeHtml(lesson.title)}</h2>
+        <section class="card starting">
+          <h3>${autostart ? 'Starting over' : `Starting ${MODES[mode].label}`}</h3>
+          <p class="phase">Starting afresh: ${escapeHtml(lesson.script)} goes back to its step headings, and the Console, Environment and Plots are emptied.</p>
+          <div class="timer working"><span></span></div>
+        </section>`;
+      const problems = await freshStart(lesson);
+      open(mode, {autostart});
+      if (problems.length) {
+        const warning = Object.assign(document.createElement('p'), {className: 'error reset-problem'});
+        warning.textContent = `The coach couldn't reset everything. ${problems.join(' ')}`;
+        content.prepend(warning);
+      }
+    }
+
     function renderPicker() {
       const modes = modesOf(lesson);
       const lessonCards = `
@@ -648,7 +708,8 @@
               <span class="what">${escapeHtml(MODES[mode].what)}</span>
             </button>`).join('')}
         </div>
-        <p class="muted">You can change ${lessons.length > 1 ? 'lesson or ' : ''}mode at any time. RStudio keeps your script and Console as they are, and each mode counts only what you run after choosing it.</p>`;
+        ${resume ? `<div class="row"><button class="back">Back to ${escapeHtml(MODES[resume.mode].label)}${lessons.length > 1 ? `: ${escapeHtml(resume.lesson.title)}` : ''}</button></div>` : ''}
+        <p class="muted">You can change ${lessons.length > 1 ? 'lesson or ' : ''}mode at any time. Each choice starts afresh: the lesson's script goes back to its step headings, and the Console, Environment and Plots are emptied.</p>`;
       for (const card of content.querySelectorAll('.lesson-card')) {
         card.addEventListener('click', () => {
           lesson = lessons.find(l => l.id === card.dataset.lesson);
@@ -658,15 +719,23 @@
           content.querySelector(`.lesson-card[data-lesson="${CSS.escape(lesson.id)}"]`)?.focus();
         });
       }
-      for (const card of content.querySelectorAll('.mode-card')) card.addEventListener('click', () => open(card.dataset.mode));
+      for (const card of content.querySelectorAll('.mode-card')) card.addEventListener('click', () => start(card.dataset.mode));
+      content.querySelector('.back')?.addEventListener('click', () => {
+        const {lesson: was, mode} = resume;
+        resume = null;
+        lesson = was;
+        open(mode, {restored: true});
+      });
     }
     // What a lesson covers, from its step titles: "Plots: plot()" -> "plot()".
     function covers(l) {
       return `${l.steps.length} steps: ${l.steps.map(s => s.title.split(': ').pop()).join(', ')}`;
     }
+    // A reload returns to the lesson and mode as they were; a new run (or tab) opens on the picker,
+    // or straight into the only mode of a one-lesson, one-mode run, as provisioned.
     const saved = read(modeKey(lesson));
     const modes = modesOf(lesson);
-    open(modes.includes(saved) ? saved : modes.length === 1 && lessons.length === 1 ? modes[0] : null, modes.includes(saved));
+    open(modes.includes(saved) ? saved : modes.length === 1 && lessons.length === 1 ? modes[0] : null, {restored: modes.includes(saved)});
   }
 
   // The card's "now" line: what the coach is doing in RStudio, in plain words. Each change
@@ -684,7 +753,100 @@
   function endedView(content, text, changeMode, switchLabel) {
     content.innerHTML = `<p class="ended"></p><div class="row"><button class="switch">${switchLabel}</button></div>`;
     content.querySelector('.ended').textContent = text;
-    content.querySelector('.switch').addEventListener('click', changeMode);
+    content.querySelector('.switch').addEventListener('click', () => changeMode(false)); // nothing to go back to
+  }
+
+  // ---------- A fresh start ----------
+  // Choosing a mode, or Start over, starts the lesson from scratch, whatever ran before it in
+  // RStudio. Otherwise a Demonstration's code would already be under the headings when Guided asks
+  // the learner to write it, and its chart and variables would already be on screen. The lesson's
+  // script goes back to the step headings it was provisioned with. Then the coach empties R the
+  // way a learner would, with the brooms on the Environment and Plots panes (each confirmed in
+  // RStudio's own dialog, and only if there is something to clear), and clears the Console. This
+  // is housekeeping rather than part of the lesson, so the coach works RStudio without its pointer.
+  // Resolves to the problems it met, for the panel to report.
+  //
+  // Not Restart R: in a session's first half-minute RStudio holds a restart back (one asked for
+  // 7 s after sign-in took 23.6 s, against 1-2 s later on), and that is when a learner picks their
+  // first mode. These lessons load no packages, so clearing objects and charts loses nothing.
+  async function freshStart(lesson) {
+    const began = Date.now();
+    const problems = [];
+    const attempt = async fn => { try { await fn(); } catch (error) { problems.push(error.message); } };
+    await attempt(() => resetScript(lesson.script, lesson.starter));
+    const objects = !ide.environmentEmpty();
+    if (objects) await attempt(clearObjects);
+    const charts = ide.chartShown();
+    if (charts) await attempt(clearPlots);
+    const clear = ide.consoleClear();
+    if (clear) press(clear);
+    const cleared = Boolean(await waitFor(() => !ide.consoleText().trim(), 3000));
+    const detail = {lesson: lesson.id, ms: Date.now() - began, objects, charts, cleared, problems};
+    coach.fresh = {count: coach.fresh.count + 1, last: detail};
+    note('fresh_start', detail);
+    return problems;
+  }
+
+  // `script` back to `text` and saved, with no undo history that could bring the old code back.
+  async function resetScript(script, text) {
+    const editor = await openQuietly(script);
+    if (editor.getValue() !== text) editor.session.getDocument().setValue(text);
+    editor.session.getUndoManager().reset();
+    editor.clearSelection();
+    editor.moveCursorTo(0, 0);
+    editor.renderer.scrollToRow(0);
+    if (!ide.unsaved(script)) return;
+    const save = await waitFor(ide.saveButton, 2000);
+    if (save) press(save);
+    if (!(await waitFor(() => !ide.unsaved(script), 5000))) throw new Error(`RStudio did not save ${script} after the coach reset it.`);
+  }
+
+  // Show `script` in the Source pane: its tab if it is open, otherwise from the project folder in
+  // the Files pane. RStudio re-renders the Files list and tab strip, so retry a click that missed.
+  async function openQuietly(script) {
+    const listed = () => ide.sourceTab(script) || ide.fileLink(script);
+    for (let attempt = 1; attempt <= 3 && !ide.scriptEditor(script); attempt += 1) {
+      if (!listed()) {
+        if (!ide.files() && ide.filesTab()) press(ide.filesTab());
+        else if (ide.filesHome()) press(ide.filesHome()); // Files shows another folder
+      }
+      const target = await waitFor(listed, 5000);
+      if (!target) break;
+      press(target);
+      await waitFor(() => ide.scriptEditor(script), 4000);
+    }
+    const editor = ide.scriptEditor(script);
+    if (!editor) throw new Error(`${script} did not open from the project folder, so it still holds what was typed before.`);
+    return editor;
+  }
+
+  // Press Yes in RStudio's confirmation dialog titled `title`. Its id differs from dialog to dialog.
+  async function confirm(title) {
+    const yes = await waitFor(() => {
+      const dialog = [...document.querySelectorAll('[role="alertdialog"]')].find(d => shown(d) && d.textContent.includes(title));
+      return dialog && [...dialog.querySelectorAll('button')].find(b => shown(b) && b.textContent.trim() === 'Yes');
+    }, 3000);
+    if (yes) press(yes);
+    return Boolean(yes);
+  }
+
+  // The Environment pane's broom removes every object, hidden ones included (the dialog's default).
+  async function clearObjects() {
+    const broom = document.getElementById('rstudio_tb_clearworkspace');
+    if (broom) press(broom);
+    if (!broom || !(await confirm('Remove Objects')) || !(await waitFor(ide.environmentEmpty, 5000))) {
+      throw new Error('The objects from before are still in the Environment pane.');
+    }
+  }
+
+  // The Plots pane's broom does nothing unless the Plots tab is showing.
+  async function clearPlots() {
+    if (!ide.plots() && ide.plotsTab()) press(ide.plotsTab());
+    const broom = await waitFor(() => byId('rstudio_tb_clearplots'), 2000);
+    if (broom) press(broom);
+    if (!broom || !(await confirm('Clear Plots')) || !(await waitFor(() => !ide.chartShown(), 5000))) {
+      throw new Error('The chart from before is still in the Plots pane.');
+    }
   }
 
   // ---------- Demonstration ----------
@@ -701,7 +863,10 @@
   // the wait down ("Advance · 5s", "Next: step 3 · 12s") and a bar fills; pressing it moves on at
   // once, and otherwise the coach moves on when the countdown ends, into the next step after an
   // explanation. Advance pressed while the coach is acting ends the next wait as soon as it starts.
-  function renderDemo({content, session, lesson: manifest, status, storeKey: keyFor, switchLabel, changeMode}) {
+  //
+  // Start over resets the script and R (a fresh start) and then runs step 1 by itself, so every
+  // line is typed again. `autostart` is that second half.
+  function renderDemo({content, session, lesson: manifest, status, autostart, storeKey: keyFor, switchLabel, changeMode, startOver}) {
     const steps = manifest.steps;
     content.innerHTML = `
       <div class="overview">
@@ -820,28 +985,24 @@
     }
 
     // The coach's pointer sets off from the button the learner just pressed.
-    go.addEventListener('click', () => {
-      if (demo.state === 'running') { // Advance
-        note('demo_advance', {counting: counting()});
-        if (counting()) endCountdown(true);
-        else { wait.queued = true; renderControls(); }
-        return;
-      }
+    function begin() {
       const i = nextIndex();
       if (i === null) return;
       endCountdown(false); // the explanation's countdown: the learner moved on first
       clearHighlight();
       pointerFrom(go);
       runStep(i);
+    }
+    go.addEventListener('click', () => {
+      if (demo.state !== 'running') { begin(); return; }
+      note('demo_advance', {counting: counting()}); // Advance
+      if (counting()) endCountdown(true);
+      else { wait.queued = true; renderControls(); }
     });
     restart.addEventListener('click', () => {
       if (demo.state === 'running') return;
-      endCountdown(false);
-      clearHighlight();
-      pointerFrom(restart);
-      Object.assign(demo, {completed: [], values: {}, index: -1, failure: null});
-      persist();
-      runStep(0);
+      note('demo_start_over');
+      startOver();
     });
     const halt = () => {
       demo.stopped = true;
@@ -859,7 +1020,7 @@
       note('stop');
       endedView(content, 'This demonstration has ended. RStudio stays open and keeps what the demonstration ran.', changeMode, switchLabel);
     });
-    $('.switch').addEventListener('click', changeMode);
+    $('.switch').addEventListener('click', () => changeMode());
 
     async function runStep(i) {
       const step = steps[i];
@@ -923,6 +1084,7 @@
     }
 
     renderControls();
+    if (autostart) begin();
     return () => { halt(); coach.demo = null; };
   }
 
@@ -949,10 +1111,7 @@
     }
 
     async function openScript() {
-      const isOpen = () => {
-        const tab = ide.sourceTab(script);
-        return tab && tab.getAttribute('aria-selected') === 'true' && ide.activeEditor() ? ide.activeEditor() : null;
-      };
+      const isOpen = () => ide.scriptEditor(script);
       if (isOpen()) return;
       // RStudio re-renders the Files list and tab strip when files change, so look the
       // target up again after each pause and retry if the click landed on a stale element.
@@ -1039,7 +1198,7 @@
     }
 
     async function save() {
-      const unsaved = () => (ide.sourceTab(script)?.innerText || '').includes('*');
+      const unsaved = () => ide.unsaved(script);
       if (!unsaved()) return;
       say(`Saving ${script}`);
       if (!(await clickOn(ide.saveButton, 'save'))) throw new Error('The Save button in the Source pane is not visible.');
@@ -1057,7 +1216,7 @@
       const lines = editor.session.getDocument().getAllLines();
       const block = stepBlock(lines, heading);
       if (!block) {
-        throw new Error(`${script} no longer has the line ${heading}, so the coach can't tell where step ${index + 1} goes. Start a new run to restore the script.`);
+        throw new Error(`${script} no longer has the line ${heading}, so the coach can't tell where step ${index + 1} goes. Put the heading back, or start this mode again to reset the script.`);
       }
       // The spotlight takes in the step's heading and the line the code goes on.
       const headingRow = block.start - 1;
@@ -1405,7 +1564,7 @@
       note('guided_step_started', {step: steps[g.step].id});
       render();
     });
-    $('.switch').addEventListener('click', changeMode);
+    $('.switch').addEventListener('click', () => changeMode());
 
     render();
     return () => {
@@ -1509,7 +1668,7 @@
       note('solo_check', {done: Object.keys(solo.seen).length, of: lines.length, hints: Object.keys(solo.hints).length});
       render();
     });
-    $('.switch').addEventListener('click', changeMode);
+    $('.switch').addEventListener('click', () => changeMode());
 
     render();
     return () => { clearInterval(timer); coach.solo = null; };

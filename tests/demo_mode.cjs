@@ -16,7 +16,10 @@
 //   inside the spotlight; when a step is explained, the dimming has lifted and
 //   an evidence ring marks the Console output or the chart;
 // - code is typed into the script one key at a time, at a person's pace, and
-//   saved; code already in the script is run again, not typed twice;
+//   saved;
+// - choosing Demonstration, and Start over, start afresh: the script holds only its
+//   step headings and the Console, Environment and Plots are empty, and
+//   Start over then types every step again;
 // - each step's explanation appears only once RStudio shows the matching
 //   Console output, or a newly loaded chart;
 // - the explanation quotes values that are on screen;
@@ -30,6 +33,7 @@ const path = require('path');
 const {
   ROOT, audit, assert, tokens, provision, warnings, signIn, waitForCoach, coachEl,
   now, record, editorLines, verifyPointer, verifyTyping, verifySpotlight, overlayState, plotSrc, dockedGeometry,
+  rstudioState, verifyFresh, waitForFreshStart, freshStarts,
 } = require('./lib.cjs');
 
 const OUT = path.resolve(process.argv[2] || path.join(ROOT, 'results'));
@@ -104,7 +108,9 @@ function verifyNarration(lines, step, typed, advanced = []) {
 }
 
 // The learner presses Advance during the step's first countdown. The button counted down from
-// the text's reading time (at least 5 s), and the wait ends at once.
+// the text's reading time (at least 5 s), and the wait ends at once: the narration moves on, or
+// the button stops counting. When the next line is narrated in the same tick (the click on Run
+// after "Writing code to ..."), the button never shows a bare "Advance" in between.
 async function pressAdvance(page) {
   const at = await page.waitForFunction(() => {
     const root = document.getElementById('rs-coach-host').shadowRoot;
@@ -114,13 +120,15 @@ async function pressAdvance(page) {
   const need = Math.ceil(readingMs(at.text) / 1000);
   assert(at.seconds >= 5 && at.seconds >= need - 1 && at.seconds <= need, `"${at.text}" counted down from ${at.seconds} s; its reading time rounds up to ${need} s`);
   await coachEl(page, 'button.go').click();
-  const after = await page.waitForFunction(() => {
-    const go = document.getElementById('rs-coach-host').shadowRoot.querySelector('.go').textContent;
-    return go.includes('·') ? null : {go, t: performance.now()};
-  }, null, {timeout: 5000, polling: 20}).then(h => h.jsonValue());
+  const after = await page.waitForFunction(text => {
+    const root = document.getElementById('rs-coach-host').shadowRoot;
+    const go = root.querySelector('.go').textContent;
+    const phase = root.querySelector('.phase').textContent;
+    return go.includes('·') && phase === text ? null : {go, phase, t: performance.now()};
+  }, at.text, {timeout: 5000, polling: 20}).then(h => h.jsonValue());
   const waited = after.t - at.t;
   assert(waited < readingMs(at.text) - 2000, `Advance ended "${at.text}" ${Math.round(waited)} ms into its countdown`);
-  return {text: at.text, countedFrom: at.seconds, advancedAfterMs: Math.round(waited), then: after.go};
+  return {text: at.text, countedFrom: at.seconds, advancedAfterMs: Math.round(waited), then: after.phase || after.go};
 }
 // Wait for step i to finish or fail. The snapshot is taken in the same poll in which the
 // explanation first appears, so it shows exactly what RStudio displayed at that moment.
@@ -245,19 +253,29 @@ async function runSteps(page, manifest, from, to, tag, {scriptPath, typed = true
     page.on('pageerror', e => errors.push(`graphical: ${e.message}`));
     let manifest;
 
-    await probe('graphical: sign in; coach docks in the sidebar and covers no other pane', async () => {
+    await probe('graphical: sign in; choosing Demonstration opens the script, fresh; coach docks in the sidebar and covers no other pane', async () => {
       await signIn(page, password);
       manifest = await page.evaluate(() => fetch('/coach/api/steps').then(r => r.json()).then(s => s.lessons[0]));
+      assert(manifest.starter === original, 'the coach would reset the script to something other than what was provisioned');
+      const {last} = await waitForFreshStart(page, 1);
+      verifyFresh(await rstudioState(page), manifest, scriptPath);
       const g = await dockedGeometry(page);
       assert(g.parent === 'rstudio_Sidebar_pane' && g.fills && Object.keys(g.overlaps).length === 0, JSON.stringify(g));
       const view = await coachView(page);
       assert(view.overview && !view.card, `before Start, the panel should introduce the lesson: ${JSON.stringify(view)}`);
       await page.screenshot({path: path.join(OUT, 'graphical-docked.png')});
-      return g;
+      return {resetMs: last.ms, ...g};
     });
 
     await probe('graphical: a script without step 1\'s heading stops step 1 visibly, before typing', async () => {
-      fs.writeFileSync(scriptPath, original.replace('# Step 1. Plots: plot()\n', ''));
+      // The learner deletes the heading's text with the keyboard.
+      const heading = manifest.steps[0].heading;
+      const box = await page.locator('#rstudio_Source_pane .ace_line', {hasText: heading}).boundingBox();
+      await page.mouse.click(box.x + 40, box.y + box.height / 2); // Ace's layers fail Playwright's click checks
+      await page.keyboard.press('Home');
+      await page.keyboard.press('Shift+End');
+      await page.keyboard.press('Backspace');
+      assert(!(await editorLines(page)).includes(heading), `the learner's edit did not remove ${heading}`);
       const since = await now(page);
       await coachEl(page, 'button.go').click();
       const snap = await settleStep(page, 0);
@@ -272,9 +290,14 @@ async function runSteps(page, manifest, from, to, tag, {scriptPath, typed = true
     });
 
     await probe('graphical: after the script is restored, "Try this step again" passes', async () => {
-      // The learner restores the file and closes its tab (headless RStudio does not reload
-      // a changed file by itself); the coach must reopen it from the Files pane.
-      fs.writeFileSync(scriptPath, original);
+      // The learner undoes their edit, saves and closes the script's tab; the coach must
+      // reopen it from the Files pane.
+      const first = await page.locator('#rstudio_Source_pane .ace_line').first().boundingBox();
+      await page.mouse.click(first.x + 40, first.y + first.height / 2); // back into the editor
+      await page.keyboard.press('Control+z');
+      await page.keyboard.press('Control+s');
+      await page.waitForFunction(() => ![...document.querySelectorAll('#rstudio_Source_pane [role="tab"]')].some(t => t.innerText.includes('*')), null, {timeout: 10000});
+      assert(fs.readFileSync(scriptPath, 'utf8') === original, 'undo and save did not restore the script');
       const tab = page.locator('#rstudio_Source_pane [role="tab"]', {hasText: 'graphical-tools.R'});
       await tab.locator('img').last().click(); // the tab's close icon (unlabelled in this RStudio build)
       await tab.waitFor({state: 'detached', timeout: 10000});
@@ -312,23 +335,20 @@ async function runSteps(page, manifest, from, to, tag, {scriptPath, typed = true
       return {mounts, panel: g.panel, ...checks};
     });
 
-    await probe('graphical: reload keeps progress; Stop part-way through typing halts the typing and RStudio', async () => {
+    await probe('graphical: reload keeps progress; Start over resets the script and R, then types step 1 again; Stop part-way through typing halts the typing and RStudio', async () => {
       await page.reload();
       await page.waitForSelector('#rstudio_console_input', {timeout: 90000});
       await waitForCoach(page);
       const restored = await coachView(page);
       assert(restored.steps.every(s => s === 'done') && restored.go === 'Demonstration complete' && restored.restartShown, JSON.stringify(restored));
-      // The learner clears step 1's line with the keyboard, so Start over has to type it again.
+      const before = await rstudioState(page);
+      assert(before.chart && /frequencies/.test(before.environment), `the demonstration left nothing to reset: ${JSON.stringify(before).slice(0, 300)}`);
       const heading = manifest.steps[0].heading;
       const code = manifest.steps[0].runs[0].code;
-      const box = await page.locator('#rstudio_Source_pane .ace_line', {hasText: code}).boundingBox();
-      await page.mouse.click(box.x + 40, box.y + box.height / 2);
-      await page.keyboard.press('Home');
-      await page.keyboard.press('Shift+End');
-      await page.keyboard.press('Backspace');
-      const cleared = await editorLines(page);
-      assert(!cleared.includes(code), `the learner's edit did not remove ${code}`);
+      const fresh = await freshStarts(page);
       await coachEl(page, 'button.restart').click();
+      const {last} = await waitForFreshStart(page, fresh + 1);
+      verifyFresh(await rstudioState(page), manifest, scriptPath); // step 1 starts by itself, typing within a second
       // Stop once the line under the heading is partly typed.
       await page.waitForFunction(([heading, code]) => {
         const el = [...document.querySelectorAll('#rstudio_Source_pane .ace_editor')].find(e => e.offsetParent && e.env?.editor);
@@ -356,7 +376,7 @@ async function runSteps(page, manifest, from, to, tag, {scriptPath, typed = true
       const shade = await overlayState(page);
       assert(!shade.dim && !shade.spot && !shade.ring, `the overlay still shows after Stop: ${JSON.stringify(shade)}`);
       await page.screenshot({path: path.join(OUT, 'graphical-stopped.png')});
-      return {restoredGo: restored.go, lineAtStop: atStop.line, actionsAtStop: atStop.actions};
+      return {restoredGo: restored.go, resetMs: last.ms, lineAtStop: atStop.line, actionsAtStop: atStop.actions};
     });
     await context.close();
   }
@@ -404,19 +424,21 @@ async function runSteps(page, manifest, from, to, tag, {scriptPath, typed = true
       return {message: snap.explain.trim()};
     });
 
-    await probe('statistical: Start over reruns steps 1-3 without retyping, types 4-5, and finishes', async () => {
+    await probe('statistical: Start over resets the script and R (sample_data and step 3\'s line are gone), types all 5 steps again, and finishes', async () => {
       const allValues = Object.assign({}, ...manifest.steps.flatMap(s => s.runs.map(r => r.expected_values)));
-      const since = await now(page);
+      const before = await rstudioState(page);
+      assert(before.script.includes(manifest.steps[2].runs[0].code), 'step 3\'s line was not in the script before Start over');
+      const fresh = await freshStarts(page);
       await coachEl(page, 'button.restart').click();
+      // The reset's own clicks are RStudio commands, not the pointer's: check the pointer from here.
+      const {t: since, last} = await waitForFreshStart(page, fresh + 1);
+      verifyFresh(await rstudioState(page), manifest, scriptPath);
       const snap = await settleStep(page, 0);
-      await verifyStepFully(page, manifest, 0, snap, since, {plotBefore: null, allValues, scriptPath, typed: false});
-      const done = [
-        ...await runSteps(page, manifest, 1, 2, 'statistical-rerun', {scriptPath, typed: false}),
-        ...await runSteps(page, manifest, 3, 4, 'statistical-rerun', {scriptPath}),
-      ];
+      const first = await verifyStepFully(page, manifest, 0, snap, since, {plotBefore: null, allValues, scriptPath, typed: true});
+      const done = [{step: 1, ...first}, ...await runSteps(page, manifest, 1, 4, 'statistical-rerun', {scriptPath})];
       const view = await coachView(page);
       assert(view.steps.every(s => s === 'done') && view.go === 'Demonstration complete', JSON.stringify(view));
-      return done;
+      return {resetMs: last.ms, done};
     });
 
     await probe('statistical: the saved script holds every line once, under its heading, with nothing unsaved', async () => {
