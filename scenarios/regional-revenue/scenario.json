@@ -1,5 +1,5 @@
 {
   "id": "regional-revenue",
   "title": "Regional revenue",
-  "mode": "guided"
+  "modes": ["guided"]
 }

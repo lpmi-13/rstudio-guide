@@ -11,10 +11,8 @@ if [ ! -e "$lab_dir/run/ready" ]; then
   unset lab_waited
 fi
 if [ -e "$lab_dir/run/ready" ] && [ -r "$lab_dir/run/.env" ]; then
-  printf '\n  RStudio is running the %s scenario. Open the RStudio tab and sign in:\n\n    Username: rstudio\n    Password: %s\n\n  Switch scenario: cd %s && ./run.sh up graphical-tools  (or statistical-tools)\n\n' \
-    "$(sed -n 's/^LAB_SCENARIO=//p' "$lab_dir/run/.env")" \
-    "$(sed -n 's/^RSTUDIO_PASSWORD=//p' "$lab_dir/run/.env")" \
-    "$lab_dir"
+  printf '\n  RStudio is ready. Open the RStudio tab and sign in:\n\n    Username: rstudio\n    Password: %s\n\n  Then choose a lesson and a mode (Demonstration, Guided or Solo)\n  in the Coach pane on the right.\n\n' \
+    "$(sed -n 's/^RSTUDIO_PASSWORD=//p' "$lab_dir/run/.env")"
 else
   printf '\n  RStudio is not ready yet. Open a new terminal later to see its password.\n\n'
 fi

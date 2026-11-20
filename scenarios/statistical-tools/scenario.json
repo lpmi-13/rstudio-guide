@@ -1,18 +1,21 @@
 {
   "id": "statistical-tools",
   "title": "Statistical tools in base R",
-  "mode": "demonstration",
+  "modes": ["demonstration", "guided", "solo"],
   "script": "statistical-tools.R",
   "source": "Code from \"Statistical Analysis using RStudio\", UP Mindanao SPARCS on dev.to (April 2025)",
-  "intro": "Watch RStudio describe the temperatures in R's built-in airquality data. For each line, the coach selects it in statistical-tools.R and presses Run. It explains the numbers after the Console prints them.",
+  "summary": "Describe the daily temperatures in R's built-in airquality data: the lowest and highest, the mean, the median, percentiles and a summary. R prints each answer in the Console.",
   "steps": [
     {
       "id": "min-max",
       "title": "Minimum and maximum: min() and max()",
       "runs": [
-        {"code": "sample_data <- airquality # Assigning the built-in dataset \"airquality\" to sample_data", "evidence": "console", "show": "environment"},
-        {"code": "max(sample_data$Temp) # Finding the maximum value in Temperature", "evidence": "console", "capture": {"max": "^\\[1\\] (\\S+)$"}},
-        {"code": "min(sample_data$Temp) # Finding the minimum value in Temperature", "evidence": "console", "capture": {"min": "^\\[1\\] (\\S+)$"}}
+        {"code": "sample_data <- airquality # Assigning the built-in dataset \"airquality\" to sample_data", "purpose": "copy R's built-in `airquality` data into `sample_data`", "evidence": "console", "show": "environment",
+         "task": "Copy R's built-in `airquality` data into a variable called `sample_data`, using `<-`."},
+        {"code": "max(sample_data$Temp) # Finding the maximum value in Temperature", "purpose": "find the highest temperature", "evidence": "console", "capture": {"max": "^\\[1\\] (\\S+)$"},
+         "task": "Find the highest temperature with `max()`. The temperatures are in `sample_data$Temp`."},
+        {"code": "min(sample_data$Temp) # Finding the minimum value in Temperature", "purpose": "find the lowest temperature", "evidence": "console", "capture": {"min": "^\\[1\\] (\\S+)$"},
+         "task": "Find the lowest temperature with `min()`."}
       ],
       "explain": "`sample_data` is a copy of `airquality`: daily readings from New York, May to September 1973. `$Temp` picks the temperature column, which holds each day's highest temperature in °F. The hottest day reached {max} °F. The coolest day only reached {min} °F."
     },
@@ -20,7 +23,8 @@
       "id": "mean",
       "title": "Mean: mean()",
       "runs": [
-        {"code": "mean(sample_data$Temp) # Finding the mean/average of all Temperature entries", "evidence": "console", "capture": {"mean": "^\\[1\\] (\\S+)$"}}
+        {"code": "mean(sample_data$Temp) # Finding the mean/average of all Temperature entries", "purpose": "find the mean (average) temperature", "evidence": "console", "capture": {"mean": "^\\[1\\] (\\S+)$"},
+         "task": "Find the mean (average) temperature with `mean()`."}
       ],
       "explain": "The mean adds up every daily temperature and divides by the number of days. Here it is {mean} °F. `Temp` has no missing values. If it had any, `mean()` would return `NA` unless you added `na.rm = TRUE`."
     },
@@ -28,7 +32,8 @@
       "id": "median",
       "title": "Median: median()",
       "runs": [
-        {"code": "median(sample_data$Temp) # Finding the median of Temperature", "evidence": "console", "capture": {"median": "^\\[1\\] (\\S+)$"}}
+        {"code": "median(sample_data$Temp) # Finding the median of Temperature", "purpose": "find the median temperature", "evidence": "console", "capture": {"median": "^\\[1\\] (\\S+)$"},
+         "task": "Find the median temperature with `median()`."}
       ],
       "explain": "If you sort the temperatures from coolest to hottest, the middle one is {median} °F. That is a little higher than the mean of {mean} °F. The coolest days pull the mean down, but they barely move the middle value."
     },
@@ -36,11 +41,13 @@
       "id": "quantile",
       "title": "Percentiles: quantile()",
       "runs": [
-        {"code": "quantile(sample_data$Temp) # Return the percentiles of 0, 25, 50, 75, and 100", "evidence": "console", "capture": {
+        {"code": "quantile(sample_data$Temp) # Return the percentiles of 0, 25, 50, 75, and 100", "purpose": "list the temperature percentiles: 0%, 25%, 50%, 75% and 100%", "evidence": "console", "capture": {
           "p25": "^0% 25% 50% 75% 100% \\S+ (\\S+) \\S+ \\S+ \\S+$",
           "p75": "^0% 25% 50% 75% 100% \\S+ \\S+ \\S+ (\\S+) \\S+$"
-        }},
-        {"code": "quantile(sample_data$Temp, c(0.45)) # Return only the 45th percentile", "evidence": "console", "capture": {"p45": "^45% (\\S+)$"}}
+        },
+         "task": "Show the temperatures' 0th, 25th, 50th, 75th and 100th percentiles with `quantile()`."},
+        {"code": "quantile(sample_data$Temp, c(0.45)) # Return only the 45th percentile", "purpose": "find only the 45th percentile", "evidence": "console", "capture": {"p45": "^45% (\\S+)$"},
+         "task": "Show only the 45th percentile. Give `quantile()` a second argument: `c(0.45)`."}
       ],
       "explain": "With no other arguments, `quantile()` gives the 0th, 25th, 50th, 75th and 100th percentiles. About a quarter of the days reached {p25} °F or less, and about three quarters reached {p75} °F or less. The 0% and 100% values are the minimum and maximum, and 50% is the median. `c(0.45)` asks for just one percentile: about 45% of the days reached {p45} °F or less."
     },
@@ -48,14 +55,15 @@
       "id": "summary",
       "title": "Summary: summary()",
       "runs": [
-        {"code": "summary(sample_data$Temp) # Return the summary of Temperature in airquality dataset", "evidence": "console", "capture": {
+        {"code": "summary(sample_data$Temp) # Return the summary of Temperature in airquality dataset", "purpose": "summarise the temperatures in six numbers", "evidence": "console", "capture": {
           "s_min": "^Min\\. 1st Qu\\. Median Mean 3rd Qu\\. Max\\. (\\S+) \\S+ \\S+ \\S+ \\S+ \\S+$",
           "s_q1": "^Min\\. 1st Qu\\. Median Mean 3rd Qu\\. Max\\. \\S+ (\\S+) \\S+ \\S+ \\S+ \\S+$",
           "s_median": "^Min\\. 1st Qu\\. Median Mean 3rd Qu\\. Max\\. \\S+ \\S+ (\\S+) \\S+ \\S+ \\S+$",
           "s_mean": "^Min\\. 1st Qu\\. Median Mean 3rd Qu\\. Max\\. \\S+ \\S+ \\S+ (\\S+) \\S+ \\S+$",
           "s_q3": "^Min\\. 1st Qu\\. Median Mean 3rd Qu\\. Max\\. \\S+ \\S+ \\S+ \\S+ (\\S+) \\S+$",
           "s_max": "^Min\\. 1st Qu\\. Median Mean 3rd Qu\\. Max\\. \\S+ \\S+ \\S+ \\S+ \\S+ (\\S+)$"
-        }}
+        },
+         "task": "Show a summary of the temperatures with `summary()`."}
       ],
       "explain": "`summary()` shows six numbers at once: minimum {s_min}, first quartile {s_q1}, median {s_median}, mean {s_mean}, third quartile {s_q3} and maximum {s_max}. They are the same results as the earlier steps. `summary()` rounds to four significant figures, so the mean of {mean} appears as {s_mean}."
     }

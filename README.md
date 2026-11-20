@@ -1,29 +1,34 @@
 # RStudio guide: a coach inside the RStudio tab
 
-RStudio Server with an in-IDE coach, two demonstrations, and an iximiuz Labs playground. It began as the feasibility spike for `plan-docs/R_STUDIO_WRAPPED.md` §6 (probes "Proxy and coach" and "Demonstration control"). This README is also the spike's decision record, dated 19 November 2026.
+RStudio Server with an in-IDE coach, two lessons that can each be watched (Demonstration), done with help (Guided) or done alone (Solo), and an iximiuz Labs playground. It began as the feasibility spike for `plan-docs/R_STUDIO_WRAPPED.md` §6 (probes "Proxy and coach" and "Demonstration control"). This README is also the spike's decision record, dated 19 November 2026.
 
-**Try it in your browser:** [RStudio coach on iximiuz Labs](https://labs.iximiuz.com/playgrounds/rstudio-guide-16afe14e). It needs a free iximiuz account. Starting it takes about a minute. The **Terminal** tab then shows the RStudio password; open the **RStudio** tab and sign in.
+**Try it in your browser:** [RStudio coach on iximiuz Labs](https://labs.iximiuz.com/playgrounds/rstudio-guide-16afe14e). It needs a free iximiuz account. Starting it takes about a minute. The **Terminal** tab then shows the RStudio password; open the **RStudio** tab and sign in. (The playground still runs the version before the mode picker until the rootfs is republished.)
 
 | Question | Answer |
 | --- | --- |
 | Can the coach run inside the RStudio IDE tab without breaking RStudio? | **Yes.** It needs a capture-phase keyboard shield that loads before RStudio's own code. |
 | Can it dock into RStudio's layout instead of floating over it? | **Yes.** It docks into RStudio's own sidebar column, and RStudio resizes the other panes around it. If the learner hides the sidebar, it falls back to a floating card. |
-| Can it drive a visible, automatic demonstration in the real IDE? | **Yes, for two article-based scenarios.** It selects each line in the Source pane, presses RStudio's Run button, and waits for the Console or Plots pane to show the reference result. Only then does it explain, quoting values that are on screen. |
+| Can the learner choose a lesson, and whether to watch, be guided, or work alone? | **Yes.** A new run holds both lessons and opens on a picker in the coach: a lesson, then **Demonstration**, **Guided** or **Solo**, over the same steps, script and reference output. Guided and Solo check the learner's own work from what RStudio shows. |
+| Can it drive a visible, automatic demonstration in the real IDE? | **Yes, for two article-based scenarios.** It works RStudio the way a learner would: a visible pointer moves to each control it clicks, and it types each line into the Source pane one key at a time. It then presses RStudio's Run button and waits for the Console or Plots pane to show the reference result. Only then does it explain, quoting values that are on screen. |
 
-Final runs: the guided audit passed 21/21, including the AI-assistant lockout, and the demonstration audit passed 12/12 on four consecutive runs (8 fresh provisions). There were no warnings, page errors, console errors, HTTP errors or failed requests through the gateway.
+Final runs: the guided audit passed 21/21, including the AI-assistant lockout, and the demonstration audit passed 12/12 on four consecutive runs (8 fresh provisions). There were no warnings, page errors, console errors, HTTP errors or failed requests through the gateway. After the demonstrations were changed to type their code with a visible pointer, the demonstration audit passed 12/12 and the guided audit 21/21, each on one run, again with no warnings or page errors. After the lesson and mode picker, Guided and Solo were added, one run each: picker, Guided and Solo audit 17/17, demonstration 12/12 (now choosing Demonstration on the picker) and the regional-revenue audit 21/21, with no warnings or page errors. After the dimmed spotlight and slower pacing, one run each: the same 17/17, 12/12 and 21/21. After the demonstration panel was changed to show only the current step, narrated by each line's purpose, the demonstration audit passed 12/12 on one run, with no warnings or page errors (the other audits were not rerun). After every line and explanation were given a reading countdown with **Advance**, it passed 12/12 again on one run, with no warnings or page errors, in 9.2 minutes.
 
 One intermittent failure appeared earlier, before the fix in finding 7: Chromium dropped the sign-in page's scripts while Docker was still changing the host network. It has not recurred in those 8 provisions, but that is evidence, not proof. The audits still check for it and report it as a warning if it happens.
 
 ## Run it
 
 ```bash
-./run.sh up graphical-tools      # or statistical-tools, or regional-revenue (Guided, the default)
+./run.sh up                      # both lessons in one project, "lessons" (the default)
+./run.sh up statistical-tools    # one lesson only (or graphical-tools, or regional-revenue)
 ./run.sh down                    # stop and delete the run directory
 
 # Audits (need @playwright/test installed globally). Each provisions its own runs.
 ./run.sh up regional-revenue && NODE_PATH=$(npm root -g) node tests/coach_in_ide.cjs results
 NODE_PATH=$(npm root -g) node tests/demo_mode.cjs results
+NODE_PATH=$(npm root -g) node tests/practice_modes.cjs results
 ```
+
+After signing in, choose a lesson and then **Demonstration**, **Guided** or **Solo** in the Coach pane on the right; `run.sh` prints the same reminder. A one-lesson run skips the lesson cards. `regional-revenue` is the original Guided stub (a Check work button, no steps), so it opens straight into it with no picker, and it can't share a run.
 
 - Gateway with the coach: <http://127.0.0.1:8788/>. The user is `rstudio`; `./run.sh up` prints the password, which is also in `run/.env`.
 - Direct RStudio without the coach, for comparison: <http://127.0.0.1:18787/>.
@@ -41,12 +46,12 @@ NODE_PATH=$(npm root -g) node tests/demo_mode.cjs results
 
 | Piece | File | Notes |
 | --- | --- | --- |
-| Scenarios | `scenarios/<id>/scenario.json`, `scenarios/<id>/project/` | `regional-revenue` (Guided), `graphical-tools` and `statistical-tools` (Demonstration). A demo's steps, code, evidence type, captured values and narration all live in one file. |
-| Provisioning | `tools/provision.py`, `runtime/reference.R` | Copies the project and generates the demo script from `scenario.json`. It then runs every line in a throwaway container from the same image (`--network none`, 512 MB, 1 CPU, 60 s) to record what R prints and whether it draws. The run is not reported ready if any line errors, its plot/no-plot behaviour is wrong, or a capture pattern doesn't match. It writes `run/public/session.json` and `demo.json` for the coach. `run.sh` reports Ready only after the gateway answers and the host network has settled (finding 7). |
+| Scenarios | `scenarios/<id>/scenario.json`, `scenarios/<id>/project/` | `graphical-tools` and `statistical-tools` offer `"modes": ["demonstration", "guided", "solo"]` and can share a run; `regional-revenue` offers only its Guided stub. A lesson's steps, code, evidence type, captured values, narration (each line's `purpose`) and the task shown to a learner for each line all live in one file. |
+| Provisioning | `tools/provision.py`, `runtime/reference.R` | Copies each lesson's files into one project (named after the lesson, or `lessons` when there are several, with a README listing them; it refuses clashing file names) and generates each lesson's script from `scenario.json`: a header and one `# Step N.` heading per step, with no code yet. The coach or the learner types it, depending on the mode. Every line needs a `task` when Guided or Solo is offered, and gets two generated hints: how it starts (`plot(…)`) and the line without its comment. It then runs every line in a throwaway container from the same image (`--network none`, 512 MB, 1 CPU, 60 s) to record what R prints and whether it draws. The run is not reported ready if any line errors, its plot/no-plot behaviour is wrong, or a capture pattern doesn't match. It writes `run/public/session.json` (the lessons and their modes) and `steps.json` for the coach. `run.sh` reports Ready only after the gateway answers and the host network has settled (finding 7). |
 | Runtime | `runtime/Dockerfile`, `runtime/rstudio-prefs.json`, `runtime/03_lab_project` | `rocker/rstudio:4.6.2@sha256:ab667f41…` (RStudio Server 2026.11.0+203, R 4.6.2). The preferences show the sidebar on the right and hide Posit Assistant. Admin settings in `/etc/rstudio/rsession.conf` lock out Posit Assistant and Copilot, so a learner can't turn them back on: `posit-assistant-enabled`, `posit-assistant-installation-enabled`, `copilot-enabled` and the two `allow-*` options, all `0`. A container-init hook opens the run's project on first sign-in. |
-| Gateway | `gateway/nginx.conf` | `nginx:1.27.3-alpine`. Proxies everything, including WebSockets and long-polls. Only the IDE host page (`location = /`) is rewritten, with the coach script tag placed right after `<head>`. `/coach/api/session` and `/coach/api/demo` serve the run's public files. `/coach/api/check` is a stub. |
-| Coach | `coach/coach.js` | Vanilla JS in a Shadow DOM, about 600 lines. Contains the keyboard shield, docking and floating placement, a highlight overlay, the Guided view, and the Demonstration engine. |
-| Audits | `tests/coach_in_ide.cjs`, `tests/demo_mode.cjs` | Playwright on headless Chromium. They drive the real IDE through the gateway, using only the coach's visible buttons; they never call coach internals to complete a step. They write `results/*.json` and screenshots. |
+| Gateway | `gateway/nginx.conf` | `nginx:1.27.3-alpine`. Proxies everything, including WebSockets and long-polls. Only the IDE host page (`location = /`) is rewritten, with the coach script tag placed right after `<head>`. `/coach/api/session` and `/coach/api/steps` serve the run's public files. `/coach/api/check` is a stub. |
+| Coach | `coach/coach.js` | Vanilla JS in a Shadow DOM, about 1,400 lines. Contains the keyboard shield, docking and floating placement, an overlay with the highlight box and the pointer, the lesson and mode picker, the RStudio driver (Demonstration and Show me), the Console watcher (Guided and Solo), and the regional-revenue Guided stub. |
+| Audits | `tests/coach_in_ide.cjs`, `tests/demo_mode.cjs`, `tests/practice_modes.cjs` (shared helpers in `tests/lib.cjs`) | Playwright on headless Chromium. They drive the real IDE through the gateway, using only the coach's visible buttons and the keyboard, as a learner would; they never call coach internals to complete a step. They write `results/*.json` and screenshots to a local, git-ignored `results/` folder. |
 
 ## Docking into the sidebar
 
@@ -55,6 +60,54 @@ RStudio 2026.11 has a full-height **Sidebar** pane. It is configured through `pa
 - RStudio lays out the other panes around the sidebar, so the coach covers none of them. That holds at 1366×768 (a 362 px column), 1440×900 (382 px) and 1920×1080 (511 px). Before docking, the floating card covered 37% of the Files/Plots pane at 1366×768.
 - If the learner hides the sidebar (toolbar button), the coach floats, with collapse and drag. When the sidebar is shown again, it re-docks.
 - **Hiding the sidebar deletes that pane's DOM, coach included.** The first version mounted a new coach, losing typed text and orphaning a running demo. The coach now keeps its element and re-attaches that same element. The audits check this mid-demo: the step still finishes, the coach is mounted exactly once, and the floating drag position is cleared on re-dock.
+
+## Choosing a lesson and a mode
+
+A new run opens the coach on a picker. Under **Choose a lesson** are two compact cards, one per lesson, each with its title and the functions it covers (`4 steps: plot(), type = "l", pie(), barplot()`). The selected one is marked like a radio button. Below them, **How do you want to work through it?** offers three mode cards. Everything stays in view without scrolling in the docked coach at 1366×768, where the last card ends at 580 px. A one-lesson run (`./run.sh up graphical-tools`) shows the lesson's title and summary instead of the lesson cards. Until the learner picks a mode, the coach does nothing in RStudio. The header shows the chosen mode, and **Change lesson or mode** (**Change mode** in a one-lesson run) returns to the picker at any time.
+
+Both lessons live in one RStudio project and one R session, so `graphical-tools.R` and `statistical-tools.R` sit side by side in the Files pane, and switching lesson needs no restart.
+
+| Mode | Who works RStudio | When results are shown |
+| --- | --- | --- |
+| **Demonstration** | The coach, with its pointer and typing (below). | After each step, with an explanation. |
+| **Guided** | The learner, one step at a time. **Hint** gives up to three hints per line: where to type it and how to run it (highlighting the Source pane), how it starts (`plot(…)`), then the whole line. **Show me** makes the coach type and run that one line, exactly as in Demonstration. | Each line is ticked as soon as RStudio shows its result; the step's explanation follows. An R error is quoted back, and a line that runs but gives a different result gets a nudge. A debrief at the end counts steps done without help, hints read and lines the coach showed. |
+| **Solo** | The learner, with the whole task list. One hint per line (how it starts), counted in the results. | Only when the learner presses **Check my work**: each line ticked or not, and hints used. When every line is done, the steps' explanations are offered. |
+
+The chosen lesson, each lesson's mode, and each mode's progress are kept per run in `sessionStorage`, so a reload reopens the same lesson and mode where it was, and a lesson left half-done keeps its progress while the learner tries the other. Nothing is reset when the lesson or mode changes: RStudio keeps the scripts and Console.
+
+### How Guided and Solo recognise the learner's work
+
+The coach reads what RStudio shows, not keystrokes, so the Console and the script (Ctrl+Enter or Run) both work.
+
+- **A line that prints something** counts when the Console shows output with the same tokens as the reference, without an error, however it was written. `max(airquality$Temp)` counts for `max(sample_data$Temp)`.
+- **A line that prints nothing** (an assignment or a chart) counts when the command matches the reference, ignoring spaces, comments and quote style, and reading `=` as `<-` for an assignment. `slices = c(50,20,30)` counts. A chart line also needs a new chart in the Plots pane after the command.
+- **Only work done in this mode counts.** The coach notes where the Console stood when the mode was chosen. After a reload, RStudio refills the Console with earlier output, so a reopened mode waits until the Console has been quiet for 1 s before deciding where it stood. A chosen mode counts from the click, so a learner who types at once isn't missed. The first version waited for quiet in both cases, and the audit caught it missing lines typed within 1.5 s of choosing.
+- These lessons hide nothing (their code and output are public), so the check runs in the page. A lesson with a private answer needs the server-side grader (plan §4).
+
+### Audit results (`tests/practice_modes.cjs`)
+
+The audit works as a learner: it clicks the coach's buttons and types into the Console and Source pane with the keyboard. It reads the coach's state only to know when to look.
+
+| Probe | Result |
+| --- | --- |
+| A new run opens on Demonstration, Guided and Solo, all in view in the docked coach, and the coach clicks and types nothing until one is chosen (1440×900 and 1366×768) | Pass. Lowest card ends at 516 px and 535 px. |
+| Guided: `plot(5, q)` gets R's error quoted back; `plot(4, 4)` gets a nudge; neither counts | Pass |
+| Guided: `plot(5,5)` typed in the Console counts for `plot(5, 5)` once a new chart has loaded, then the step's explanation appears | Pass |
+| Guided: three hints arrive one per click; **Show me** types and runs the line with the pointer and the spotlight, saves it under the step heading, and is recorded as shown; nothing stays dimmed afterwards | Pass. 4 clicks on the pointer and in the spotlight, 20 keystrokes for 20 characters. |
+| Guided: lines typed below the heading in the script and run with Ctrl+Enter count, including `slices = c(50, 20, 30)` for `<-` | Pass |
+| Guided: reload mid-step keeps the mode and progress | Pass |
+| Guided: finishing step 4 shows the debrief | Pass. 3 of 4 steps without help, 3 hints read, 1 line shown. |
+| Solo: **Change mode** returns to the picker; Solo lists all 7 tasks; a line that counts is recorded but not shown before **Check my work** | Pass |
+| Solo: after a reload, the Guided lines that RStudio puts back in the Console still don't count | Pass |
+| Solo: the check shows 1 of 7; a hint is counted; after the other six lines, the result changes only when the learner checks again, then shows all 7 and the explanations | Pass |
+| Solo (statistical): `max(airquality$Temp)` counts for `max(sample_data$Temp)`, and `sample_data = airquality` for `<-`; `mean(…, trim = 0.1)` prints a different number and doesn't count | Pass. 2 of 8. |
+| Guided (statistical): after the learner removes `sample_data`, **Show me** quotes R's error and doesn't count the line. Once it is restored, **Show me** runs the line already typed, with no keystrokes | Pass |
+| Two lessons (the default run, 1366×768): two lesson cards above three mode cards, all in view, Graphical selected; the project holds both scripts; the coach acts on nothing | Pass. Last card ends at 580 px. |
+| Two lessons: Statistical, then Solo, opens that lesson (8 tasks) and counts `max(airquality$Temp)` | Pass |
+| Two lessons: **Change lesson or mode** remembers Statistical; Graphical in Demonstration opens `graphical-tools.R` from Files (next to `statistical-tools.R`) and finishes step 1 with the pointer and typing | Pass. 3 clicks on the pointer, 10 keystrokes. |
+| Two lessons: reload reopens Graphical Demonstration at step 2; switching back to Statistical Solo still has its line | Pass. 1 of 8. |
+
+17/17 passed, with no warnings or page errors.
 
 ## Demonstration mode
 
@@ -76,40 +129,63 @@ The reference run reproduces every value shown in the article's screenshots.
 
 ### How a step runs
 
-1. If the script isn't already the active Source tab, the coach opens it from the Files pane, highlighting the file first.
-2. For each line, the coach:
-   - selects that line in the Source editor (Ace API);
-   - highlights **Run**;
-   - presses it with a synthetic mouse-down/up/click sequence (GWT ignores a bare `.click()`).
-3. The coach waits until the Console echoes the line. The output after the echo must have the same tokens as the reference output, and a plotting line must show a new, fully loaded `/graphics/<id>.png` in the Plots pane. All of that must stay true for 300 ms. Token comparison tolerates RStudio wrapping output to fit a narrow Console.
-4. Only then does it read each captured value from the Console text and compare it with the reference. It then highlights the evidence pane (Plots, Console or Environment).
-5. After the last line, it shows the explanation, filled with the captured values. Each step waits for **Next**.
+The coach works RStudio the way a learner would, so the learner can watch the whole workflow.
+
+- **The panel.** Before the first step, the coach introduces the lesson and lists its steps. Once the learner presses **Start demonstration** (or **Next**), that overview gives way to the current step alone: its heading, then one "now" line saying what the coach is doing, then, once RStudio shows the result, the step's explanation. Each line of code is narrated by what it is for, from the run's `purpose` in `scenario.json`: "Writing code to draw a line through the numbers 1 to 10". `provision.py` refuses a Demonstration or Guided lesson with a line that has no `purpose`, because Show me narrates the same way. After a reload, the overview comes back with the steps done so far ticked, until the learner presses **Next**.
+- **The pointer.** An amber mouse pointer, labelled as the coach's in the card during the first step, starts at the coach button the learner pressed. It glides along a slight curve, easing in and out, to each thing the coach clicks. Every synthetic click carries the pointer's coordinates, so it lands where the learner sees it. The pointer fades out while the coach types, as most systems hide the mouse during typing, and at the end of each step. With `prefers-reduced-motion`, it jumps instead of gliding.
+- **The typing.** Code is typed through Ace's `insert`, one character at a time, at about 70 ms per key (ELK Guide's rate). The gap varies from 0.6× to 1.4×, with a little extra after a space and a short pause before a `#` comment. RStudio's auto-pairing runs as it does for a learner: `(` also inserts `)`, and the `)` typed later steps over it. All 15 scenario lines come out exact. `localStorage.rsCoachTypeMs` changes the rate.
+- **The spotlight.** While the coach works, RStudio is dimmed except for what it acts on, and the coach panel stays bright so its narration can be read. This is ELK Guide's spotlight: an amber ring arrives wide, closes in on its target and pulses once, and each new target replays that entrance. The spotlight follows its target every frame:
+  - the file in Files, the **Run** and **Save** buttons;
+  - the step's heading plus the line being typed, across the editor;
+  - while R runs, the Console or Plots pane, then exactly what R printed (the echoed command and its output), the chart, or, after an assignment, the new variable's row in Environment.
+
+  The dimming is a fixed layer cut by a `clip-path` with two holes, the spotlight and the coach panel, because a single `box-shadow` (ELK's way) would dim the coach too. With `prefers-reduced-motion`, the rings fade in instead.
+- **The pace: the learner's turn to read.** The narration is a "now" line in the card, amber-edged and fading in on each change, in plain words: "Writing code to find the mean (average) temperature", "Pressing Run to send this line to the Console (Ctrl+Enter does the same)", "R printed `[1] 77.88235` in the Console", "`slices` now appears in the Environment pane (an assignment prints nothing in the Console)". As with ELK Guide's reading beats, each line then waits for the learner. Before a click (opening the script, **Run**, **Save**), the line announces it, and the countdown runs with the spotlight already on the control. After typing or a result, the countdown runs with the code or the result in the spotlight. Each explanation except the last waits the same way, and the next step then starts by itself. The wait is 5 s for up to 60 characters, plus 3 s each time the text doubles in length (`rsCoachReadMinMs`, `rsCoachReadStepMs`): 5 s for "Saving graphical-tools.R", 5.8 s for the Run line, 6.9 s for the longest line, and 10–12.6 s for the explanations. The green button counts the wait down ("Advance · 5s", "Next: step 3 · 12s") while a blue bar fills under the card; while the coach acts, the bar sweeps amber, like ELK's. **Advance** ends the wait on screen at once. Pressed while the coach is still acting, it reads "Advancing when ready…" and ends the next wait as soon as that starts, but never an explanation's. R's own run isn't a turn to read: "Pressing Run…" stays up until R answers, and only a line still running after 1.5 s says so. Show me in Guided keeps its own pace with no countdown: 0.7 s before each click (`rsCoachLeadMs`) and 2.4 s on each result (`rsCoachDwellMs`). All these settings are `localStorage` numbers in milliseconds, like `rsCoachTypeMs`.
+
+1. If the script isn't already the active Source tab, the pointer opens it from the Files pane.
+2. For each line, the coach looks below the step's `# Step N.` heading, up to the next heading.
+   - If the line isn't there, the pointer clicks at the end of the step's last non-blank line (at first, the heading itself). The coach presses Enter and types the line.
+   - If the line is already there (typed in an earlier attempt, kept after **Start over**, or typed by the learner), the pointer clicks at its start, and the coach runs it as it is, without typing it twice. Clicking at the end of one of the article's long commented lines scrolled the editor sideways and hid the code.
+3. The pointer presses **Run** with no selection, which sends the cursor's line, comment included. RStudio treats a comment directly above a statement as part of it, so the first line of each step also echoes its heading in the Console. That is also what a learner would see pressing Ctrl+Enter there. GWT ignores a bare `.click()`, so presses are a synthetic pointer and mouse down/up/click sequence.
+4. The coach waits until the Console echoes the line. The output after the echo must have the same tokens as the reference output, and a plotting line must show a new, fully loaded `/graphics/<id>.png` in the Plots pane. All of that must stay true for 300 ms. Token comparison tolerates RStudio wrapping output to fit a narrow Console.
+5. Only then does it read each captured value from the Console text and compare it with the reference. The spotlight then moves to the result and holds there.
+6. After the last line, the pointer presses **Save** if the script has unsaved changes, and the coach waits for the tab's unsaved marker to clear. The dimming then lifts, an evidence ring (ELK's, without dimming) stays on what the step printed or drew, and the explanation appears, filled with the captured values. The ring stays until the next step starts: when the learner presses **Next**, or when the explanation's countdown ends.
 
 **Failures stop visibly.** The step turns red, the card says why, and **Try this step again** and **Start over** appear. Tested cases:
 
-- The script was changed, so a line is missing. Message: `graphical-tools.R no longer contains the line plot(5, 5)…`. The coach does not run the edited line.
+- The script lost a step's heading, so the coach can't tell where the code goes. Message: `graphical-tools.R no longer has the line # Step 1. Plots: plot(), so the coach can't tell where step 1 goes…`. The coach types and runs nothing.
 - R raised an error. Message: `R reported: Error: object 'sample_data' not found`, shown immediately. RStudio prints errors after its inline "Show Traceback / Rerun with Debug" links, so the check looks for them there too.
 - No echo, no chart, or different output within 20 s. The message names which of these happened.
 
-Progress is kept per run in `sessionStorage`, so a reload resumes at the next step. **Stop** ends the demo, and no further RStudio actions happen after it. The coach looks up RStudio elements again after every pause, because RStudio re-renders the Files list and toolbar when files change. The first version clicked a stale Files link and the open silently failed.
+Handled but not audited: if the learner moves the cursor while the coach is typing, the coach puts it back. If the typed line still doesn't match, for example because the learner typed into it, the step stops with `Line 8 of graphical-tools.R reads … instead of …`.
+
+Progress is kept per run in `sessionStorage`, so a reload resumes at the next step. **Stop** ends the demo, and no further RStudio actions happen after it, keystrokes included. A line stopped part-way stays as typed, unsaved. The coach looks up RStudio elements again after every pause, because RStudio re-renders the Files list and toolbar when files change. The first version clicked a stale Files link and the open silently failed.
 
 ### Audit results (`tests/demo_mode.cjs`)
+
+Each run starts by choosing **Demonstration** on the mode picker; after a reload the coach reopens in it.
 
 | Probe | Result |
 | --- | --- |
 | Coach docks in the sidebar and covers no other pane (1440×900 and 1366×768) | Pass |
-| A changed demo script stops step 1 with a clear message | Pass |
-| After restoring the script and closing its tab, **Try this step again** reopens it from Files and passes | Pass |
-| Graphical steps 2–4: each explanation appears only after a new chart is on screen | Pass. 2.8 s, 5.2 s and 7.9 s per step. |
-| Hiding and re-showing the sidebar during step 4 | Pass. Same coach, step completes, re-docked geometry. |
-| Reload keeps progress; **Stop** during a step halts RStudio actions | Pass |
-| Statistical steps 1–2 at 1366×768, quoting values the Console printed | Pass (`max=97`, `min=56`, `mean=77.88235`) |
+| A script without step 1's heading stops step 1 with a clear message, before typing or running anything | Pass |
+| After restoring the script and closing its tab, **Try this step again** reopens it from Files, types `plot(5, 5)` and passes | Pass |
+| Graphical steps 2–3: typed, run, and explained only after a new chart is on screen. Nothing is pressed after step 2, so its explanation counts down ("Next: step 3 · 13s") and step 3 starts by itself | Pass. Step 3 started 12.2 s after step 2's explanation appeared (reading time 12.1 s). 25.9 s and 65.5 s per step with every line read in full (9.3 s and 22.3 s before the reading countdowns). |
+| Hiding and re-showing the sidebar while step 4 is typed and run | Pass. Same coach, all 145 characters typed, step completes, re-docked geometry. |
+| Reload keeps progress. The learner clears step 1's line, **Start over** retypes it, and **Stop** after 4 characters halts the typing and RStudio | Pass. The line stayed `plot` for 4 s, with no further actions or Console output, and the pointer, dimming and rings gone. |
+| Statistical steps 1–2 at 1366×768, typed, quoting values the Console printed. **Advance** is pressed on the first countdown | Pass (`max=97`, `min=56`, `mean=77.88235`). The first countdown started at 5 s and Advance ended it at once. 81.4 s and 30.3 s (38.1 s and 13.3 s before the reading countdowns). |
 | Reload resumes at step 3 | Pass |
 | The learner runs `rm(sample_data)`, so step 3 stops with R's error | Pass |
-| **Start over** recreates the data and finishes all 5 steps | Pass. All 8 summary and percentile values match. |
-| The demonstration never leaves unsaved changes in the script | Pass |
+| **Start over** reruns steps 1–3 from the lines already in the script (0 keystrokes), types steps 4–5, and finishes | Pass. All 8 summary and percentile values match. Steps 4–5 took 55.0 s and 31.2 s (24.9 s and 14.2 s before the reading countdowns). |
+| The saved script holds all 8 lines once each, under their headings, with nothing unsaved | Pass |
 
-At every explanation, the audit takes its own snapshot of the Console and Plots pane. It checks the reference output and every quoted value against that snapshot, independently of the coach's checks.
+At every explanation, the audit takes its own snapshot of the Console and Plots pane. It checks the reference output and every quoted value against that snapshot, independently of the coach's checks. Each finished step is also checked for:
+
+- **The pointer:** every click the coach makes (a synthetic mousedown) lands within 2 px of the pointer's tip while the pointer is visible, and the pointer took at least 5 animation frames to get there.
+- **The typing:** the edits Ace applied number no more than the characters typed and at least 70% of them, none is more than 2 characters, and the median gap is 35–250 ms. Measured: 65–77 ms, with one insert per character in every step. A step whose code was already in the script must record no keystrokes.
+- **The save:** the script on disk holds the step's lines directly below its heading, each exactly once, and no tab shows an unsaved marker.
+- **The panel and the reading time** (steps run by `runSteps`): every line the card narrated, from Start to the explanation, appeared with the lesson overview hidden. For each line of code, the card said "Writing code to <purpose>", or "The code to <purpose> is already in the script…" for a line run again. Every line stayed up for at least its reading time, worked out independently by the audit (5 s up to 60 characters, plus 3 s per doubling), except a line the audit pressed **Advance** on and R's "still running" note. Before the first Start, and after a reload, the overview is shown instead.
+- **The spotlight:** every coach click happened with RStudio dimmed and the click point inside the spotlight ring, and every typed key with the caret's line inside it. The caret's x isn't checked, because Ace reports each edit before it scrolls sideways to follow the caret along a long line; the first version of this check failed on exactly that, at x −86. When the explanation appears, the dimming has lifted and an evidence ring at least 15 px tall sits on the Console (or, for a chart step, the Plots pane). A failed step also leaves nothing dimmed.
 
 ## Guided mode audit (`tests/coach_in_ide.cjs`, `regional-revenue`)
 
@@ -135,9 +211,12 @@ At every explanation, the audit takes its own snapshot of the Console and Plots 
 2. **RStudio's shortcuts run in the capture phase.** The coach must register `window` capture listeners before GWT loads, so the gateway injects it right after `<head>`. This depends on script order, so the A/B probe stays in the audit.
 3. **The sidebar is the right home for the coach.** It is a real RStudio pane, so no other pane is covered, and RStudio handles resizing and left/right placement. The cost: the coach covers whatever tab is in the sidebar (Chat, now switched off). The coach must also survive RStudio deleting the pane's DOM when the sidebar is hidden.
 4. **Driving the real IDE from the page works, but it is coupled to this RStudio build.** The coach depends on:
-   - the Run button's title text;
-   - the Ace editor's `env.editor`;
+   - the Run and Save buttons' title texts (`Run the current line or selection…`, `Save current document…`);
+   - the Ace editor's `env.editor`, and its `insert`, `moveCursorTo`, `renderer.textToScreenCoordinates` and `renderer.scrollCursorIntoView`;
+   - RStudio's auto-pairing giving exact text when typed through `insert` (checked for all 15 scenario lines);
+   - Run with no selection sending the cursor's whole line, including a trailing comment;
    - the plot image inside the Plots iframe;
+   - the Console output as plain text nodes in order (the spotlight on what R printed maps character positions to a DOM range), and the Environment pane showing each variable's name in its own cell;
    - an unlabelled tab-close icon (tests only).
 
    Pin the image digest and rerun `demo_mode.cjs` before any upgrade.
@@ -191,11 +270,11 @@ labctl playground start docker -f iximiuz/manifest.yaml   # throwaway session fr
 
 The public playground was created once with `labctl playground create --base docker -f iximiuz/manifest.yaml rstudio-guide`. iximiuz added the `-16afe14e` suffix, and `name:` in the manifest records it, so later publishes update that playground. Don't run `create` again: it would make a second playground with a new link.
 
-**What a learner sees:** the playground opens on **Terminal**, which prints the RStudio username and this run's password. If RStudio is still starting, the terminal waits and then prints them. A second tab, **RStudio**, shows the IDE inside the playground page with the coach docked. That makes one click plus sign-in. To switch scenario, run `./run.sh up statistical-tools`; a new terminal then shows the new password.
+**What a learner sees:** the playground opens on **Terminal**, which prints the RStudio username and this run's password. If RStudio is still starting, the terminal waits and then prints them. A second tab, **RStudio**, shows the IDE inside the playground page with the coach docked. That makes one click plus sign-in. Both lessons are in the run, so the learner picks one in the Coach pane, as the terminal banner and the playground's description say. `./run.sh up statistical-tools` still starts a one-lesson run; a new terminal then shows the new password.
 
 ### How it works
 
-- **Init:** the manifest's single init task runs `iximiuz/start-lab.sh`. On first start it does `docker load` on `/opt/rstudio-guide/images.tar`, then runs `./run.sh up graphical-tools`.
+- **Init:** the manifest's single init task runs `iximiuz/start-lab.sh`. On first start it does `docker load` on `/opt/rstudio-guide/images.tar`, then runs `./run.sh up` (both lessons; versions up to v2 started `graphical-tools` only).
 - **`lab.env`** is baked into the rootfs with `FRAME_ORIGIN=https://labs.iximiuz.com`, `GATEWAY_BIND=0.0.0.0` and `LAB_PREBUILT=1`. Every later `./run.sh up` keeps these, so switching scenario keeps the RStudio tab working and never rebuilds or pulls. Values set in the environment still win.
 - **The RStudio tab** is an `http-port` tab on 8788 with private access: only the person who started that session can open it, even though anyone can start the playground. RStudio allows `labs.iximiuz.com` to frame it via `www-frame-origin`, set at container start by `runtime/04_lab_frame_origin`. The coach skips only frames nested *inside* RStudio, so it runs when RStudio itself is framed.
 - **Earlier approach:** the first tests below packed the repository into the manifest as a startup file, because iximiuz allows at most 20 startup files. The rootfs image replaced that.
@@ -241,10 +320,11 @@ From the version that packed the code into the manifest, on the official `docker
 
 ## Plan deviations and open points
 
-- **Demonstration control uses RStudio's own UI, not `rstudioapi`.** The plan proposed an addin calling `rstudioapi::sendToConsole()`. That needs an R-side trigger and a package the image doesn't have. Pressing the real Run button on a visible selection works without either, and shows the learner the exact workflow they will use.
+- **Demonstration control uses RStudio's own UI, not `rstudioapi`.** The plan proposed an addin calling `rstudioapi::sendToConsole()`. That needs an R-side trigger and a package the image doesn't have. Typing into the real Source pane and pressing the real Run button, with a visible pointer, works without either. It also shows the learner the exact workflow they will use.
   - Trade-off: it depends on DOM details (finding 4).
   - Rejected alternatives: RStudio's internal `/rpc/console_input` and the undocumented `window.dispatchRStudioCommandExternal`.
 - **The demo data are fixed.** Both scenarios use the article's literal values and R's built-in `airquality` data. The plan's per-run variation by scenario key does not apply to them yet.
 - **The article's "Lines" text and code disagree.** The text describes `lines()`, which adds to an existing plot, but the code is `plot(1:10, type="l")`, which draws a new one. The demo runs the article's code and the narration explains both.
-- **Expected values reach the browser in Demonstration mode.** That is acceptable for an unscored demo. Challenge mode must not do this (plan §4).
+- **Expected values reach the browser in every mode of these two lessons.** Their code and output are public (they come from the article), and nothing is scored, so Guided and Solo check in the page. A scored mode, or a lesson with a private answer such as `regional-revenue`, must not do this (plan §4).
+- **Solo is the plan's Challenge mode**, under the product name ELK Guide uses. It is not scored yet: it counts hints and discloses results only on request, but has no score or replay with fresh values.
 - **Not covered yet:** saved-code grading, clean replay by key, launch handoff, headed Chrome and Firefox, and a security review. Same-origin coach code can call RStudio's RPC endpoints.

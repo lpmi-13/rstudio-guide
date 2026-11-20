@@ -1,8 +1,11 @@
 # Statistical tools
 
-A demonstration of five base R tools for describing data: `min()` and
-`max()`, `mean()`, `median()`, `quantile()` and `summary()`. The examples use
-the temperature column of R's built-in `airquality` data.
+Five base R tools for describing data: `min()` and `max()`, `mean()`,
+`median()`, `quantile()` and `summary()`. The examples use the temperature
+column of R's built-in `airquality` data.
 
-The coach runs `statistical-tools.R` one line at a time. You can run any line
-yourself: put the cursor on it and press Ctrl+Enter, or click **Run**.
+Choose a mode in the Coach pane on the right: watch the coach type and run each
+line (Demonstration), do it yourself with hints (Guided), or work through the
+whole list on your own (Solo). Each line goes below its step heading in
+`statistical-tools.R`. To run a line, put the cursor on it and press Ctrl+Enter,
+or click **Run**.

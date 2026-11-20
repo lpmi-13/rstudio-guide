@@ -1,3 +1,4 @@
 # Per-run state, including the RStudio password
 run/
+results/
 lab.env

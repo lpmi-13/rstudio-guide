@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Start or stop RStudio with the coach. Each "up" gets a fresh project, run ID and password.
+# With no scenario, both lessons share the run, in a project called "lessons". The learner
+# chooses a lesson and a mode (Demonstration, Guided or Solo) in the coach, inside RStudio.
 #
-#   ./run.sh up [regional-revenue|graphical-tools|statistical-tools]
+#   ./run.sh up [scenario...]     (default: graphical-tools statistical-tools)
 #   ./run.sh down
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -37,11 +39,16 @@ stop_run() {
 
 case "${1:-up}" in
   up)
-    scenario="${2:-regional-revenue}"
-    if [ ! -f "scenarios/$scenario/scenario.json" ]; then
-      echo "Unknown scenario '$scenario'. Choose one of: $(ls scenarios | tr '\n' ' ')" >&2
-      exit 2
-    fi
+    scenarios=("${@:2}")
+    if [ ${#scenarios[@]} -eq 0 ]; then scenarios=(graphical-tools statistical-tools); fi
+    for scenario in "${scenarios[@]}"; do
+      if [ ! -f "scenarios/$scenario/scenario.json" ]; then
+        echo "Unknown scenario '$scenario'. Choose from: $(ls scenarios | tr '\n' ' ')" >&2
+        exit 2
+      fi
+    done
+    # The RStudio project (and its folder) is named after a single scenario, or "lessons".
+    if [ ${#scenarios[@]} -eq 1 ]; then project=${scenarios[0]}; else project=lessons; fi
     require
     # Site defaults (a playground's FRAME_ORIGIN, for example) can live in lab.env so that
     # every later "./run.sh up <scenario>" keeps them. Values set in the environment win.
@@ -59,19 +66,30 @@ case "${1:-up}" in
     # GATEWAY_BIND: loopback by default; a remote VM behind its own proxy may need 0.0.0.0.
     # FRAME_ORIGIN / SAME_SITE: let a platform (e.g. https://labs.iximiuz.com) frame RStudio.
     (umask 077; printf 'RSTUDIO_PASSWORD=%s\nLAB_SCENARIO=%s\nHOST_UID=%s\nHOST_GID=%s\nGATEWAY_BIND=%s\nFRAME_ORIGIN=%s\nSAME_SITE=%s\n' \
-      "$password" "$scenario" "$(id -u)" "$(id -g)" "${GATEWAY_BIND:-127.0.0.1}" "${FRAME_ORIGIN:-}" "${SAME_SITE:-}" > run/.env)
+      "$password" "$project" "$(id -u)" "$(id -g)" "${GATEWAY_BIND:-127.0.0.1}" "${FRAME_ORIGIN:-}" "${SAME_SITE:-}" > run/.env)
     # A rootfs with the runtime image preloaded sets LAB_PREBUILT=1, so nothing is rebuilt or pulled.
     if [ "${LAB_PREBUILT:-0}" != 1 ] || ! docker image inspect rstudio-guide-runtime:local >/dev/null 2>&1; then
       docker compose --env-file run/.env build --quiet rstudio
     fi
-    python3 -I tools/provision.py "$PWD" "$scenario" "$IMAGE"
+    python3 -I tools/provision.py "$PWD" "$IMAGE" "$project" "${scenarios[@]}"
     docker compose --env-file run/.env up -d --quiet-pull
     for _ in $(seq 1 60); do
       if curl -fsS -o /dev/null http://127.0.0.1:8788/auth-sign-in 2>/dev/null; then
         wait_for_host_network
         touch run/ready # for launchers and the playground's terminal banner
         if [ "${GATEWAY_BIND:-127.0.0.1}" = 127.0.0.1 ]; then where="at http://127.0.0.1:8788/"; else where="(open the RStudio tab)"; fi
-        echo "Ready: $scenario $where  user: rstudio  password: $password"
+        echo "Ready: ${scenarios[*]} $where  user: rstudio  password: $password"
+        python3 -I - run/public/session.json <<'PY'
+import json, sys
+session = json.load(open(sys.argv[1]))
+lessons = session.get("lessons", [])
+modes = sorted({m for lesson in lessons for m in lesson["modes"]}, key=["demonstration", "guided", "solo"].index)
+modes = ", ".join(m.capitalize() for m in modes[:-1]) + " or " + modes[-1].capitalize() if len(modes) > 1 else ""
+if len(lessons) > 1:
+    print(f"After signing in, choose a lesson and a mode ({modes}) in the Coach pane on the right.")
+elif modes:
+    print(f"After signing in, choose {modes} in the Coach pane on the right.")
+PY
         exit 0
       fi
       sleep 1
@@ -84,7 +102,7 @@ case "${1:-up}" in
     stop_run
     ;;
   *)
-    echo "usage: $0 up [scenario] | down" >&2
+    echo "usage: $0 up [scenario...] | down" >&2
     exit 2
     ;;
 esac

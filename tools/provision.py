@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-"""Materialize one run of a scenario from scenarios/<id>/scenario.json.
+"""Materialize one run of one or more scenarios from scenarios/<id>/scenario.json.
 
 Writes:
   run/project/         the learner's RStudio project (static files, .Rproj and,
-                       for a demonstration, the generated demo script)
+                       for each lesson with steps, the generated script)
   run/public/          what the gateway serves to the coach: session.json and,
-                       for a demonstration, demo.json with the expected output
+                       for lessons with steps, steps.json with the expected output
   run/private/         the reference run's working files (never mounted)
 
-For a demonstration, every line is first run in a throwaway, network-less
-container from the same runtime image. The run is not ready if any line errors,
-draws a plot when it shouldn't (or the reverse), or prints output that the
-scenario's capture patterns can't read.
+Several lessons with steps can share one run and project; the learner chooses a
+lesson and one of its modes (Demonstration, Guided, Solo) in the coach. Every
+line is first run in a throwaway, network-less container from the same runtime
+image. The run is not ready if any line errors, draws a plot when it shouldn't
+(or the reverse), or prints output that the lesson's capture patterns can't read.
 
-  python3 -I tools/provision.py <repo-root> <scenario-id> <runtime-image>
+  python3 -I tools/provision.py <repo-root> <runtime-image> <project-name> <scenario-id>...
 """
 import json
 import os
@@ -37,6 +38,9 @@ Encoding: UTF-8
 """
 
 
+MODES = ("demonstration", "guided", "solo")
+
+
 def fail(message):
     print(f"provision: {message}", file=sys.stderr)
     sys.exit(1)
@@ -46,18 +50,47 @@ def normalise(text):
     return " ".join(text.split())
 
 
+def heading(number, step):
+    return f"# Step {number}. {step['title']}"
+
+
+def strip_comment(code):
+    """The code before an R comment, ignoring # inside strings."""
+    quote = None
+    for i, ch in enumerate(code):
+        if quote:
+            if ch == quote and code[i - 1] != "\\":
+                quote = None
+        elif ch in "\"'":
+            quote = ch
+        elif ch == "#":
+            return code[:i].rstrip()
+    return code.rstrip()
+
+
+def partial(code):
+    """A hint that shows how a line starts: plot(5, 5) -> plot(…), x <- y -> x <- …"""
+    line = strip_comment(code)
+    if "(" in line:
+        return line[: line.index("(") + 1] + "…)"
+    if "<-" in line:
+        return line[: line.index("<-") + 2] + " …"
+    return "…"
+
+
 def render_script(scenario):
+    """The script starts with only the step headings. Each step's code goes below
+    its heading: typed by the coach in Demonstration, by the learner otherwise."""
     lines = [
         f"# {scenario['title']}",
         f"# {scenario['source']}",
         "#",
-        "# The coach runs these lines one at a time. To run a line yourself, put",
-        "# the cursor on it and press Ctrl+Enter.",
+        "# Each step's code goes below its heading. To run a line, put the cursor on",
+        "# it and press Ctrl+Enter (or click Run).",
         "",
     ]
     for number, step in enumerate(scenario["steps"], start=1):
-        lines.append(f"# Step {number}. {step['title']}")
-        lines.extend(run["code"] for run in step["runs"])
+        lines.append(heading(number, step))
         lines.append("")
     return "\n".join(lines)
 
@@ -96,39 +129,97 @@ def reference_run(scenario, workdir, root, image):
             run["expected_values"][name] = match.group(1)
 
 
-def main(root, scenario_id, image):
-    root = Path(root).resolve()
+def load(root, scenario_id):
     source = root / "scenarios" / scenario_id
     if not (source / "scenario.json").is_file():
         fail(f"no scenario named {scenario_id!r}")
     scenario = json.loads((source / "scenario.json").read_text())
     if scenario["id"] != scenario_id:
         fail(f"scenario.json id {scenario['id']!r} does not match its folder")
+    modes = scenario.get("modes") or []
+    if not modes or any(mode not in MODES for mode in modes):
+        fail(f"{scenario_id}: modes must be a non-empty list drawn from {', '.join(MODES)}; got {modes!r}")
+    return scenario, source / "project"
+
+
+def copy_project(source, project, skip=()):
+    """Copy a scenario's static files into the run's project, refusing to overwrite."""
+    for path in sorted(source.rglob("*")):
+        rel = path.relative_to(source)
+        if path.is_dir() or str(rel) in skip:
+            continue
+        target = project / rel
+        if target.exists():
+            fail(f"two lessons both provide {rel}")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, target)
+
+
+def prepare_lesson(scenario, project, workdir, root, image):
+    """Write the lesson's script, run its reference, and return what the coach needs."""
+    modes = scenario["modes"]
+    for step in scenario["steps"]:
+        for run in step["runs"]:
+            if ("guided" in modes or "solo" in modes) and not run.get("task"):
+                fail(f"`{run['code']}` needs a task: Guided and Solo show it instead of the code")
+            if ("demonstration" in modes or "guided" in modes) and not run.get("purpose"):
+                fail(f"`{run['code']}` needs a purpose: Demonstration and Show me say "
+                     f"\"Writing code to <purpose>\" while they type it")
+    if (project / scenario["script"]).exists():
+        fail(f"two lessons both use {scenario['script']}")
+    (project / scenario["script"]).write_text(render_script(scenario))
+    reference_run(scenario, workdir, root, image)
+    for number, step in enumerate(scenario["steps"], start=1):
+        step["heading"] = heading(number, step)
+        for run in step["runs"]:
+            run["hint_partial"] = partial(run["code"])
+            run["hint_line"] = strip_comment(run["code"])
+    return {key: scenario[key] for key in ("id", "title", "summary", "source", "script", "modes", "steps")}
+
+
+def render_readme(lessons):
+    lines = ["# Lessons", ""]
+    for lesson in lessons:
+        lines += [f"- `{lesson['script']}`: {lesson['title']}. {lesson['summary']}"]
+    lines += ["", "Choose a lesson and a mode in the Coach pane on the right. Each lesson's code",
+              "goes below its step headings in its script. To run a line, put the cursor on it",
+              "and press Ctrl+Enter, or click **Run**.", ""]
+    return "\n".join(lines)
+
+
+def main(root, image, project_name, *scenario_ids):
+    root = Path(root).resolve()
+    scenarios = [load(root, scenario_id) for scenario_id in scenario_ids]
+    several = len(scenarios) > 1
+    if several and any("steps" not in scenario for scenario, _ in scenarios):
+        fail("only lessons with steps can share a run")
 
     run = root / "run"
     project, public, private = run / "project", run / "public", run / "private"
-    shutil.copytree(source / "project", project)
-    (project / f"{scenario_id}.Rproj").write_text(RPROJ)
-    public.mkdir()
-    private.mkdir()
+    for folder in (project, public, private):
+        folder.mkdir(parents=True)
+    # Lessons that share a run get one README listing them all.
+    for _, source in scenarios:
+        copy_project(source, project, skip={"README.md"} if several else ())
+    (project / f"{project_name}.Rproj").write_text(RPROJ)
 
-    session = {
-        "run_id": secrets.token_hex(4),
-        "scenario": scenario_id,
-        "title": scenario["title"],
-        "mode": scenario["mode"],
-    }
-    if scenario["mode"] == "demonstration":
-        (project / scenario["script"]).write_text(render_script(scenario))
-        reference_run(scenario, private / "reference", root, image)
-        demo = {key: scenario[key] for key in ("title", "intro", "source", "script", "steps")}
-        (public / "demo.json").write_text(json.dumps(demo, indent=2))
-        session["script"] = scenario["script"]
+    session = {"run_id": secrets.token_hex(4), "project": project_name}
+    first = scenarios[0][0]
+    if "steps" not in first:
+        # regional-revenue has no steps yet: its Guided mode is a stub with a Check work button.
+        session.update(scenario=first["id"], title=first["title"], modes=first["modes"])
+    else:
+        lessons = [prepare_lesson(scenario, project, private / "reference" / scenario["id"], root, image)
+                   for scenario, _ in scenarios]
+        if several:
+            (project / "README.md").write_text(render_readme(lessons))
+        (public / "steps.json").write_text(json.dumps({"lessons": lessons}, indent=2))
+        session["lessons"] = [{key: lesson[key] for key in ("id", "title", "script", "modes")} for lesson in lessons]
     (public / "session.json").write_text(json.dumps(session, indent=2))
-    print(f"provisioned {scenario_id} ({scenario['mode']}) as run {session['run_id']}")
+    print(f"provisioned {', '.join(scenario_ids)} in {project_name} as run {session['run_id']}")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        fail("usage: provision.py <repo-root> <scenario-id> <runtime-image>")
+    if len(sys.argv) < 5:
+        fail("usage: provision.py <repo-root> <runtime-image> <project-name> <scenario-id>...")
     main(*sys.argv[1:])

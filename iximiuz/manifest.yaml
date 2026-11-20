@@ -2,7 +2,7 @@ kind: playground
 name: rstudio-guide-16afe14e
 base: docker
 title: RStudio coach
-description: RStudio Server with an in-IDE coach and two demonstrations (graphical and statistical tools in base R).
+description: RStudio Server with an in-IDE coach and two lessons (graphical and statistical tools in base R), each in Demonstration, Guided or Solo mode.
 categories:
     - linux
 markdown: |-
@@ -10,6 +10,7 @@ markdown: |-
 
     1. The **Terminal** tab shows the RStudio username and password.
     2. Open the **RStudio** tab and sign in.
+    3. In the **Coach** pane on the right, choose a lesson, then **Demonstration** (watch), **Guided** (do it with hints) or **Solo** (do it, then check).
 playground:
     networks:
         - name: local
@@ -50,7 +51,7 @@ playground:
             timeout_seconds: 600
             run: |
                 set -eu
-                /home/laborant/rstudio-guide/iximiuz/start-lab.sh graphical-tools
+                /home/laborant/rstudio-guide/iximiuz/start-lab.sh
     initConditions: {}
     accessControl:
         canList:

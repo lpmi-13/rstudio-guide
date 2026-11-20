@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Playground init task: load the images preloaded in the rootfs (first start only),
-# then start a scenario. The terminal banner prints the password once run.sh is ready.
+# then start the lab. The terminal banner prints the password once run.sh is ready.
 #
-#   iximiuz/start-lab.sh [scenario]   (default: graphical-tools)
+#   iximiuz/start-lab.sh [scenario...]   (default: both lessons; see run.sh)
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
@@ -13,4 +13,4 @@ if ! docker image inspect rstudio-guide-runtime:local >/dev/null 2>&1; then
   docker load -i "${archive}"
   echo "Loaded in $((SECONDS - started)) s."
 fi
-./run.sh up "${1:-graphical-tools}"
+./run.sh up "$@"
