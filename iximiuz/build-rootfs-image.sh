@@ -55,7 +55,7 @@ fi
 build_context="$(mktemp -d "${TMPDIR:-/tmp}/rstudio-guide-rootfs-build.XXXXXX")"
 trap 'rm -rf "${build_context}"' EXIT
 
-# The learner-facing files only: no per-run state, results, local audits or site settings.
+# The learner-facing files only: no per-run state, results, local audits, spikes or site settings.
 # Only files git tracks, as they are in the working tree (uncommitted edits included), so an
 # untracked file such as a scratch .env or notes can never reach this public image. `git stash
 # create` snapshots tracked changes without touching the working tree, index or stash list.
@@ -70,7 +70,7 @@ if [[ -n "${untracked}" ]]; then
 fi
 snapshot="$(git -c user.name=build-rootfs -c user.email=build-rootfs@localhost stash create)"
 mkdir -p "${build_context}/rstudio-guide"
-git archive --format=tar "${snapshot:-HEAD}" -- . ':(exclude)tests' ':(exclude).claude' \
+git archive --format=tar "${snapshot:-HEAD}" -- . ':(exclude)tests' ':(exclude)spikes' ':(exclude).claude' \
   | tar -C "${build_context}/rstudio-guide" -xf -
 # Settings every ./run.sh up in the playground keeps (see run.sh and the README).
 printf '%s\n' \

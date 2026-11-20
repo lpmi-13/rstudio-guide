@@ -1,0 +1,92 @@
+{
+ "lesson": "engine-actions",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "dplyr"
+   ],
+   "class": "character",
+   "dim": 8,
+   "files": [],
+   "fp": "dbfe31b3f3e637e7c7027780eaff9d34",
+   "fp_any": null,
+   "index": 0,
+   "library": "dplyr",
+   "messages": [
+    "\nAttaching package: ‘dplyr’\n",
+    "The following objects are masked from ‘package:stats’:\n\n    filter, lag\n",
+    "The following objects are masked from ‘package:base’:\n\n    intersect, setdiff, setequal, union\n"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "files": [],
+   "index": 1,
+   "step": "format"
+  },
+  {
+   "files": [],
+   "index": 2,
+   "step": "format"
+  },
+  {
+   "files": [],
+   "index": 3,
+   "step": "render"
+  },
+  {
+   "files": [
+    "report_files/libs/bootstrap/bootstrap-c1c07594e57ec10855c209f24173fbb0.min.css",
+    "report_files/libs/bootstrap/bootstrap-icons.css",
+    "report_files/libs/bootstrap/bootstrap-icons.woff",
+    "report_files/libs/bootstrap/bootstrap.min.js",
+    "report_files/libs/clipboard/clipboard.min.js",
+    "report_files/libs/quarto-html/anchor.min.js",
+    "report_files/libs/quarto-html/popper.min.js",
+    "report_files/libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css",
+    "report_files/libs/quarto-html/quarto.js",
+    "report_files/libs/quarto-html/tabsets/tabsets.js",
+    "report_files/libs/quarto-html/tippy.css",
+    "report_files/libs/quarto-html/tippy.umd.min.js",
+    "report.html"
+   ],
+   "index": 4,
+   "step": "render"
+  },
+  {
+   "files": [],
+   "index": 5,
+   "step": "visual"
+  },
+  {
+   "files": [],
+   "index": 6,
+   "step": "visual"
+  },
+  {
+   "files": [],
+   "index": 7,
+   "step": "new"
+  },
+  {
+   "files": [],
+   "index": 8,
+   "step": "shortcut"
+  }
+ ],
+ "stamp": {
+  "evidence": "6975ac8d7ad699c3a66635638064a328ac1710406b714d34220eb9bced7dbb8c",
+  "format": "1",
+  "image": "3c0b182f40fef71d474a0cb37e54efd6011616ae218ee460ff82417f952dd665",
+  "lesson": "8868757eb0848c1a0bd478c3416b460eab9d40c168d60510fb39aa5e76fe4a8c",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "9f39a0c47c5afb428b57f3fd243dc3b0082012d945718d12bf8d7cab6b3e97b8"
+ }
+}

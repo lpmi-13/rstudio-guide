@@ -1,0 +1,14 @@
+---
+title: "Spike slides"
+format: revealjs
+---
+
+## One
+
+- a point
+
+## Two
+
+```{r}
+summary(mtcars$mpg)
+```

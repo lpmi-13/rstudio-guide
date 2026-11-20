@@ -3,4 +3,6 @@ run/
 results/
 lab.env
 
+**__pycache**
+
 notes.txt

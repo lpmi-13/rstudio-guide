@@ -31,6 +31,8 @@ class PublishRootfsImageTests(unittest.TestCase):
         # A git checkout of the tracked files as they are now: the rootfs is built from tracked files only.
         tracked = subprocess.run(["git", "-C", str(ROOT), "ls-files", "-z"], check=True, capture_output=True, text=True).stdout
         for rel in filter(None, tracked.split("\0")):
+            if not (ROOT / rel).exists():
+                continue  # deleted in the working tree, not yet committed
             (self.root / rel).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / rel, self.root / rel)
         git = ["git", "-C", str(self.root), "-c", "user.name=test", "-c", "user.email=test@localhost", "-c", "commit.gpgsign=false"]

@@ -1,0 +1,251 @@
+{
+ "lesson": "engine-check",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "trips",
+     "class": "spec_tbl_df",
+     "code": "trips = read_csv('data/trips.csv', show_col_types = FALSE)",
+     "dim": [
+      149747,
+      10
+     ],
+     "fp": "925ba2a4e6f8a0e568dad6aeb7da9353",
+     "fp_any": "925ba2a4e6f8a0e568dad6aeb7da9353"
+    }
+   ],
+   "assigned": "trips",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    149747,
+    10
+   ],
+   "files": [],
+   "fp": "925ba2a4e6f8a0e568dad6aeb7da9353",
+   "fp_any": "925ba2a4e6f8a0e568dad6aeb7da9353",
+   "index": 1,
+   "messages": [
+    "Rows: 149747 Columns: 10",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): bike_id, member_type, bike_type\ndbl  (5): trip_id, start_station, end_station, distance_km, duration_min\ndttm (2): started_at, ended_at",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "read",
+   "values": {
+    "n_trips": "149,747"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "trips |> filter(member_type == 'casual') |> group_by(start_station) |> summarize(trips = n(), median_minutes = median(duration_min))",
+     "dim": [
+      78,
+      3
+     ],
+     "fp": "e68babae2d3b4492514a842b9bc242e9",
+     "fp_any": "e68babae2d3b4492514a842b9bc242e9"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    78,
+    3
+   ],
+   "files": [],
+   "fp": "1036c1f68451d543206bd8ea568913a1",
+   "fp_any": "e68babae2d3b4492514a842b9bc242e9",
+   "index": 2,
+   "messages": [],
+   "output": "# A tibble: 78 × 3\n   start_station trips median_minutes\n           <dbl> <int>          <dbl>\n 1           164   345           14.4\n 2           125   899           15.3\n 3           113  1421           12.7\n 4           139   164           25.5\n 5           172  1197           19  \n 6           138   722           14.9\n 7           134   585           15.9\n 8           114  1570           14.1\n 9           135   832           16.5\n10           124   396           20.9\n# ℹ 68 more rows",
+   "plot": false,
+   "step": "summarise",
+   "values": {
+    "stations": "78"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "assigned": "week",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    4434,
+    10
+   ],
+   "files": [],
+   "fp": "52e6d00adb7392aa3d6597738cf07759",
+   "fp_any": "52e6d00adb7392aa3d6597738cf07759",
+   "index": 3,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "week",
+   "values": {
+    "n_week": "4,434"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week) + geom_point(aes(distance_km, duration_min, colour = bike_type), alpha = 0.4)",
+     "dim": 1,
+     "fp": "18a83a4ef418bf637c1137a4bef84fcb",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "18a83a4ef418bf637c1137a4bef84fcb",
+   "fp_any": null,
+   "index": 4,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "chart",
+   "values": {},
+   "visible": true,
+   "warnings": [
+    "Removed 3 rows containing missing values or values outside the scale range (`geom_point()`)."
+   ]
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "character",
+   "dim": 1,
+   "files": [
+    "distance.png"
+   ],
+   "fp": "ff05f1fdc502031c6613345754a36d13",
+   "fp_any": null,
+   "index": 5,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "chart",
+   "values": {},
+   "visible": false,
+   "warnings": [
+    "Removed 3 rows containing missing values or values outside the scale range (`geom_point()`)."
+   ]
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "Date",
+   "dim": 1,
+   "files": [],
+   "fp": "494f32428183e2172098075e4c3bae10",
+   "fp_any": null,
+   "index": 6,
+   "messages": [],
+   "output": "[1] \"2026-11-20\"",
+   "plot": false,
+   "step": "console",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "error": "object 'trip' not found",
+   "files": [],
+   "index": 7,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "console",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "numeric",
+   "dim": 2,
+   "files": [],
+   "fp": "8599d66ec75bd3b05bf6640fedcb3010",
+   "fp_any": null,
+   "index": 8,
+   "messages": [],
+   "output": "[1] 12 NA",
+   "plot": false,
+   "step": "console",
+   "values": {},
+   "visible": true,
+   "warnings": [
+    "NAs introduced by coercion"
+   ]
+  },
+  {
+   "files": [],
+   "index": 9,
+   "step": "ide"
+  },
+  {
+   "files": [],
+   "index": 10,
+   "step": "ide"
+  }
+ ],
+ "stamp": {
+  "evidence": "6975ac8d7ad699c3a66635638064a328ac1710406b714d34220eb9bced7dbb8c",
+  "format": "1",
+  "image": "3c0b182f40fef71d474a0cb37e54efd6011616ae218ee460ff82417f952dd665",
+  "lesson": "8b823fb287672dbf637b0ce042419d16b8cf4ed27b7ca72c4ba8af89254a389e",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "9f39a0c47c5afb428b57f3fd243dc3b0082012d945718d12bf8d7cab6b3e97b8",
+  "world": "fae8d5fb4044e74278a2c725359f1cc2d9afef6dbe5669da23864bd0d1ccfa98"
+ }
+}

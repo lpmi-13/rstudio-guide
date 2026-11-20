@@ -55,6 +55,18 @@
   try { shield = localStorage.getItem('rsCoachNoKeyShield') !== '1'; } catch (_error) { /* storage blocked */ }
   coach.keyShield = shield;
   coach.shieldedEvents = 0;
+  // Shortcuts pressed in RStudio, for lessons that teach one (Alt+- for <-, Ctrl+Shift+M for |>).
+  // Pressing one leaves nothing R can see, so the coach watches for the keys themselves.
+  coach.chords = [];
+  window.addEventListener('keydown', event => {
+    const host = document.getElementById('rs-coach-host');
+    if (host && event.composedPath().includes(host)) return;
+    const key = event.key.length === 1 ? event.key.toUpperCase() : event.key;
+    if (!(event.ctrlKey || event.altKey || event.metaKey) || ['Control', 'Alt', 'Shift', 'Meta'].includes(key)) return;
+    const chord = [event.ctrlKey && 'Ctrl', event.metaKey && 'Cmd', event.altKey && 'Alt', event.shiftKey && 'Shift', key].filter(Boolean).join('+');
+    coach.chords.push({chord, at: Date.now(), trusted: event.isTrusted});
+    if (coach.chords.length > 50) coach.chords.shift();
+  }, true);
   if (shield) {
     for (const type of ['keydown', 'keypress', 'keyup', 'beforeinput', 'input', 'paste', 'copy', 'cut', 'compositionstart', 'compositionupdate', 'compositionend']) {
       window.addEventListener(type, event => {
@@ -120,6 +132,23 @@
       const el = [...document.querySelectorAll('#rstudio_Source_pane .ace_editor')].find(e => shown(e) && e.env && e.env.editor);
       return el ? el.env.editor : null;
     },
+    // The main menu bar's item `name`, and an open menu's item whose text matches `re`.
+    menubar: name => [...document.querySelectorAll('[role="menubar"] [role="menuitem"]')].find(e => shown(e) && e.textContent.trim() === name),
+    menuItem: re => [...document.querySelectorAll('[role="menu"] [role="menuitem"]')].find(e => shown(e) && re.test(e.textContent.trim().replace(/\s+/g, ' '))),
+    dialog: re => [...document.querySelectorAll('.gwt-DialogBox, [role="dialog"], [role="alertdialog"]')].find(d => shown(d) && re.test(d.textContent)),
+    dialogButton: (dialog, label) => dialog && [...dialog.querySelectorAll('button')].find(b => shown(b) && b.textContent.trim() === label),
+    viewer: () => byId('rstudio_workbench_panel_viewer'),
+    viewerTab: () => byId('rstudio_workbench_tab_viewer'),
+    viewerShows: () => [...document.querySelectorAll('#rstudio_workbench_panel_viewer iframe')].some(frame => {
+      try { return Boolean(frame.contentDocument?.body?.innerText.trim()); } catch (_error) { return false; }
+    }),
+    helpTitle: () => {
+      for (const frame of document.querySelectorAll('#rstudio_workbench_panel_help iframe')) {
+        try { const h = frame.contentDocument?.querySelector('h2'); if (h) return h.textContent.trim(); } catch (_error) { /* not same-origin */ }
+      }
+      return null;
+    },
+    visualEditor: () => [...document.querySelectorAll('#rstudio_Source_pane .ProseMirror')].find(shown),
     plotImage: () => {
       for (const frame of document.querySelectorAll('#rstudio_workbench_panel_plots iframe')) {
         try {
@@ -139,15 +168,27 @@
 
   // GWT toolbar buttons and links act on mousedown/mouseup, so a bare .click() is ignored.
   // The events carry the coordinates of the coach's pointer, which is where the learner sees the click.
-  function press(el, at) {
+  const PRESS = ['pointerover', 'mouseover', 'pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click'];
+  function press(el, at, types = PRESS) {
     const r = el.getBoundingClientRect();
     const inside = at && at.x >= r.left && at.x <= r.right && at.y >= r.top && at.y <= r.bottom;
     const point = inside ? at : centre(el);
     const init = {bubbles: true, cancelable: true, composed: true, view: window, button: 0, buttons: 1,
       clientX: point.x, clientY: point.y, pointerId: 1, pointerType: 'mouse', isPrimary: true};
-    for (const type of ['pointerover', 'mouseover', 'pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click']) {
+    for (const type of types) {
       el.dispatchEvent(type.startsWith('pointer') ? new PointerEvent(type, init) : new MouseEvent(type, init));
     }
+  }
+  // A shortcut such as "Ctrl+Shift+M" or "Alt+-", sent as key events (RStudio acts on synthetic ones).
+  function sendKeys(target, keys) {
+    const parts = keys.split('+');
+    const name = parts.pop();
+    const named = {'-': ['Minus', 189], Enter: ['Enter', 13]}[name];
+    const init = {bubbles: true, cancelable: true, composed: true, view: window,
+      key: name, code: named ? named[0] : `Key${name.toUpperCase()}`, keyCode: named ? named[1] : name.toUpperCase().charCodeAt(0),
+      ctrlKey: parts.includes('Ctrl'), shiftKey: parts.includes('Shift'), altKey: parts.includes('Alt'), metaKey: parts.includes('Cmd')};
+    init.which = init.keyCode;
+    for (const type of ['keydown', 'keypress', 'keyup']) target.dispatchEvent(new KeyboardEvent(type, init));
   }
 
   // ---------- overlay (its own layer, above every RStudio pane) ----------
@@ -442,9 +483,27 @@
     .lesson-card strong { font-size: 13px; }
     .lesson-card .what { grid-column: 2; color: #57606a; font-size: 12px; }
     .row button.switch { margin-left: auto; background: none; border-color: transparent; color: #0b5cad; }
+    .lesson-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+    .lesson-row p { margin: 0; }
+    .lesson-title { font-size: 15px; }
+    .lesson-list { display: grid; gap: 4px; border: 1px solid #d0d7de; border-radius: 8px; padding: 6px 8px; background: #f6f8fa; }
+    .lesson-list summary { font-size: 12px; padding: 2px 0; }
+    .lesson-list ul { list-style: none; margin: 2px 0 4px; padding: 0; display: grid; gap: 1px; }
+    .lesson-pick { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 22px 1fr auto 14px; gap: 6px; align-items: baseline;
+      width: 100%; padding: 3px 6px; border-radius: 6px; cursor: pointer; }
+    .lesson-pick:hover { background: #fff; }
+    .lesson-pick:focus-visible { outline: 2px solid #0b5cad; outline-offset: 1px; }
+    .lesson-pick[aria-current="true"] { background: #fff; box-shadow: inset 0 0 0 1px #0b5cad; }
+    .lesson-pick .num { color: #57606a; text-align: right; font-variant-numeric: tabular-nums; }
+    .lesson-pick .what { color: #57606a; font-size: 11px; }
+    .lesson-pick .tick, .done-mark { color: #1a7f37; font-weight: 600; }
+    .done-mark { font-size: 11px; }
+    .lesson-summary { color: #1f2328; }
     .tasks { padding-left: 18px; }
     .hints { display: grid; gap: 4px; }
     .hint-text { font-size: 12px; }
+    pre.code { margin: 4px 0 0; padding: 4px 6px; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: #f6f8fa; border-radius: 4px; white-space: pre; overflow-x: auto; }
     .feedback { color: #9a6700; }
     .feedback:empty, .hints:empty { display: none; }
     .stats { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
@@ -618,6 +677,12 @@
   // them as they were. Choosing a mode starts it afresh (see freshStart), and forgets every
   // other mode's progress, which no longer matches the script or R. Back on the picker returns
   // to the mode just left, as it was.
+  //
+  // The lessons modelled on R for Data Science (those with a part) are too many for cards: the
+  // picker shows the chosen lesson on one line above the mode cards, and Change opens the lessons
+  // in their six parts, each with a tick once any mode of it is finished. A new tab opens on the
+  // first lesson not yet finished, so starting it takes one click, and a finished lesson offers
+  // the next. Which lessons and modes are finished is kept per run in localStorage.
   function startLessons(root, session, lessons, status) {
     const content = root.querySelector('.content');
     const read = key => { try { return sessionStorage.getItem(key); } catch (_error) { return null; } }; // storage blocked
@@ -633,7 +698,20 @@
     const modesOf = l => l.modes.filter(mode => mode in MODES);
     const switchLabel = lessons.length > 1 ? 'Change lesson or mode' : 'Change mode';
     const setHeader = text => { root.querySelector('.mode').textContent = text; };
-    let lesson = lessons.find(l => l.id === read(lessonKey)) || lessons[0];
+    const local = {
+      read: key => { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch (_error) { return null; } },
+      write: (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch (_error) { /* storage blocked */ } },
+    };
+    const finishedKey = `rsCoachFinished:${session.run_id}`; // {lesson id: [modes finished]}
+    const inRKey = `rsCoachInR:${session.run_id}`; // the lesson whose code R last ran
+    const finished = () => local.read(finishedKey) || {};
+    const collection = lessons.length > 1 && lessons.every(l => l.part);
+    const firstUnfinished = () => lessons.find(l => !finished()[l.id]?.length) || lessons[0];
+    let lesson = lessons.find(l => l.id === read(lessonKey)) || (collection ? firstUnfinished() : lessons[0]);
+    const nextAfter = l => {
+      const next = collection ? lessons[lessons.indexOf(l) + 1] : null;
+      return next && {label: `Next: lesson ${next.number} · ${next.title}`, go: () => { resume = null; lesson = next; open(null); }};
+    };
     let teardown = () => {};
     let resume = null; // {lesson, mode}: what Back on the picker returns to
     const leave = () => { teardown(); teardown = () => {}; };
@@ -656,8 +734,15 @@
         resume = resumable ? {lesson, mode} : null;
         open(null);
       };
+      const done = lesson;
+      const finish = () => {
+        const record = finished();
+        record[done.id] = [...new Set([...(record[done.id] || []), mode])];
+        local.write(finishedKey, record);
+        note('lesson_finished', {lesson: done.id, mode});
+      };
       teardown = render({content, session, lesson, status, restored, autostart, storeKey, switchLabel, changeMode,
-        startOver: () => start(mode, {autostart: true})}) || teardown;
+        startOver: () => start(mode, {autostart: true}), finish, next: nextAfter(lesson)}) || teardown;
     }
 
     // A mode chosen on the picker, or Start over: reset RStudio, then open the mode from scratch.
@@ -669,14 +754,21 @@
       Object.assign(coach, {mode, lesson: lesson.id});
       setHeader(MODES[mode].label);
       status(`Run ${session.run_id} · ${lesson.title}`);
+      // A different lesson from the one R last ran gets a new R session (see freshStart).
+      const was = lessons.find(l => l.id === local.read(inRKey));
+      const restart = Boolean(was) && was !== lesson && (was.version === 2 || lesson.version === 2);
       content.innerHTML = `
         <h2>${escapeHtml(lesson.title)}</h2>
         <section class="card starting">
           <h3>${autostart ? 'Starting over' : `Starting ${MODES[mode].label}`}</h3>
-          <p class="phase">Starting afresh: ${escapeHtml(lesson.script)} goes back to its step headings, and the Console, Environment and Plots are emptied.</p>
+          <p class="phase">Starting afresh: ${escapeHtml(lesson.script)} goes back to its step headings, ${restart ? 'R restarts, ' : ''}and the Console, Environment and Plots are emptied.</p>
           <div class="timer working"><span></span></div>
         </section>`;
-      const problems = await freshStart(lesson);
+      const phase = content.querySelector('.starting .phase');
+      const problems = await freshStart(lesson, {restart, slow: () => {
+        phase.textContent = 'R is restarting. In a session\'s first half-minute RStudio holds a restart back, for up to 30 seconds.';
+      }});
+      local.write(inRKey, lesson.id);
       open(mode, {autostart});
       if (problems.length) {
         const warning = Object.assign(document.createElement('p'), {className: 'error reset-problem'});
@@ -686,6 +778,7 @@
     }
 
     function renderPicker() {
+      if (collection) { renderCollectionPicker(); return; }
       const modes = modesOf(lesson);
       const lessonCards = `
         <div class="pick" role="radiogroup" aria-labelledby="lesson-label">
@@ -727,6 +820,62 @@
         open(mode, {restored: true});
       });
     }
+    // The chosen lesson on one line, the lessons by part behind Change, then the mode cards.
+    function renderCollectionPicker(listOpen = false) {
+      const modes = modesOf(lesson);
+      const done = finished();
+      const parts = [...new Set(lessons.map(l => l.part))].map(title => ({title, lessons: lessons.filter(l => l.part === title)}));
+      const tick = l => (done[l.id]?.length ? `<span class="tick" title="Finished: ${done[l.id].map(m => MODES[m].label).join(', ')}">✓</span>` : '');
+      content.innerHTML = `
+        <div class="lesson-row">
+          <p><span class="muted">Lesson ${lesson.number} · ${escapeHtml(lesson.part)}</span><br><strong class="lesson-title">${escapeHtml(lesson.title)}</strong></p>
+          <button class="link change" aria-expanded="${listOpen}" aria-controls="lesson-list">${listOpen ? 'Close' : 'Change'}</button>
+        </div>
+        <nav class="lesson-list" id="lesson-list" aria-label="Lessons" ${listOpen ? '' : 'hidden'}>
+          ${parts.map(part => `
+            <details ${part.lessons.includes(lesson) ? 'open' : ''}>
+              <summary>${escapeHtml(part.title)}</summary>
+              <ul>${part.lessons.map(l => `
+                <li><button class="lesson-pick" data-lesson="${escapeHtml(l.id)}" aria-current="${l === lesson}">
+                  <span class="num">${l.number}</span><span class="name">${escapeHtml(l.title)}</span>
+                  <span class="what">${l.steps.length} steps</span>${tick(l)}</button></li>`).join('')}
+              </ul>
+            </details>`).join('')}
+        </nav>
+        <p class="lesson-summary">${escapeHtml(lesson.summary)}</p>
+        <div class="pick" role="group" aria-labelledby="pick-label">
+          <p class="pick-label" id="pick-label">How do you want to work through it?</p>
+          ${modes.map(mode => `
+            <button class="mode-card" data-mode="${mode}">
+              <span class="icon" aria-hidden="true">${MODES[mode].icon}</span>
+              <strong>${MODES[mode].label}${done[lesson.id]?.includes(mode) ? ' <span class="done-mark">✓ done</span>' : ''}</strong>
+              <span class="what">${escapeHtml(MODES[mode].what)}</span>
+            </button>`).join('')}
+        </div>
+        ${resume ? `<div class="row"><button class="back">Back to ${escapeHtml(MODES[resume.mode].label)}: ${escapeHtml(resume.lesson.title)}</button></div>` : ''}
+        <p class="muted">Each choice starts afresh: the lesson's script goes back to its step headings, and R and its panes are emptied.${lesson.chapter
+          ? ` To go deeper, read <a href="${escapeHtml(lesson.chapter)}" target="_blank" rel="noopener">this topic in R for Data Science</a>.` : ''}</p>`;
+      content.querySelector('.change').addEventListener('click', () => {
+        renderCollectionPicker(!listOpen);
+        content.querySelector(listOpen ? '.change' : '.lesson-pick[aria-current="true"]')?.focus();
+      });
+      for (const pick of content.querySelectorAll('.lesson-pick')) {
+        pick.addEventListener('click', () => {
+          lesson = lessons.find(l => l.id === pick.dataset.lesson);
+          write(lessonKey, lesson.id);
+          note('lesson', {lesson: lesson.id});
+          renderCollectionPicker(false);
+          content.querySelector('.mode-card')?.focus();
+        });
+      }
+      for (const card of content.querySelectorAll('.mode-card')) card.addEventListener('click', () => start(card.dataset.mode));
+      content.querySelector('.back')?.addEventListener('click', () => {
+        const {lesson: was, mode} = resume;
+        resume = null;
+        lesson = was;
+        open(mode, {restored: true});
+      });
+    }
     // What a lesson covers, from its step titles: "Plots: plot()" -> "plot()".
     function covers(l) {
       return `${l.steps.length} steps: ${l.steps.map(s => s.title.split(': ').pop()).join(', ')}`;
@@ -748,7 +897,11 @@
   const lessonHeader = (lesson, intro) => `
     <h2>${escapeHtml(lesson.title)}</h2>
     <p class="intro">${inline(intro)}</p>
-    <p class="muted source">${escapeHtml(lesson.source)}</p>`;
+    ${lesson.chapter ? `<p class="muted source">To go deeper, read <a href="${escapeHtml(lesson.chapter)}" target="_blank" rel="noopener">this topic in R for Data Science</a>.</p>`
+      : `<p class="muted source">${escapeHtml(lesson.source)}</p>`}`;
+  // What the lesson's checklist counts: lines in the older lessons; tasks (statements and IDE
+  // actions) in those modelled on the book.
+  const unitOf = lesson => (lesson.version === 2 ? 'task' : 'line');
   const stepList = steps => `<ol class="steps">${steps.map((s, i) => `<li data-step="${i}">${escapeHtml(s.title)}</li>`).join('')}</ol>`;
   function endedView(content, text, changeMode, switchLabel) {
     content.innerHTML = `<p class="ended"></p><div class="row"><button class="switch">${switchLabel}</button></div>`;
@@ -766,14 +919,28 @@
   // is housekeeping rather than part of the lesson, so the coach works RStudio without its pointer.
   // Resolves to the problems it met, for the panel to report.
   //
-  // Not Restart R: in a session's first half-minute RStudio holds a restart back (one asked for
-  // 7 s after sign-in took 23.6 s, against 1-2 s later on), and that is when a learner picks their
-  // first mode. These lessons load no packages, so clearing objects and charts loses nothing.
-  async function freshStart(lesson) {
+  // Restart R only when the lesson changes to or from one modelled on the book (version 2): those
+  // attach packages, and some replace other packages' methods (duckplyr's for dplyr), which only a
+  // new R session undoes. Staying in a lesson keeps the brooms: in a session's first half-minute
+  // RStudio holds a restart back (one asked for 7 s after sign-in took 23.6 s, against 1-2 s later
+  // on), and that is when a learner picks their first mode. `slow` says why, if it comes to that.
+  async function freshStart(lesson, {restart = false, slow = () => {}} = {}) {
     const began = Date.now();
     const problems = [];
     const attempt = async fn => { try { await fn(); } catch (error) { problems.push(error.message); } };
+    let restarted = false;
+    if (restart) await attempt(async () => { await restartR(slow); restarted = true; });
     await attempt(() => resetScript(lesson.script, lesson.starter));
+    // Documents the lesson's actions open or create are closed, unsaved changes discarded.
+    const opened = lesson.steps.flatMap(step => step.runs).filter(run => run.action === 'open-file' || run.action === 'new-file');
+    if (opened.length) await attempt(() => closeDocuments(opened.map(run => run.file).filter(Boolean)));
+    // A setting the lesson asks the learner to change goes back to how it was, or that step would
+    // count before the learner did anything.
+    const settings = lesson.steps.flatMap(step => step.runs).filter(run => run.action === 'option' && run.ide && 'pref' in run.ide);
+    if (settings.length) {
+      const prefs = (await readEvidence(0)).state?.prefs || {};
+      for (const run of settings.filter(r => prefs[r.ide.pref] === r.ide.value)) await attempt(() => setOptionQuietly(run, !run.value));
+    }
     const objects = !ide.environmentEmpty();
     if (objects) await attempt(clearObjects);
     const charts = ide.chartShown();
@@ -781,10 +948,82 @@
     const clear = ide.consoleClear();
     if (clear) press(clear);
     const cleared = Boolean(await waitFor(() => !ide.consoleText().trim(), 3000));
-    const detail = {lesson: lesson.id, ms: Date.now() - began, objects, charts, cleared, problems};
+    const detail = {lesson: lesson.id, ms: Date.now() - began, restarted, objects, charts, cleared, problems};
     coach.fresh = {count: coach.fresh.count + 1, last: detail};
     note('fresh_start', detail);
     return problems;
+  }
+
+  // Session › Restart R, as housekeeping (no pointer). Done once R's evidence comes from a new session.
+  async function restartR(slow) {
+    // R writes its first evidence a second after it starts: wait for it, to tell the new session apart.
+    let before = (await readEvidence(0)).session;
+    for (const t = Date.now(); !before && Date.now() - t < 10000;) {
+      await sleep(250);
+      before = (await readEvidence(0)).session;
+    }
+    const bar = ide.menubar('Session');
+    if (!bar) throw new Error('RStudio\'s Session menu isn\'t visible, so R wasn\'t restarted.');
+    press(bar);
+    const item = await waitFor(() => ide.menuItem(/^Restart R/), 3000);
+    if (!item) throw new Error('The Session menu has no Restart R, so R wasn\'t restarted.');
+    press(item);
+    const started = Date.now();
+    for (;;) {
+      const doc = await readEvidence(0);
+      if (doc.session && doc.session !== before) break;
+      if (slow && Date.now() - started > 4000) { slow(); slow = null; }
+      if (Date.now() - started > 60000) throw new Error('R did not restart within a minute, so the last lesson\'s packages may still be attached.');
+      await sleep(250);
+    }
+    note('restart_r', {ms: Date.now() - started});
+  }
+
+  // Close Source tabs for `files` and any untitled document, choosing Don't Save if RStudio asks.
+  async function closeDocuments(files) {
+    const extra = () => [...document.querySelectorAll('#rstudio_Source_pane [role="tab"]')].find(t => {
+      const name = t.textContent.trim().replace(/\*$/, '');
+      return shown(t) && (files.includes(name) || /^Untitled\d*$/.test(name));
+    });
+    for (let n = 0; n < 10 && extra(); n += 1) {
+      const tab = extra();
+      const close = tab.querySelector('img[alt="Close document tab"]');
+      if (!close) throw new Error(`The coach couldn't close ${tab.textContent.trim()}.`);
+      press(close);
+      const ask = await waitFor(() => ide.dialog(/Save|save/) && [...ide.dialog(/Save|save/).querySelectorAll('button')].find(b => shown(b) && /^Don.t Save$/.test(b.textContent.trim())), 800);
+      if (ask) press(ask);
+      await waitFor(() => !tab.isConnected || !shown(tab), 3000);
+    }
+    if (extra()) throw new Error(`${extra().textContent.trim()} is still open from before.`);
+  }
+
+  // Tick or untick a Global Options checkbox (housekeeping, no pointer), then wait for R's evidence
+  // to show the preference changed.
+  async function setOptionQuietly(run, value) {
+    const bar = ide.menubar('Tools');
+    if (!bar) throw new Error('RStudio\'s Tools menu isn\'t visible.');
+    press(bar);
+    const item = await waitFor(() => ide.menuItem(/^Global Options/), 3000);
+    if (!item) throw new Error('The Tools menu has no Global Options.');
+    press(item);
+    const plain = text => text.replace(/\s+/g, ' ').trim().replace(/:$/, '');
+    const dialog = () => [...document.querySelectorAll('.gwt-DialogBox, [role="dialog"]')].find(d => shown(d) && ide.dialogButton(d, 'OK') && ide.dialogButton(d, 'Cancel'));
+    const label = () => [...(dialog()?.querySelectorAll('label') || [])].find(l => shown(l) && plain(l.textContent) === plain(run.label));
+    if (!(await waitFor(dialog, 10000))) throw new Error('Global Options did not open, so a setting from before is still on.');
+    if (!label()) {
+      const pane = [...dialog().querySelectorAll('*')].find(el => el.childElementCount === 0 && shown(el) && el.textContent.trim() === run.pane);
+      if (pane) press(pane);
+      await waitFor(label, 5000);
+    }
+    const box = label() && (label().htmlFor ? document.getElementById(label().htmlFor) : label().parentElement.querySelector('input[type="checkbox"]'));
+    if (box && box.checked !== value) box.click();
+    press(ide.dialogButton(dialog(), box ? 'OK' : 'Cancel'));
+    if (!box) throw new Error(`Global Options has no setting "${run.label}".`);
+    for (const t = Date.now(); Date.now() - t < 5000;) {
+      if ((await readEvidence(0)).state?.prefs?.[run.ide.pref] === (run.ide.value === run.value ? value : !value)) return;
+      await sleep(250);
+    }
+    throw new Error(`RStudio didn't save "${run.label}".`);
   }
 
   // `script` back to `text` and saved, with no undo history that could bring the old code back.
@@ -849,6 +1088,136 @@
     }
   }
 
+  // ---------- Evidence from R ----------
+  // runtime/evidence.R records, in R, what every top-level call returned: a fingerprint of the
+  // value, the name it assigned and the package a library() call named. It also records a little
+  // IDE state: attached packages, RStudio preferences, the project's files and when each changed.
+  // The gateway serves it to a browser signed in to RStudio. Lessons with "version": 2 are checked
+  // against it, so a statement counts whichever way the learner writes it, and a tibble counts
+  // however narrow the Console that printed it. Older lessons are checked by what the Console shows.
+  const evidence = {doc: null, at: 0, pending: null, failures: 0};
+  const EMPTY_EVIDENCE = {session: null, seq: 0, calls: [], state: null};
+  function readEvidence(maxAgeMs = 250) {
+    if (evidence.pending) return evidence.pending;
+    if (evidence.doc && Date.now() - evidence.at < maxAgeMs) return Promise.resolve(evidence.doc);
+    evidence.pending = fetch('/coach/api/evidence', {cache: 'no-store'})
+      .then(res => {
+        if (res.status === 404) return EMPTY_EVIDENCE; // R hasn't written any yet
+        if (!res.ok) throw new Error(`evidence ${res.status}`);
+        return res.json();
+      })
+      .then(doc => { Object.assign(evidence, {doc, at: Date.now()}); return doc; })
+      .catch(error => {
+        evidence.failures += 1;
+        note('evidence_failed', {error: String(error)});
+        return evidence.doc || EMPTY_EVIDENCE;
+      })
+      .finally(() => { evidence.pending = null; });
+    return evidence.pending;
+  }
+  // Where a mode's work starts: R's session and its last call, and each project file's modification
+  // time. Only calls after the mark count, and a file counts once it changes.
+  async function evidenceMark() {
+    const doc = await readEvidence(0);
+    return {session: doc.session, seq: doc.seq || 0, at: Date.now(),
+      files: Object.fromEntries((doc.state?.files || []).map(f => [f.path, f.mtime]))};
+  }
+  const callKey = (doc, call) => `${doc.session}:${call.seq}`;
+  const usesEvidence = run => !['console', 'plot', 'pattern', 'error'].includes(run.evidence);
+  // Whether `run` is done since `mark`, by R's evidence. A call counts for one statement only, so
+  // printing `trips` doesn't also tick the step that read it in: `claimed` holds the calls already
+  // used. IDE state counts only once it has been seen not to hold since the mark (`off` records
+  // that), so a setting or an editor already as the step wants it doesn't tick by itself;
+  // Demonstration, which does the action itself, passes no `off`. Returns {key} or null.
+  function evidenceMatch(run, doc, mark, claimed = new Set(), off = null) {
+    const want = run.expected || {};
+    const fresh = (doc.calls || []).filter(c => doc.session !== mark.session || c.seq > mark.seq).reverse(); // newest first
+    const take = test => {
+      const call = fresh.find(c => !claimed.has(callKey(doc, c)) && test(c));
+      return call ? {key: callKey(doc, call), call} : null;
+    };
+    switch (run.evidence) {
+      case 'value':
+        return take(c => (run.order === 'any' ? Boolean(want.fp_any) && c.fp_any === want.fp_any : Boolean(want.fp) && c.fp === want.fp));
+      case 'assign':
+        return take(c => c.assigned === want.assigned && c.fp === want.fp);
+      case 'ggplot':
+        return take(c => c.visible && c.fp === want.fp);
+      case 'attached':
+        return (doc.state?.attached || []).includes(want.library) ? take(c => c.library === want.library) : null;
+      case 'file': {
+        const file = (doc.state?.files || []).find(f => f.path === run.path && f.mtime !== mark.files?.[run.path]);
+        return file ? {key: `file:${run.path}:${file.mtime}`} : null;
+      }
+      case 'ide': {
+        const id = `ide:${JSON.stringify(run.ide)}`;
+        if (!ideHolds(run.ide, doc, mark)) {
+          if (off) off[id] = true;
+          return null;
+        }
+        const relative = run.ide.restarted || run.ide.chord; // measured from the mark already
+        return !off || relative || off[id] ? {key: `${id}:${doc.session}`} : null;
+      }
+      default:
+        return null;
+    }
+  }
+  // Record, for every IDE-state task in `lesson`, that its state doesn't hold now (see evidenceMatch).
+  // Done when a mode begins and at every check, so a task whose step isn't current yet still sees
+  // the state before the learner changes it.
+  function noteIdeOff(lesson, doc, mark, off) {
+    for (const run of lesson.steps.flatMap(step => step.runs)) {
+      if (run.evidence === 'ide' && !ideHolds(run.ide, doc, mark)) off[`ide:${JSON.stringify(run.ide)}`] = true;
+    }
+  }
+  // IDE state a step asks for: a preference's value, R restarted, a tab, the Viewer, Help, the
+  // project, a shortcut pressed, the editor's mode.
+  function ideHolds(want, doc, mark) {
+    if (!want) return false;
+    const checks = [];
+    if ('pref' in want) checks.push(doc.state?.prefs?.[want.pref] === want.value);
+    if (want.restarted) checks.push(Boolean(doc.session) && doc.session !== mark.session);
+    // A tab's name without its unsaved marker (always in the markup, hidden by CSS when saved).
+    if (want.tab) checks.push(Boolean([...document.querySelectorAll('#rstudio_Source_pane [role="tab"]')].find(t => shown(t) && new RegExp(want.tab).test(t.innerText.trim().replace(/\s*\*$/, '')))));
+    if (want.viewer) checks.push(ide.viewerShows());
+    if (want.help) checks.push(new RegExp(want.help).test(ide.helpTitle() || ''));
+    if (want.project) checks.push((doc.state?.wd || '').endsWith(`/${want.project}`));
+    if (want.chord) checks.push(coach.chords.some(c => c.chord === want.chord && c.at >= mark.at));
+    if (want.editor_mode) checks.push(want.editor_mode === 'visual' ? Boolean(ide.visualEditor()) : Boolean(ide.activeEditor()) && !ide.visualEditor());
+    if ('editor_text' in want) checks.push(ide.activeEditor()?.getValue() === want.editor_text);
+    return checks.length > 0 && checks.every(Boolean);
+  }
+  // Console-side evidence for "pattern" (today(), timings) and "error" (a statement meant to fail):
+  // the newest Console entry from `from` on that shows it and no other statement has used.
+  function consoleMatch(run, view, claimed = new Set(), from = view.from) {
+    for (let k = view.entries.length - 1; k >= from; k -= 1) {
+      const entry = view.entries[k];
+      if (!codeKey(entry.code) || claimed.has(`console:${k}`)) continue;
+      const error = consoleError(entry.output);
+      if (run.evidence === 'error' ? error && new RegExp(run.error).test(error) : !error && new RegExp(run.pattern).test(entry.output.trim())) {
+        return {index: k, output: entry.output, key: `console:${k}`};
+      }
+    }
+    return null;
+  }
+
+  // Whether `run` is done, by the evidence its kind uses: R's record, the Console, or RStudio itself.
+  // Returns {key, output} or null. Older lessons' "console" and "plot" lines are matched as before.
+  function runDone(run, view, doc, mark, claimed, off = {}) {
+    if (run.action || usesEvidence(run)) return doc && mark ? evidenceMatch(run, doc, mark, claimed, off) : null;
+    if (run.evidence === 'pattern' || run.evidence === 'error') return consoleMatch(run, view, claimed);
+    const match = matchRun(run, view);
+    return match && {...match, key: `console:${match.index}`};
+  }
+  // Code in a hint: inline for one line, as a block for a statement over several.
+  const codeHtml = text => (text.includes('\n') ? `<pre class="code">${escapeHtml(text)}</pre>` : `<code>${escapeHtml(text)}</code>`);
+  // The control a hint points at for an IDE action.
+  const actionControl = run => (run.action === 'menu' ? ide.menubar(run.menu[0])
+    : run.action === 'option' ? ide.menubar('Tools')
+    : run.action === 'format-document' ? ide.menubar('Code')
+    : run.action === 'new-file' ? ide.menubar('File')
+    : ide.source());
+
   // ---------- Demonstration ----------
   class DemoStopped extends Error {}
 
@@ -866,11 +1235,11 @@
   //
   // Start over resets the script and R (a fresh start) and then runs step 1 by itself, so every
   // line is typed again. `autostart` is that second half.
-  function renderDemo({content, session, lesson: manifest, status, autostart, storeKey: keyFor, switchLabel, changeMode, startOver}) {
+  function renderDemo({content, session, lesson: manifest, status, autostart, storeKey: keyFor, switchLabel, changeMode, startOver, finish, next}) {
     const steps = manifest.steps;
     content.innerHTML = `
       <div class="overview">
-        ${lessonHeader(manifest, `${manifest.summary} For each line, the coach types it into ${manifest.script}, presses Run and explains the result once RStudio shows it.`)}
+        ${lessonHeader(manifest, `${manifest.summary} For each ${manifest.version === 2 ? 'statement' : 'line'}, the coach types it into ${manifest.script}, presses Run and explains the result once RStudio shows it.`)}
         ${stepList(steps)}
       </div>
       <section class="card" hidden>
@@ -884,6 +1253,7 @@
         <button class="restart" hidden>Start over</button>
         <button class="stop">Stop</button>
         <button class="switch">${switchLabel}</button>
+        ${next ? `<button class="primary next-lesson" hidden>${escapeHtml(next.label)}</button>` : ''}
       </div>
       <p class="muted watch" hidden>The amber pointer is the coach's. While it works, watch RStudio rather than typing in it.</p>`;
     const $ = sel => content.querySelector(sel);
@@ -980,6 +1350,10 @@
         : left ? `Next: step ${next + 1} · ${left}s` : `Next: step ${next + 1}`;
       go.title = left ? 'Move on now. Otherwise the coach moves on when the countdown ends.' : '';
       restart.hidden = !(demo.state === 'failed' || (demo.state !== 'running' && demo.completed.length));
+      const complete = demo.state !== 'running' && demo.completed.length === steps.length;
+      const nextLesson = $('.next-lesson');
+      if (nextLesson) nextLesson.hidden = !complete;
+      go.hidden = Boolean(nextLesson) && complete;
       $('.overview').hidden = started > 0;
       $('.watch').hidden = demo.state !== 'running' || started > 1; // the first time the pointer appears
     }
@@ -1021,6 +1395,7 @@
       endedView(content, 'This demonstration has ended. RStudio stays open and keeps what the demonstration ran.', changeMode, switchLabel);
     });
     $('.switch').addEventListener('click', () => changeMode());
+    $('.next-lesson')?.addEventListener('click', () => next.go());
 
     async function runStep(i) {
       const step = steps[i];
@@ -1034,19 +1409,24 @@
       renderControls();
       note('demo_step_started', {step: step.id});
       try {
-        await drive.openScript();
         let firstEcho = -1;
         for (const run of step.runs) {
+          if (run.action) {
+            await drive.doAction(run, step, i);
+            continue;
+          }
+          await drive.openScript(); // an action (a new file, Render) may have shown another tab
           await drive.doRun(run, step, i);
           if (firstEcho < 0) firstEcho = demo.echoAt;
         }
-        await drive.save();
+        if (step.runs.some(r => r.code)) await drive.save();
         // Every result this step explains is now on screen and matches the reference run. The
         // dimming lifts, and a ring stays on what the explanation talks about while it is read.
         setPhase('');
         showPointer(false);
         spotlight(null);
-        highlight(step.runs.some(r => r.evidence === 'plot') ? ide.plots : () => consoleRangeRect(firstEcho), Infinity);
+        const charts = step.runs.some(r => ['plot', 'ggplot'].includes(r.evidence));
+        highlight(charts ? ide.plots : firstEcho >= 0 ? () => consoleRangeRect(firstEcho) : ide.console, Infinity);
         explainEl.innerHTML = format(step.explain, demo.values);
         demo.completed = [...new Set([...demo.completed, i])];
         demo.state = 'waiting';
@@ -1054,8 +1434,12 @@
         bar(null);
         persist();
         note('demo_step_done', {step: step.id, values: {...demo.values}});
-        if (i === steps.length - 1) status(`Demonstration complete · ${manifest.title}`);
-        else continueAfterReading(i);
+        if (i === steps.length - 1) {
+          status(`Demonstration complete · ${manifest.title}`);
+          finish?.();
+        } else {
+          continueAfterReading(i);
+        }
       } catch (error) {
         showPointer(false);
         spotlight(null);
@@ -1110,7 +1494,8 @@
       check();
     }
 
-    async function openScript() {
+    const openScript = () => openFile(script);
+    async function openFile(script) {
       const isOpen = () => ide.scriptEditor(script);
       if (isOpen()) return;
       // RStudio re-renders the Files list and tab strip when files change, so look the
@@ -1122,10 +1507,13 @@
         } else {
           say(`Opening ${script} from the Files pane`);
           if (!ide.files() && ide.filesTab()) { await clickOn(ide.filesTab, 'files_tab'); await pause(400); }
+          if (!ide.fileLink(script) && ide.filesHome()) { await clickOn(ide.filesHome, 'files_home'); await pause(600); } // Files shows another folder
         }
         if (!(await waitFor(target, 5000))) {
           throw new Error(`${script} is not listed in the Files pane. Show the project folder in Files, then try again.`);
         }
+        // With many files, the script can be below the fold of the Files list: scroll to it first.
+        if (!ide.sourceTab(script)) await scrollIntoList(ide.fileLink(script));
         if (!(await clickOn(target, 'open_script'))) continue;
         note('demo_action', {action: 'open_script', script, attempt});
         if (await waitFor(isOpen, 4000)) { await pause(); return; }
@@ -1133,9 +1521,24 @@
       throw new Error(`${script} did not open in the Source pane.`);
     }
 
+    // Scroll a list (the Files pane) so `el` is in view, as a learner scrolls before clicking.
+    async function scrollIntoList(el) {
+      if (!el) return;
+      let box = el.parentElement;
+      while (box && box !== document.body && !/auto|scroll/.test(getComputedStyle(box).overflowY)) box = box.parentElement;
+      if (!box || box === document.body) return;
+      const r = el.getBoundingClientRect();
+      const b = box.getBoundingClientRect();
+      if (r.top >= b.top && r.bottom <= b.bottom) return;
+      el.scrollIntoView({block: 'center', behavior: reducedMotion() ? 'auto' : 'smooth'});
+      note('demo_action', {action: 'scroll_files'});
+      await pause(500);
+    }
+
     // Move the pointer to a control and click it there. `find` is called again on arrival,
-    // because RStudio re-renders the Files list and toolbars when files change.
-    async function clickOn(find, what) {
+    // because RStudio re-renders the Files list and toolbars when files change. `lone` sends only
+    // the click event, which a menu item that opens a submenu needs (a full press opens and shuts it).
+    async function clickOn(find, what, {lone = false} = {}) {
       spotlight(find);
       await heed(leadMs); // the spotlight arrives before the pointer sets off
       for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -1146,7 +1549,7 @@
         const r = el.getBoundingClientRect();
         if (pointer.x < r.left || pointer.x > r.right || pointer.y < r.top || pointer.y > r.bottom) continue; // it moved
         pointerClickEffect();
-        press(el, {x: pointer.x, y: pointer.y});
+        press(el, {x: pointer.x, y: pointer.y}, lone ? ['click'] : undefined);
         state.actions += 1;
         note('demo_click', {target: what, x: Math.round(pointer.x), y: Math.round(pointer.y)});
         return el;
@@ -1173,28 +1576,78 @@
       note('demo_click', {target: 'editor', line: row + 1, x: Math.round(pointer.x), y: Math.round(pointer.y)});
     }
 
-    // Press Enter at the end of `row`, then type the code one key at a time. RStudio's own
-    // auto-pairing runs, as it does for a learner: "(" also adds ")", and typing ")" steps over it.
-    async function typeLine(editor, row, code) {
-      const line = row + 1;
+    // Press Enter at the end of `row`, then type the statement one key at a time, line by line.
+    // RStudio's own behaviour runs, as it does for a learner: "(" also adds ")", typing ")" types
+    // over it, and Enter indents the next line. Where RStudio's indentation differs from the
+    // reference's, the coach sets it, as a learner would with Backspace or Tab. When Enter falls
+    // between a pair, RStudio moves the closer down a line; if the reference's next line starts with
+    // that closer, the coach steps down onto it (as a learner presses ↓) rather than pressing Enter,
+    // so the statement doesn't end up with the closer twice.
+    async function typeStatement(editor, row, code) {
+      const session = editor.session;
+      const lines = code.split('\n');
+      const lengthBefore = session.getLength();
+      const first = row + 1;
+      const tailStart = () => first + (session.getLength() - lengthBefore); // the first row that was below `row`
+      const closers = ')]}"\'';
+      const setIndent = (r, indent) => {
+        const text = session.getLine(r);
+        const current = text.length - text.trimStart().length;
+        if (current !== indent) session.replace({start: {row: r, column: 0}, end: {row: r, column: current}}, ' '.repeat(indent));
+      };
+      const moveTo = (r, column) => { editor.clearSelection(); editor.moveCursorTo(r, column); };
       showPointer(false); // like most systems, hide the mouse pointer while typing
+      const started = Date.now();
+      moveTo(row, session.getLine(row).length);
       editor.insert('\n', true);
       state.actions += 1;
-      const started = Date.now();
-      for (let i = 0; i < code.length; i += 1) {
-        await pause(keyGap(code, i));
-        const at = editor.getCursorPosition();
-        if (at.row !== line || at.column !== i) { editor.clearSelection(); editor.moveCursorTo(line, i); }
-        editor.insert(code[i]);
-        editor.renderer.scrollCursorIntoView(null, 0.5);
-        state.actions += 1;
+      let keys = 0;
+      for (let li = 0; li < lines.length; li += 1) {
+        const want = lines[li];
+        const body = want.trimStart();
+        const indent = want.length - body.length;
+        const r = first + li;
+        if (li > 0) {
+          await pause(typeMs * 2);
+          const rest = session.getLine(r - 1).slice(lines[li - 1].length);
+          const below = session.getLine(r).trim();
+          if (!rest.trim() && r < tailStart() && body && ')]}'.includes(body[0]) && below[0] === body[0]) moveTo(r, 0); // ↓
+          else editor.insert('\n'); // Enter
+          state.actions += 1;
+        }
+        setIndent(r, indent);
+        moveTo(r, indent);
+        for (let i = 0; i < body.length; i += 1) {
+          await pause(keyGap(body, i));
+          const c = body[i];
+          const column = indent + i;
+          const at = editor.getCursorPosition();
+          if (at.row !== r || at.column !== column) moveTo(r, column);
+          if (closers.includes(c) && session.getLine(r)[column] === c) moveTo(r, column + 1); // added with its pair: type over it
+          else editor.insert(c);
+          // RStudio re-indents some lines as they are typed (a closing brace, say): keep the reference's.
+          if (!session.getLine(r).startsWith(want.slice(0, column + 1))) {
+            setIndent(r, indent);
+            moveTo(r, column + 1);
+          }
+          editor.renderer.scrollCursorIntoView(null, 0.5);
+          state.actions += 1;
+          keys += 1;
+        }
       }
-      note('demo_action', {action: 'type', line: line + 1, chars: code.length, ms: Date.now() - started});
-      const typed = editor.session.getLine(line);
-      if (typed !== code) {
-        throw new Error(`Line ${line + 1} of ${script} reads ${typed} instead of ${code}. Something else edited it while the coach was typing.`);
+      // Closers RStudio added that the statement already has: after its last line, and on rows below.
+      const last = first + lines.length - 1;
+      const after = session.getLine(last).slice(lines[lines.length - 1].length);
+      if (after && /^[\s)\]}"']*$/.test(after)) {
+        session.remove({start: {row: last, column: lines[lines.length - 1].length}, end: {row: last, column: session.getLine(last).length}});
       }
-      return line;
+      while (tailStart() > last + 1 && /^[\s)\]}"']*$/.test(session.getLine(last + 1))) session.removeFullLines(last + 1, last + 1);
+      note('demo_action', {action: 'type', line: first + 1, lines: lines.length, chars: code.length, keys, ms: Date.now() - started});
+      const typed = session.getLines(first, last).join('\n');
+      if (typed !== code || tailStart() !== last + 1) {
+        throw new Error(`${script} reads ${JSON.stringify(session.getLines(first, tailStart() - 1).join('\n'))} where the coach typed ${JSON.stringify(code)}. Something else edited it while the coach was typing.`);
+      }
+      return {first, last};
     }
 
     async function save() {
@@ -1207,7 +1660,7 @@
       note('demo_action', {action: 'save', script});
     }
 
-    // Each line is narrated by what it is for (the run's `purpose`, from scenario.json), not by
+    // Each statement is narrated by what it is for (the run's `purpose`, from scenario.json), not by
     // where it goes: "Writing code to find the highest temperature".
     async function doRun(run, step, index) {
       const heading = step.heading || `# Step ${index + 1}. ${step.title}`;
@@ -1218,87 +1671,116 @@
       if (!block) {
         throw new Error(`${script} no longer has the line ${heading}, so the coach can't tell where step ${index + 1} goes. Put the heading back, or start this mode again to reset the script.`);
       }
-      // The spotlight takes in the step's heading and the line the code goes on.
+      // The spotlight takes in the step's heading and the lines the statement goes on.
       const headingRow = block.start - 1;
-      let row = lines.findIndex((line, r) => r >= block.start && r < block.end && line.trimEnd() === run.code);
+      const count = run.code.split('\n').length;
+      let row = findStatement(lines, block, run.code);
+      let last = row + count - 1;
       if (row >= 0) {
         // Already there (typed earlier, or by the learner): run it as it is rather than type it twice.
         say(`The code to ${run.purpose} is already in the script, so it runs again as it is`);
-        const at = row;
-        spotlight(() => editorRowsRect(editor, headingRow, at));
+        spotlight(() => editorRowsRect(editor, headingRow, last));
         await pause(leadMs);
         await clickInEditor(editor, row, 0); // at its start, so a long line doesn't scroll the editor sideways
       } else {
         say(`Writing code to ${run.purpose}`);
-        spotlight(() => editorRowsRect(editor, headingRow, block.last + 1));
+        spotlight(() => editorRowsRect(editor, headingRow, Math.max(block.last + 1, editor.getCursorPosition().row)));
         await pause(leadMs);
         await clickInEditor(editor, block.last, lines[block.last].length);
-        row = await typeLine(editor, block.last, run.code);
+        ({first: row, last} = await typeStatement(editor, block.last, run.code));
+        spotlight(() => editorRowsRect(editor, headingRow, last));
+        if (count > 1) {
+          await heed(400);
+          // Run sends the whole statement the cursor is in; the coach puts it on the first line.
+          say('Putting the cursor on the statement\'s first line');
+          await clickInEditor(editor, row, 0);
+        }
       }
       await heed(400);
 
-      // With no selection, Run sends the line the cursor is on, comment included.
-      say('Pressing Run to send this line to the Console (Ctrl+Enter does the same)');
-      const before = {echoes: countEchoes(ide.consoleText(), run.code), plot: ide.plotImage()?.src || null};
+      // With no selection, Run sends the statement the cursor is on, comment included.
+      say(count > 1 ? 'Pressing Run to send the whole statement, all its lines, to the Console (Ctrl+Enter does the same)'
+        : 'Pressing Run to send this line to the Console (Ctrl+Enter does the same)');
+      const before = {echoes: countEchoes(ide.consoleText(), run.code), plot: ide.plotImage()?.src || null,
+        mark: usesEvidence(run) ? await evidenceMark() : null};
       if (!(await clickOn(ide.runButton, 'run'))) throw new Error('The Run button in the Source pane is not visible.');
-      note('demo_action', {action: 'run', line: row + 1});
+      note('demo_action', {action: 'run', line: row + 1, lines: count});
 
-      spotlight(run.evidence === 'plot' ? ide.plots : ide.console);
+      const charts = ['plot', 'ggplot'].includes(run.evidence);
+      spotlight(charts ? ide.plots : ide.console);
       const output = await waitForEvidence(run, before);
-      const echoAt = ide.consoleText().lastIndexOf(`> ${run.code}`);
+      const echoAt = ide.consoleText().lastIndexOf(echoOf(run.code));
       state.echoAt = echoAt;
-      for (const [name, pattern] of Object.entries(run.capture || {})) {
-        // Read the value from what the Console shows. If RStudio wrapped the printout to
-        // fit a narrow pane, the tokens already match the reference, so use its reading.
-        const seen = (new RegExp(pattern).exec(normalise(output)) || [])[1] ?? run.expected_values[name];
-        if (seen !== run.expected_values[name]) {
-          throw new Error(`RStudio showed ${name} = ${seen}, but the reference run for this scenario gave ${run.expected_values[name]}.`);
+      if (run.capture) {
+        for (const [name, pattern] of Object.entries(run.capture)) {
+          // Read the value from what the Console shows. If RStudio wrapped the printout to
+          // fit a narrow pane, the tokens already match the reference, so use its reading.
+          const seen = (new RegExp(pattern).exec(normalise(output)) || [])[1] ?? run.expected_values[name];
+          if (seen !== run.expected_values[name]) {
+            throw new Error(`RStudio showed ${name} = ${seen}, but the reference run for this scenario gave ${run.expected_values[name]}.`);
+          }
+          state.values[name] = seen;
         }
-        state.values[name] = seen;
+      } else {
+        // R's value has the reference's fingerprint, so it is the reference's value: quote the bake's.
+        Object.assign(state.values, run.expected_values || {});
       }
       // Hold the result in the spotlight long enough to find and read it.
-      const stored = /^\s*([A-Za-z.][\w.]*)\s*(?:<-|=)/.exec(run.code)?.[1];
+      const stored = run.evidence === 'assign' ? run.expected?.assigned
+        : run.show === 'environment' ? /^\s*([A-Za-z.][\w.]*)\s*(?:<-|=)/.exec(run.code)?.[1] : null;
       const printed = normalise(output);
-      if (run.evidence === 'plot') {
+      if (charts) {
         spotlight(ide.plots);
         say('R drew the chart in the Plots pane');
-      } else if (run.show === 'environment' && stored) {
+      } else if (stored) {
         spotlight(() => environmentRowRect(stored) || ide.environment());
         say(`\`${stored}\` now appears in the Environment pane (an assignment prints nothing in the Console)`);
       } else {
         spotlight(() => consoleRangeRect(echoAt));
-        say(printed && printed.length <= 40 ? `R printed \`${printed}\` in the Console` : 'R printed the result in the Console');
+        say(run.evidence === 'error' ? 'R stopped with an error, shown in the Console'
+          : run.evidence === 'attached' ? `R attached ${run.expected?.library}; the Console lists what came with it`
+          : run.evidence === 'file' ? `R wrote ${run.path} into the project folder`
+          : printed && printed.length <= 40 ? `R printed \`${printed}\` in the Console` : 'R printed the result in the Console');
       }
       await heed(dwellMs);
       return output;
     }
 
-    // Done only when RStudio shows the line ran, with the reference output, plus a newly
-    // loaded chart for a plotting line. An R error stops the line visibly. R usually answers
-    // within a second, so "Pressing Run…" stays up until then; a slower line says it is running.
+    // Done only when RStudio shows the statement ran and R's evidence agrees with the reference: the
+    // same fingerprint (or for older lessons, the same printed output), plus a newly loaded chart for
+    // a chart. An R error stops the statement visibly, unless the statement is meant to fail. R
+    // usually answers within a second, so "Pressing Run…" stays up until then; a slower statement
+    // says it is running.
     async function waitForEvidence(run, before) {
-      const deadline = Date.now() + 20000;
+      const charts = ['plot', 'ggplot'].includes(run.evidence);
+      const deadline = Date.now() + 30000;
       let slowAt = Date.now() + 1500;
       let matchedAt = 0;
-      let seen = {echo: false, output: '', plot: false};
+      let seen = {echo: false, output: '', plot: false, ok: false};
+      const echo = echoOf(run.code);
       for (;;) {
         check();
         if (slowAt && Date.now() > slowAt && !matchedAt) {
           slowAt = 0;
-          setPhase(run.evidence === 'plot' ? 'R is still drawing the chart…' : 'R is still running the line…');
+          setPhase(charts ? 'R is still drawing the chart…' : 'R is still running the statement…');
         }
         const text = ide.consoleText();
         if (countEchoes(text, run.code) > before.echoes) {
-          const at = text.lastIndexOf(`> ${run.code}`);
-          const end = text.indexOf('\n', at);
+          const at = text.lastIndexOf(echo);
+          const end = text.indexOf('\n', at + echo.length);
           const output = end < 0 ? '' : text.slice(end + 1);
           const error = consoleError(output);
-          if (error) throw new Error(`R reported: ${error}`);
+          if (error && run.evidence !== 'error') throw new Error(`R reported: ${error}`);
           const img = ide.plotImage();
-          const plotOk = run.evidence !== 'plot' || Boolean(img && img.src !== before.plot && img.complete && img.naturalWidth > 0);
-          const outputOk = sameTokens(output, run.expected_output);
-          seen = {echo: true, output, plot: plotOk};
-          if (plotOk && outputOk) {
+          const newChart = Boolean(img && img.src !== before.plot && img.complete && img.naturalWidth > 0);
+          let ok;
+          if (run.evidence === 'console') ok = sameTokens(output, run.expected_output);
+          else if (run.evidence === 'plot') ok = newChart && sameTokens(output, run.expected_output);
+          else if (run.evidence === 'pattern') ok = new RegExp(run.pattern).test(output.trim());
+          else if (run.evidence === 'error') ok = Boolean(error) && new RegExp(run.error).test(error);
+          else ok = Boolean(evidenceMatch(run, await readEvidence(), before.mark)) && (run.evidence !== 'ggplot' || newChart);
+          seen = {echo: true, output, plot: newChart, ok};
+          if (ok) {
             matchedAt = matchedAt || Date.now();
             if (Date.now() - matchedAt >= 300) return output; // stable: no late error or extra output
           } else {
@@ -1306,15 +1788,143 @@
           }
         }
         if (Date.now() > deadline) {
-          if (!seen.echo) throw new Error('The Console never showed the line, so RStudio did not run it.');
-          if (!seen.plot) throw new Error('No new chart appeared in the Plots pane.');
-          throw new Error(`The Console showed "${normalise(seen.output).slice(0, 120)}" instead of the reference output "${normalise(run.expected_output).slice(0, 120)}".`);
+          if (!seen.echo) throw new Error('The Console never showed the statement, so RStudio did not run it.');
+          if (charts && !seen.plot) throw new Error('No new chart appeared in the Plots pane.');
+          if (run.evidence === 'error') throw new Error(`R didn't report the error this statement shows (${run.error}).`);
+          if (['console', 'plot'].includes(run.evidence)) {
+            throw new Error(`The Console showed "${normalise(seen.output).slice(0, 120)}" instead of the reference output "${normalise(run.expected_output).slice(0, 120)}".`);
+          }
+          if (run.evidence === 'pattern') throw new Error(`The Console showed "${normalise(seen.output).slice(0, 120)}", which isn't what this statement prints.`);
+          throw new Error(evidence.failures && !evidence.doc?.session ? 'The coach can\'t read what R did, so it can\'t confirm the result.'
+            : 'R\'s result differs from the reference result for this statement.');
         }
         await sleep(100);
       }
     }
 
-    return {openScript, doRun, save};
+    // IDE actions, worked the way a learner works them: the pointer goes to each menu, dialog and
+    // control in turn. Done once the evidence (or RStudio) shows the result.
+    async function doAction(run, step, index) {
+      const mark = await evidenceMark();
+      const purpose = run.purpose ? run.purpose[0].toUpperCase() + run.purpose.slice(1) : 'Working RStudio';
+      if (run.action === 'menu') {
+        say(`${purpose}: ${run.menu.join(' › ')}`);
+        await menuPath(run.menu);
+      } else if (run.action === 'open-file') {
+        await openFile(run.file);
+      } else if (run.action === 'option') {
+        say(`${purpose}: Tools › Global Options › ${run.pane}`);
+        await setOption(run);
+      } else if (run.action === 'format-document') {
+        say(`${purpose}: Code › Reformat Document`);
+        await menuPath(['Code', 'Reformat Document']);
+      } else if (run.action === 'new-file') {
+        say(`${purpose}: File › New File › ${run.kind}`);
+        await menuPath(['File', 'New File', run.kind]);
+        const dialog = () => ide.dialog(new RegExp(`New ${run.kind.replace(/…|\.\.\.$/, '')}`));
+        if (await waitFor(dialog, 4000)) {
+          // The lessons type into the source editor; RStudio's dialog remembers the visual editor if it was used before.
+          const visual = () => [...dialog().querySelectorAll('label')].find(l => shown(l) && /visual markdown editor/i.test(l.textContent));
+          const box = visual() && (visual().htmlFor ? document.getElementById(visual().htmlFor) : visual().parentElement.querySelector('input[type="checkbox"]'));
+          if (box?.checked) {
+            await clickOn(visual, 'dialog visual editor');
+            if (box.checked) box.click();
+          }
+          await clickOn(() => ide.dialogButton(dialog(), 'Create'), 'dialog Create');
+        }
+      } else if (run.action === 'render') {
+        say(`${purpose}: the Render button`);
+        if (!(await clickOn(() => ide.sourceButton(/^Render\b/), 'render'))) throw new Error('The Render button is not visible.');
+      } else if (run.action === 'editor-mode') {
+        const label = run.to === 'visual' ? 'Visual' : 'Source';
+        say(`${purpose}: the ${label} button`);
+        const toggle = () => [...document.querySelectorAll('#rstudio_Source_pane button, #rstudio_Source_pane [role="button"], #rstudio_Source_pane [role="tab"]')]
+          .find(b => shown(b) && (b.textContent.trim() === label || b.getAttribute('title') === label));
+        if (!(await clickOn(toggle, `editor ${label}`))) throw new Error(`The ${label} button is not visible.`);
+        // RStudio asks once, before the first switch to visual mode.
+        const ask = () => ide.dialog(/Switch to Visual Mode/);
+        if (run.to === 'visual' && await waitFor(() => ask() || ide.visualEditor(), 10000) && ask()) {
+          await clickOn(() => ask() && [...ask().querySelectorAll('button')].find(b => shown(b) && /Use Visual Mode/.test(b.textContent)), 'dialog Use Visual Mode');
+        }
+      } else if (run.action === 'shortcut') {
+        say(`${purpose}: ${run.keys}`);
+        // Into the open document, in whichever editor it shows.
+        const visual = ide.visualEditor();
+        const editor = visual ? null : ide.activeEditor();
+        if (!visual && !editor) throw new Error('No document is open in the Source pane.');
+        if (editor) editor.focus(); else visual.focus();
+        sendKeys(editor ? editor.textInput.getElement() : visual, run.keys);
+        state.actions += 1;
+      } else {
+        throw new Error(`The coach can't do the action ${run.action}.`);
+      }
+      note('demo_action', {action: run.action, step: step.id});
+      spotlight(run.evidence === 'file' ? ide.viewer : ide.console);
+      const started = Date.now();
+      let slow = false;
+      for (;;) {
+        check();
+        if (run.evidence === 'file' || run.evidence === 'ide' ? evidenceMatch(run, await readEvidence(), mark) : true) break;
+        if (!slow && run.ide?.restarted && Date.now() - started > 4000) {
+          slow = true;
+          setPhase('R is restarting. In a session\'s first half-minute RStudio holds a restart back for up to 30 seconds.');
+        }
+        if (Date.now() - started > 60000) throw new Error(`RStudio didn't show the result of ${run.action === 'menu' ? run.menu.join(' › ') : run.action}.`);
+        await sleep(200);
+      }
+      Object.assign(state.values, run.expected_values || {});
+      say(run.ide?.restarted ? 'R restarted: the Console shows a fresh session and the Environment is empty'
+        : run.ide && 'pref' in run.ide ? 'RStudio saved the setting'
+        : run.evidence === 'file' ? `RStudio wrote ${run.path}` : 'Done');
+      await heed(dwellMs);
+    }
+
+    async function menuPath(path) {
+      if (!(await clickOn(() => ide.menubar(path[0]), `menu ${path[0]}`))) throw new Error(`The ${path[0]} menu is not visible.`);
+      for (let k = 1; k < path.length; k += 1) {
+        const re = new RegExp(`^${path[k].replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/(…|\\\.\\\.\\\.)$/, '')}`);
+        if (!(await waitFor(() => ide.menuItem(re), 5000))) throw new Error(`The ${path.slice(0, k).join(' › ')} menu has no ${path[k]} item.`);
+        await clickOn(() => ide.menuItem(re), `menu ${path[k]}`, {lone: k < path.length - 1});
+      }
+    }
+
+    async function setOption(run) {
+      await menuPath(['Tools', 'Global Options']);
+      const dialog = () => ide.dialog(/General|Restore \.RData/) && [...document.querySelectorAll('.gwt-DialogBox, [role="dialog"]')]
+        .find(d => shown(d) && ide.dialogButton(d, 'OK') && ide.dialogButton(d, 'Cancel') && /Options/.test(d.querySelector('.gwt-Caption, [class*="Caption"], h1, h2')?.textContent || d.textContent.slice(0, 80)));
+      if (!(await waitFor(dialog, 10000))) throw new Error('The Global Options dialog did not open.');
+      // RStudio's labels sometimes end in a colon ("Restore .RData into workspace at startup:").
+      const plain = text => text.replace(/\s+/g, ' ').trim().replace(/:$/, '');
+      const label = () => [...(dialog()?.querySelectorAll('label') || [])].find(l => shown(l) && plain(l.textContent) === plain(run.label));
+      try {
+        await setIn(run, dialog, label);
+      } catch (error) {
+        const cancel = ide.dialogButton(dialog(), 'Cancel');
+        if (cancel) press(cancel); // leave RStudio as it was
+        throw error;
+      }
+    }
+    async function setIn(run, dialog, label) {
+      if (!label()) {
+        const pane = () => [...(dialog()?.querySelectorAll('*') || [])].find(el => el.childElementCount === 0 && shown(el) && el.textContent.trim() === run.pane);
+        if (!(await clickOn(pane, `options ${run.pane}`))) throw new Error(`Global Options has no ${run.pane} pane.`);
+        if (!(await waitFor(label, 5000))) throw new Error(`Global Options › ${run.pane} has no setting "${run.label}".`);
+      }
+      const box = () => {
+        const l = label();
+        return l && (l.htmlFor ? document.getElementById(l.htmlFor) : l.parentElement.querySelector('input[type="checkbox"]'));
+      };
+      if (box() && box().checked !== run.value) {
+        await clickOn(label, `option ${run.label}`);
+        if (box().checked !== run.value) box().click(); // GWT sometimes ignores a synthetic click on the label
+        if (box().checked !== run.value) throw new Error(`The coach couldn't set "${run.label}".`);
+      }
+      await pause(300);
+      if (!(await clickOn(() => ide.dialogButton(dialog(), 'OK'), 'options OK'))) throw new Error('The OK button of Global Options is not visible.');
+      await waitFor(() => !dialog(), 5000);
+    }
+
+    return {openScript, doRun, doAction, save};
   }
 
   // ---------- Guided and Solo: the learner works RStudio ----------
@@ -1376,27 +1986,31 @@
   }
   const expectedValues = steps => Object.assign({}, ...steps.flatMap(s => s.runs.map(r => r.expected_values || {})));
 
-  function renderGuided({content, session, lesson, status, restored, storeKey: keyFor, switchLabel, changeMode}) {
+  function renderGuided({content, session, lesson, status, restored, storeKey: keyFor, switchLabel, changeMode, finish, next}) {
     const steps = lesson.steps;
     const script = lesson.script;
     const key = (s, r) => `${s}.${r}`;
     const storeKey = keyFor('Guided');
     // done: {"step.line": "learner" | "coach"}; hints: {"step.line": hints read}.
     // since: the first Console entry that gets feedback for this step (undefined: the mode's first).
-    const g = (coach.guided = {step: 0, done: {}, hints: {}, values: {}, showing: false, show: null, feedback: '', since: undefined});
+    // mark: where R's evidence stood when the mode began; claims: the calls (or Console entries)
+    // already credited to a statement, so one result never ticks two.
+    const g = (coach.guided = {step: 0, done: {}, hints: {}, values: {}, showing: false, show: null, feedback: '', since: undefined, mark: null, claims: [], off: {}});
     try {
       const saved = JSON.parse(sessionStorage.getItem(storeKey) || 'null');
-      if (saved) Object.assign(g, {step: Math.min(saved.step || 0, steps.length - 1), done: saved.done || {}, hints: saved.hints || {}, values: saved.values || {}});
+      if (saved) Object.assign(g, {step: Math.min(saved.step || 0, steps.length - 1), done: saved.done || {}, hints: saved.hints || {}, values: saved.values || {}, mark: saved.mark || null, claims: saved.claims || [], off: saved.off || {}});
     } catch (_error) { /* storage blocked */ }
     const persist = () => {
-      try { sessionStorage.setItem(storeKey, JSON.stringify({step: g.step, done: g.done, hints: g.hints, values: g.values})); } catch (_error) { /* storage blocked */ }
+      try { sessionStorage.setItem(storeKey, JSON.stringify({step: g.step, done: g.done, hints: g.hints, values: g.values, mark: g.mark, claims: g.claims, off: g.off})); } catch (_error) { /* storage blocked */ }
     };
     const stepDone = s => steps[s].runs.every((_run, r) => g.done[key(s, r)]);
     const current = () => steps[g.step].runs.findIndex((_run, r) => !g.done[key(g.step, r)]); // -1: step done
     const finished = () => g.step === steps.length - 1 && stepDone(g.step);
 
     content.innerHTML = `
-      ${lessonHeader(lesson, `${lesson.summary} Type each line below its step heading in ${script}, then press Ctrl+Enter to run it. The coach ticks each line once RStudio shows the right result.`)}
+      ${lessonHeader(lesson, lesson.version === 2
+        ? `${lesson.summary} Type each statement below its step heading in ${script}, then press Ctrl+Enter to run it. The coach ticks each task once R shows the right result.`
+        : `${lesson.summary} Type each line below its step heading in ${script}, then press Ctrl+Enter to run it. The coach ticks each line once RStudio shows the right result.`)}
       ${stepList(steps)}
       <section class="card">
         <h3></h3>
@@ -1422,10 +2036,13 @@
     function hintsFor(s, r) {
       const step = steps[s];
       const run = step.runs[r];
+      if (run.action) return [escapeHtml(run.hint_where), escapeHtml(run.hint_how)];
+      const several = run.code.includes('\n');
       return [
-        `Type it on a new line below <code>${escapeHtml(step.heading)}</code> in ${escapeHtml(script)}. With the cursor on that line, press Ctrl+Enter or click Run.`,
-        `It starts like this: <code>${escapeHtml(run.hint_partial)}</code>`,
-        `The whole line is <code>${escapeHtml(run.hint_line)}</code>`,
+        `Type it on a new line below <code>${escapeHtml(step.heading)}</code> in ${escapeHtml(script)}. With the cursor on ${several ? 'its first line' : 'that line'}, press Ctrl+Enter or click Run.` +
+          (several && /[([{]\n/.test(run.code) ? ' When you press Enter between brackets, RStudio moves the closing one down a line for you, so don\'t type it twice.' : ''),
+        `It starts like this: ${codeHtml(run.hint_partial)}`,
+        `The whole ${several ? 'statement' : 'line'} is ${codeHtml(run.hint_line)}`,
       ];
     }
 
@@ -1440,12 +2057,13 @@
       $('.tasks').innerHTML = step.runs.map((run, k) =>
         `<li class="${g.done[key(g.step, k)] ? 'done' : k === r ? 'active' : ''}">${inline(run.task)}</li>`).join('');
       const read = r < 0 ? 0 : g.hints[key(g.step, r)] || 0;
-      $('.hints').innerHTML = r < 0 ? '' : hintsFor(g.step, r).slice(0, read).map(h => `<p class="hint-text">${h}</p>`).join('');
+      const hints = r < 0 ? [] : hintsFor(g.step, r);
+      $('.hints').innerHTML = hints.slice(0, read).map(h => `<p class="hint-text">${h}</p>`).join('');
       $('.feedback').textContent = r < 0 || g.showing ? '' : g.feedback;
       $('.explain').innerHTML = r < 0 ? format(step.explain, {...expectedValues(steps), ...g.values}) : '';
       hintBtn.hidden = showBtn.hidden = r < 0;
-      hintBtn.disabled = g.showing || read >= 3;
-      hintBtn.textContent = read >= 3 ? 'No more hints' : `Hint ${read + 1} of 3`;
+      hintBtn.disabled = g.showing || read >= hints.length;
+      hintBtn.textContent = read >= hints.length ? 'No more hints' : `Hint ${read + 1} of ${hints.length}`;
       showBtn.textContent = g.showing ? 'Stop' : 'Show me';
       nextBtn.hidden = r >= 0 || finished();
       nextBtn.textContent = `Next: step ${g.step + 2}`;
@@ -1460,19 +2078,24 @@
           <ul class="stats">
             <li>Steps done without help: <strong>${own} of ${steps.length}</strong></li>
             <li>Hints read: <strong>${hints}</strong></li>
-            <li>Lines the coach showed you: <strong>${shown}</strong></li>
+            <li>${unitOf(lesson) === 'task' ? 'Tasks' : 'Lines'} the coach showed you: <strong>${shown}</strong></li>
           </ul>
-          <p class="muted">To practise without the step-by-step checks, change mode to Solo.</p>`;
+          <p class="muted">To practise without the step-by-step checks, change mode to Solo.</p>
+          ${next ? `<div class="row"><button class="primary next-lesson">${escapeHtml(next.label)}</button></div>` : ''}`;
+        debrief.querySelector('.next-lesson')?.addEventListener('click', () => next.go());
         status(`Guided lesson complete · ${lesson.title}`);
+        finish?.();
       }
     }
 
-    function complete(s, r, by, output) {
+    function complete(s, r, by, output, claim = null) {
       const k = key(s, r);
       if (g.done[k]) return;
       Object.assign(g.values, captured(steps[s].runs[r], output));
       g.done[k] = by;
+      if (claim) g.claims.push(claim);
       g.feedback = '';
+      if (lesson.version === 2) g.since = entriesNow() ?? g.since; // what ran before this tick needs no feedback
       persist();
       note('guided_line_done', {step: steps[s].id, line: r, by});
       if (stepDone(s)) note('guided_step_done', {step: steps[s].id});
@@ -1487,37 +2110,54 @@
         const entry = view.entries[k];
         if (!codeKey(entry.code)) continue; // a comment, such as a step heading Run sent along
         const error = consoleError(entry.output);
-        if (error) return `R reported: ${error.replace(/\.$/, '')}. Fix the line, then run it again.`;
-        if (steps.some(step => step.runs.some(run => matchRun(run, view, k)?.index === k))) return '';
-        if (view.quietMs < 2500) return g.feedback; // a chart may still be loading
-        return `RStudio ran ${entry.code.trim()}, but that isn't what this line asks for. Check the task, or ask for a hint.`;
+        const wanted = steps[g.step].runs[current()];
+        if (error && !(wanted?.evidence === 'error')) return `R reported: ${error.replace(/\.$/, '')}. Fix the line, then run it again.`;
+        if (lesson.version !== 2 && steps.some(step => step.runs.some(run => matchRun(run, view, k)?.index === k))) return '';
+        if (view.quietMs < 2500) return g.feedback; // a chart may still be loading, or R's evidence arriving
+        const ran = entry.code.trim().split('\n')[0] + (entry.code.trim().includes('\n') ? ' …' : '');
+        return lesson.version === 2 ? `RStudio ran ${ran}, but R's result isn't what this step asks for. Check the task, or ask for a hint.`
+          : `RStudio ran ${ran}, but that isn't what this line asks for. Check the task, or ask for a hint.`;
       }
       return null;
     }
 
     const watch = consoleWatch(restored);
     const entriesNow = () => watch.poll()?.entries.length ?? null; // null: Console not settled yet
-    const timer = setInterval(() => {
-      const view = watch.poll();
-      if (!view) return;
-      if (g.since === null) g.since = view.entries.length;
-      const s = g.step;
-      for (const [r, run] of steps[s].runs.entries()) {
-        if (g.done[key(s, r)]) continue;
-        const match = matchRun(run, view);
-        if (match && view.quietMs >= 600) complete(s, r, g.showing ? 'coach' : 'learner', match.output);
+    // Statements count from the mode's start: a fresh mode marks where R's evidence stands now.
+    if (!g.mark) evidenceMark().then(mark => { g.mark = mark; noteIdeOff(lesson, evidence.doc || EMPTY_EVIDENCE, mark, g.off); persist(); });
+    let polling = false;
+    let ended = false;
+    const timer = setInterval(async () => {
+      if (polling) return;
+      polling = true;
+      try {
+        const view = watch.poll();
+        if (!view) return;
+        const doc = lesson.version === 2 ? await readEvidence() : null;
+        if (ended) return;
+        if (doc && g.mark) noteIdeOff(lesson, doc, g.mark, g.off);
+        if (g.since === null) g.since = view.entries.length;
+        const s = g.step;
+        for (const [r, run] of steps[s].runs.entries()) {
+          if (g.done[key(s, r)]) continue;
+          const match = runDone(run, view, doc, g.mark, new Set(g.claims), g.off);
+          if (match && view.quietMs >= 600) complete(s, r, g.showing ? 'coach' : 'learner', match.output, match.key);
+        }
+        if (g.showing || current() < 0) return;
+        const feedback = feedbackFor(view);
+        if (feedback !== null && feedback !== g.feedback) { g.feedback = feedback; render(); }
+      } finally {
+        polling = false;
       }
-      if (g.showing || current() < 0) return;
-      const feedback = feedbackFor(view);
-      if (feedback !== null && feedback !== g.feedback) { g.feedback = feedback; render(); }
     }, 300);
 
     hintBtn.addEventListener('click', () => {
       const r = current();
       if (r < 0 || g.showing) return;
       const k = key(g.step, r);
-      g.hints[k] = Math.min(3, (g.hints[k] || 0) + 1);
-      if (g.hints[k] === 1) highlight(ide.source(), 4000);
+      const run = steps[g.step].runs[r];
+      g.hints[k] = Math.min(hintsFor(g.step, r).length, (g.hints[k] || 0) + 1);
+      if (g.hints[k] === 1) highlight(run.action ? actionControl(run) : ide.source(), 4000);
       persist();
       note('hint', {step: steps[g.step].id, line: r, level: g.hints[k]});
       render();
@@ -1535,14 +2175,23 @@
       render();
       note('show_me', {step: step.id, line: r});
       const drive = makeDriver(lesson, g.show, setPhase);
+      const run = step.runs[r];
       try {
-        await drive.openScript();
-        const output = await drive.doRun(step.runs[r], step, s);
-        await drive.save();
-        complete(s, r, 'coach', output);
+        let output = '';
+        if (run.action) {
+          await drive.doAction(run, step, s);
+        } else {
+          await drive.openScript();
+          output = await drive.doRun(run, step, s);
+          await drive.save();
+        }
+        // The coach's result is the one that counts for this statement.
+        const doc = lesson.version === 2 ? await readEvidence(0) : null;
+        const match = runDone(run, watch.poll() || {entries: [], from: 0, plots: []}, doc, g.mark, new Set(g.claims), null);
+        complete(s, r, 'coach', output, match?.key);
       } catch (error) {
         if (!(error instanceof DemoStopped)) {
-          g.feedback = `The coach couldn't show this line. ${error.message}`;
+          g.feedback = `The coach couldn't show this ${run.action ? 'step' : 'line'}. ${error.message}`;
           g.since = entriesNow(); // keep this message until the learner runs something new
           note('show_me_failed', {step: step.id, reason: error.message});
         }
@@ -1568,6 +2217,7 @@
 
     render();
     return () => {
+      ended = true;
       clearInterval(timer);
       if (g.show) g.show.stopped = true;
       showPointer(false);
@@ -1577,23 +2227,25 @@
     };
   }
 
-  function renderSolo({content, session, lesson, status, restored, storeKey: keyFor, switchLabel, changeMode}) {
+  function renderSolo({content, session, lesson, status, restored, storeKey: keyFor, switchLabel, changeMode, finish, next}) {
     const steps = lesson.steps;
     const lines = steps.flatMap((step, s) => step.runs.map((run, r) => ({k: `${s}.${r}`, run})));
+    const unit = unitOf(lesson);
     const storeKey = keyFor('Solo');
     // seen: lines RStudio showed with the reference result (kept quiet until a check);
     // checked: what the last check disclosed.
-    const solo = (coach.solo = {seen: {}, hints: {}, values: {}, checked: null});
+    // mark and claims: as in Guided.
+    const solo = (coach.solo = {seen: {}, hints: {}, values: {}, checked: null, mark: null, claims: [], off: {}});
     try {
       const saved = JSON.parse(sessionStorage.getItem(storeKey) || 'null');
-      if (saved) Object.assign(solo, {seen: saved.seen || {}, hints: saved.hints || {}, values: saved.values || {}, checked: saved.checked || null});
+      if (saved) Object.assign(solo, {seen: saved.seen || {}, hints: saved.hints || {}, values: saved.values || {}, checked: saved.checked || null, mark: saved.mark || null, claims: saved.claims || [], off: saved.off || {}});
     } catch (_error) { /* storage blocked */ }
     const persist = () => {
       try { sessionStorage.setItem(storeKey, JSON.stringify(solo)); } catch (_error) { /* storage blocked */ }
     };
 
     content.innerHTML = `
-      ${lessonHeader(lesson, `${lesson.summary} Work through the list on your own in ${lesson.script}: type each line below its step heading and run it. The coach checks nothing until you ask.`)}
+      ${lessonHeader(lesson, `${lesson.summary} Work through the list on your own in ${lesson.script}: type each ${lesson.version === 2 ? 'statement' : 'line'} below its step heading and run it. The coach checks nothing until you ask.`)}
       <ol class="solo-steps">${steps.map((step, s) => `
         <li><strong>${escapeHtml(step.title)}</strong>
           <ul class="tasks">${step.runs.map((run, r) => `
@@ -1615,7 +2267,8 @@
         const [s, r] = k.split('.').map(Number);
         li.className = solo.checked ? (solo.checked.seen[k] ? 'done' : 'missing') : '';
         li.querySelector('.hint').hidden = Boolean(solo.hints[k]);
-        li.querySelector('.hint-text').innerHTML = solo.hints[k] ? `It starts like this: <code>${escapeHtml(steps[s].runs[r].hint_partial)}</code>` : '';
+        const run = steps[s].runs[r];
+        li.querySelector('.hint-text').innerHTML = !solo.hints[k] ? '' : run.action ? escapeHtml(run.hint_how) : `It starts like this: ${codeHtml(run.hint_partial)}`;
       }
       const results = $('.results');
       results.hidden = !solo.checked;
@@ -1625,33 +2278,50 @@
       $('.check').textContent = 'Check again';
       if (done === lines.length) {
         const values = {...expectedValues(steps), ...solo.values};
-        results.innerHTML = `<h3>All ${lines.length} lines done</h3>
-          <p>Every line gave the reference result in RStudio. Hints used: <strong>${hints}</strong>.</p>
+        results.innerHTML = `<h3>All ${lines.length} ${unit}s done</h3>
+          <p>Every ${unit} gave the reference result in RStudio. Hints used: <strong>${hints}</strong>.</p>
           <details><summary>What each step showed</summary>
             ${steps.map(step => `<h4>${escapeHtml(step.title)}</h4>${format(step.explain, values)}`).join('')}
-          </details>`;
+          </details>
+          ${next ? `<div class="row"><button class="primary next-lesson">${escapeHtml(next.label)}</button></div>` : ''}`;
+        results.querySelector('.next-lesson')?.addEventListener('click', () => next.go());
         status(`Solo lesson complete · ${lesson.title}`);
+        finish?.();
       } else {
-        results.innerHTML = `<h3>${done} of ${lines.length} lines done</h3>
-          <p>The ticked lines gave the reference result in RStudio. Run the others, then check again. Hints used: <strong>${hints}</strong>.</p>`;
+        results.innerHTML = `<h3>${done} of ${lines.length} ${unit}s done</h3>
+          <p>The ticked ${unit}s gave the reference result in RStudio. ${unit === 'task' ? 'Do' : 'Run'} the others, then check again. Hints used: <strong>${hints}</strong>.</p>`;
       }
     }
 
     const watch = consoleWatch(restored);
-    const timer = setInterval(() => {
-      const view = watch.poll();
-      if (!view || view.quietMs < 600) return;
-      let changed = false;
-      for (const {k, run} of lines) {
-        if (solo.seen[k]) continue;
-        const match = matchRun(run, view);
-        if (!match) continue;
-        solo.seen[k] = true;
-        Object.assign(solo.values, captured(run, match.output));
-        changed = true;
-        note('solo_line_seen', {line: k}); // recorded, not shown until the learner checks
+    if (!solo.mark) evidenceMark().then(mark => { solo.mark = mark; noteIdeOff(lesson, evidence.doc || EMPTY_EVIDENCE, mark, solo.off); persist(); });
+    let polling = false;
+    let ended = false;
+    const timer = setInterval(async () => {
+      if (polling) return;
+      polling = true;
+      try {
+        const view = watch.poll();
+        if (!view || view.quietMs < 600) return;
+        const doc = lesson.version === 2 ? await readEvidence() : null;
+        if (ended) return;
+        if (doc && solo.mark) noteIdeOff(lesson, doc, solo.mark, solo.off);
+        let changed = false;
+        // In lesson order, so an earlier statement gets the first claim on a result.
+        for (const {k, run} of lines) {
+          if (solo.seen[k]) continue;
+          const match = runDone(run, view, doc, solo.mark, new Set(solo.claims), solo.off);
+          if (!match) continue;
+          solo.seen[k] = true;
+          if (match.key) solo.claims.push(match.key);
+          Object.assign(solo.values, captured(run, match.output));
+          changed = true;
+          note('solo_line_seen', {line: k}); // recorded, not shown until the learner checks
+        }
+        if (changed) persist();
+      } finally {
+        polling = false;
       }
-      if (changed) persist();
     }, 300);
 
     for (const button of content.querySelectorAll('button.hint')) {
@@ -1671,7 +2341,7 @@
     $('.switch').addEventListener('click', () => changeMode());
 
     render();
-    return () => { clearInterval(timer); coach.solo = null; };
+    return () => { ended = true; clearInterval(timer); coach.solo = null; };
   }
 
   // ---------- helpers ----------
@@ -1718,6 +2388,14 @@
     const row = (cell.closest('tr') || cell).getBoundingClientRect();
     const p = pane.getBoundingClientRect();
     return {left: p.left + 4, top: row.top, right: p.right - 4, bottom: row.bottom};
+  }
+  // The row where `code` (all its lines) starts in a step's block, or -1.
+  function findStatement(lines, block, code) {
+    const want = code.split('\n');
+    for (let r = block.start; r + want.length <= block.end; r += 1) {
+      if (want.every((line, k) => lines[r + k].trimEnd() === line)) return r;
+    }
+    return -1;
   }
   // A step's code goes below its "# Step N." heading, up to the next heading. `last` is the
   // step's last non-blank line (the heading itself if nothing is typed yet).
@@ -1786,8 +2464,10 @@
     }
     return out.replace(/^([A-Za-z.][\w.]*)=(?!=)/, '$1<-');
   }
+  // How RStudio's Console echoes a statement: "> " before its first line and "+ " before each other.
+  const echoOf = code => `> ${code.split('\n').join('\n+ ')}`;
   function countEchoes(text, code) {
-    const needle = `> ${code}`;
+    const needle = echoOf(code);
     let count = 0;
     for (let at = text.indexOf(needle); at !== -1; at = text.indexOf(needle, at + needle.length)) count += 1;
     return count;

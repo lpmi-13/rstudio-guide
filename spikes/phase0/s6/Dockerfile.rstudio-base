@@ -1,0 +1,15 @@
+# S6 comparison only: the lessons' packages installed onto rocker/rstudio:4.6.2 instead of starting
+# from rocker/tidyverse:4.6.2 (which also brings arrow, devtools and database client libraries the
+# lessons don't use). Same snapshot as runtime/Dockerfile. Build from the repository root:
+#   docker build -f spikes/phase0/s6/Dockerfile.rstudio-base -t rstudio-guide-s6-rstudio-base .
+FROM rocker/rstudio:4.6.2@sha256:ab667f419a10edc60f95da38149644d6f9eea266216b51dcce1d4df9e36dfcd6
+ARG P3M_SNAPSHOT=https://p3m.dev/cran/__linux__/resolute/2026-11-19
+# Runtime libraries the binary packages link to, which rocker/tidyverse's script installs (as -dev
+# packages) and rocker/rstudio doesn't: libuv for fs (so gt and reprex), libwebpmux for ragg.
+RUN apt-get update && apt-get install -y --no-install-recommends libuv1t64 libwebpmux3 \
+ && rm -rf /var/lib/apt/lists/* \
+ && install2.r --error --skipinstalled -n 4 -r "${P3M_SNAPSHOT}" \
+      tidyverse DBI dbplyr duckdb duckplyr janitor writexl patchwork ggrepel gt reactable \
+      styler quarto later rmarkdown shiny \
+ && rm -rf /tmp/downloaded_packages \
+ && Rscript -e 'for (p in c("tidyverse", "DBI", "dbplyr", "duckdb", "duckplyr", "janitor", "writexl", "patchwork", "ggrepel", "gt", "reactable", "styler", "quarto", "later", "rmarkdown", "shiny", "readxl", "rvest", "broom", "reprex", "ragg")) loadNamespace(p)'

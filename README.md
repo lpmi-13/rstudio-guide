@@ -2,6 +2,8 @@
 
 RStudio Server with an in-IDE coach, two lessons that can each be watched (Demonstration), done with help (Guided) or done alone (Solo), and an iximiuz Labs playground. It began as the feasibility spike for `plan-docs/R_STUDIO_WRAPPED.md` §6 (probes "Proxy and coach" and "Demonstration control"). This README is also the spike's decision record, dated 19 November 2026.
 
+**Inspiration for the lessons.** The next set of lessons follows the chapters of [R for Data Science (2e)](https://r4ds.hadley.nz) by Hadley Wickham, Mine Çetinkaya-Rundel and Garrett Grolemund. There will be one lesson for each of its 29 chapters, teaching the same concepts. The book guides what the lab teaches; it isn't a source of material. The lessons use their own code, data and explanations, built on current R packages. They will replace the two article-based lessons described below, `graphical-tools` and `statistical-tools`. The plan is `plan-docs/R4DS_CHAPTERS_PLAN.md`. The book is free to read online, and it is the best place to go deeper on any of these topics.
+
 **Try it in your browser:** [RStudio coach on iximiuz Labs](https://labs.iximiuz.com/playgrounds/rstudio-guide-16afe14e). It needs a free iximiuz account. Starting it takes about a minute. The **Terminal** tab then shows the RStudio password; open the **RStudio** tab and sign in. (The playground still runs the version before the mode picker until the rootfs is republished.)
 
 | Question | Answer |
@@ -20,12 +22,19 @@ One intermittent failure appeared earlier, before the fix in finding 7: Chromium
 ```bash
 ./run.sh up                      # both lessons in one project, "lessons" (the default)
 ./run.sh up statistical-tools    # one lesson only (or graphical-tools, or regional-revenue)
+./run.sh up engine-check         # an audit fixture for the new lessons' engine (or engine-actions)
 ./run.sh down                    # stop and delete the run directory
+
+# Checks of the lessons' content, and their reference results (both also run as part of `up`).
+python3 -I tools/check_content.py
+python3 -I tools/bake.py rstudio-guide-runtime:local engine-check engine-actions
 
 # Audits (need @playwright/test installed globally). Each provisions its own runs.
 ./run.sh up regional-revenue && NODE_PATH=$(npm root -g) node tests/coach_in_ide.cjs results
 NODE_PATH=$(npm root -g) node tests/demo_mode.cjs results
 NODE_PATH=$(npm root -g) node tests/practice_modes.cjs results
+NODE_PATH=$(npm root -g) node tests/lesson_modes.cjs engine-check results/engine-check
+NODE_PATH=$(npm root -g) node tests/lesson_switch.cjs results/lesson-switch
 ```
 
 After signing in, choose a lesson and then **Demonstration**, **Guided** or **Solo** in the Coach pane on the right; `run.sh` prints the same reminder. A one-lesson run skips the lesson cards. `regional-revenue` is the original Guided stub (a Check work button, no steps), so it opens straight into it with no picker, and it can't share a run.
@@ -37,7 +46,8 @@ After signing in, choose a lesson and then **Demonstration**, **Guided** or **So
 ### Requirements
 
 - Docker Engine with Compose v2, Python 3, curl and bash. `run.sh up` checks for these.
-- About 3 GB of disk for the RStudio image (amd64 or arm64), and about 200 MB of RAM per run at idle.
+- An amd64 machine. The lab is built and tested for amd64 only.
+- About 3.2 GB of disk for the RStudio image, and about 200 MB of RAM per run at idle.
 - Free ports 8788 and 18787.
 - Audits only: Node with `@playwright/test` and its Chromium installed globally.
 - `run.sh` passes your UID/GID to the container, so RStudio can save into the bind-mounted project. UID 1000 is tested here. On iximiuz, `laborant` is UID 1001, and sign-in and both demos worked through rocker's re-created user. Saving a file under a non-1000 UID has not been tested.
@@ -46,12 +56,17 @@ After signing in, choose a lesson and then **Demonstration**, **Guided** or **So
 
 | Piece | File | Notes |
 | --- | --- | --- |
-| Scenarios | `scenarios/<id>/scenario.json`, `scenarios/<id>/project/` | `graphical-tools` and `statistical-tools` offer `"modes": ["demonstration", "guided", "solo"]` and can share a run; `regional-revenue` offers only its Guided stub. A lesson's steps, code, evidence type, captured values, narration (each line's `purpose`) and the task shown to a learner for each line all live in one file. |
-| Provisioning | `tools/provision.py`, `runtime/reference.R` | Copies each lesson's files into one project (named after the lesson, or `lessons` when there are several, with a README listing them; it refuses clashing file names) and generates each lesson's script from `scenario.json`: a header and one `# Step N.` heading per step, with no code yet. The coach or the learner types it, depending on the mode. Every line needs a `task` when Guided or Solo is offered, and gets two generated hints: how it starts (`plot(…)`) and the line without its comment. It then runs every line in a throwaway container from the same image (`--network none`, 512 MB, 1 CPU, 60 s) to record what R prints and whether it draws. The run is not reported ready if any line errors, its plot/no-plot behaviour is wrong, or a capture pattern doesn't match. It writes `run/public/session.json` (the lessons and their modes) and `steps.json` for the coach. `run.sh` reports Ready only after the gateway answers and the host network has settled (finding 7). |
-| Runtime | `runtime/Dockerfile`, `runtime/rstudio-prefs.json`, `runtime/03_lab_project` | `rocker/rstudio:4.6.2@sha256:ab667f41…` (RStudio Server 2026.11.0+203, R 4.6.2). The preferences show the sidebar on the right and hide Posit Assistant. Admin settings in `/etc/rstudio/rsession.conf` lock out Posit Assistant and Copilot, so a learner can't turn them back on: `posit-assistant-enabled`, `posit-assistant-installation-enabled`, `copilot-enabled` and the two `allow-*` options, all `0`. A container-init hook opens the run's project on first sign-in. |
-| Gateway | `gateway/nginx.conf` | `nginx:1.30.7-alpine` (stable branch). Proxies everything, including WebSockets and long-polls. Only the IDE host page (`location = /`) is rewritten, with the coach script tag placed right after `<head>`. `/coach/api/session` and `/coach/api/steps` serve the run's public files. `/coach/api/check` is a stub. |
-| Coach | `coach/coach.js` | Vanilla JS in a Shadow DOM, about 1,800 lines. Contains the keyboard shield, docking and floating placement, an overlay with the highlight box and the pointer, the lesson and mode picker, the fresh start (script reset, Environment, Plots and Console cleared), the RStudio driver (Demonstration and Show me), the Console watcher (Guided and Solo), and the regional-revenue Guided stub. |
-| Audits | `tests/coach_in_ide.cjs`, `tests/demo_mode.cjs`, `tests/practice_modes.cjs` (shared helpers in `tests/lib.cjs`) | Playwright on headless Chromium. They drive the real IDE through the gateway, using only the coach's visible buttons and the keyboard, as a learner would; they never call coach internals to complete a step. They write `results/*.json` and screenshots to a local, git-ignored `results/` folder. |
+| Scenarios | `scenarios/<id>/scenario.json`, `scenarios/<id>/project/` | `graphical-tools` and `statistical-tools` offer `"modes": ["demonstration", "guided", "solo"]` and can share a run; `regional-revenue` offers only its Guided stub. A lesson's steps, code, evidence type, captured values, narration (each line's `purpose`) and the task shown to a learner for each line all live in one file. Lessons with `"version": 2` use the format for the lessons modelled on R for Data Science (see Phase 1); `engine-check` and `engine-actions` are audit fixtures in that format. |
+| Lessons | `content/lessons/collection.json`, `content/lessons/baked/` | The 29 lessons modelled on R for Data Science, in the book's six parts, each with its Go deeper link; a lesson's number is its place in the list. `baked/` holds each lesson's reference results (see Bake). |
+| World | `content/world/generate.R`, `check.R`, `data/` | Larkhaven Bikes, the made-up city all the new lessons use, generated from one seed (see Phase 1). The small files are committed; the image generates everything and fails to build if its small files differ. |
+| Provisioning | `tools/provision.py` | Copies each lesson's files into one project (named after the lesson, or `lessons` when there are several, with a README listing them; it refuses clashing file names), adds `data/` for lessons that use the world, and generates each lesson's script from `scenario.json`: a header and one `# Step N.` heading per step, with no code yet. The coach or the learner types it, depending on the mode. Every statement needs a `task` when Guided or Solo is offered, and gets generated hints (how it starts, `plot(…)` or `trips |>` then `filter(…)`, and the whole statement without comments); an IDE action gets two (where to look, then exactly what to do). The reference results come from the bake. The run is not reported ready if the bake fails. It writes `run/public/session.json` (the lessons and their modes) and `steps.json` for the coach. `run.sh` reports Ready only after the gateway answers and the host network has settled (finding 7). |
+| Bake | `tools/bake.py`, `runtime/bake.R` | Runs each lesson twice, as the Console would, in throwaway containers from the runtime image (`--network none`, read-only, 2 GB, 2 CPUs, 10 minutes) and records each statement's output, fingerprint, assigned name, chart, warnings, messages, files written and quoted values. It fails on anything unexpected (see Phase 1) and when the two runs differ. Results are committed in `content/lessons/baked/` with a stamp of what they depend on, so `up` bakes only after a change. |
+| Content checks | `tools/check_content.py` | The schema, purposes and tasks, step counts and the evidence each statement needs, without running R. |
+| Runtime | `runtime/Dockerfile`, `runtime/rstudio-prefs.json`, `runtime/03_lab_project`, `runtime/evidence.R`, `runtime/packages.lock` | `rocker/tidyverse:4.6.2@sha256:9241ac46…` (RStudio Server 2026.11.0+203, R 4.6.2, Ubuntu 26.04), from 20 November 2026; before that, `rocker/rstudio:4.6.2`. It adds the new lessons' packages from a dated Posit Package Manager snapshot, Air 0.13.0 and `~/.duckdb` (see Phase 0 spikes). The build fails if any installed package's version differs from `runtime/packages.lock` (refresh it with `tools/update_packages_lock.sh` after a deliberate upgrade), and it generates the world into `/opt/lab/world`. Each RStudio session records evidence of the learner's work for the coach (`runtime/evidence.R`, spike S2). The preferences show the sidebar on the right, hide Posit Assistant, use Air, run whole statements with Ctrl+Enter, and show rendered documents in the Viewer. Admin settings in `/etc/rstudio/rsession.conf` lock out Posit Assistant and Copilot, so a learner can't turn them back on: `posit-assistant-enabled`, `posit-assistant-installation-enabled`, `copilot-enabled` and the two `allow-*` options, all `0`. A container-init hook opens the run's project on first sign-in. |
+| Gateway | `gateway/nginx.conf` | `nginx:1.30.7-alpine` (stable branch). Proxies everything, including WebSockets and long-polls. Only the IDE host page (`location = /`) is rewritten, with the coach script tag placed right after `<head>`. `/coach/api/session` and `/coach/api/steps` serve the run's public files. `/coach/api/evidence` serves R's evidence only to a browser signed in to RStudio (`auth_request`). `/coach/api/check` is a stub. |
+| Coach | `coach/coach.js` | Vanilla JS in a Shadow DOM, about 2,500 lines. Contains the keyboard shield (which also notices shortcuts such as Alt+-), docking and floating placement, an overlay with the highlight box and the pointer, the lesson and mode picker (and the one-line picker for the new lessons), the fresh start (script reset, Environment, Plots and Console cleared; R restarted between new lessons), the RStudio driver (Demonstration and Show me: multi-line typing and IDE actions), the evidence reader, the Console watcher (Guided and Solo), and the regional-revenue Guided stub. |
+| Audits | `tests/coach_in_ide.cjs`, `tests/demo_mode.cjs`, `tests/practice_modes.cjs`, `tests/lesson_modes.cjs`, `tests/lesson_switch.cjs` (shared helpers in `tests/lib.cjs`) | Playwright on headless Chromium. They drive the real IDE through the gateway, using only the coach's visible buttons, the keyboard and RStudio's own menus, as a learner would; they never call coach internals to complete a step. They write `results/*.json` and screenshots to a local, git-ignored `results/` folder. |
+| Spikes | `spikes/phase0/` | The Phase 0 spikes for the new lessons (see that section). They use the audits' helpers and write to `results/spikes/`. |
 
 ## Docking into the sidebar
 
@@ -249,6 +264,116 @@ At every explanation, the audit takes its own snapshot of the Console and Plots 
    - `allow-posit-assistant=0` and `allow-copilot=0` alone changed nothing visible.
    - The integration switches did: `posit-assistant-enabled=0`, `copilot-enabled=0` and `posit-assistant-installation-enabled=0`. With them, nothing assistant-related appears, even after the learner re-enables it.
    - None of these options is listed in `rsession --help` in this build. The guided audit now re-enables assistants as a learner would and fails if any trace appears. The sidebar becomes an empty pane that the coach covers.
+
+## Phase 0 spikes for the new lessons (20 November 2026)
+
+The new lessons follow `plan-docs/R4DS_CHAPTERS_PLAN.md`. Its Phase 0 has seven spikes; this section is their decision record. Each spike is a script in `spikes/phase0/` and writes to `results/spikes/`. They run against `./run.sh up statistical-tools` on the candidate image below.
+
+| Spike | Result | Decision |
+| --- | --- | --- |
+| **S1** Multi-line typing (`s1_multiline.cjs`) | Four statements typed one key at a time came out exact, both through Ace's `editor.insert` (RStudio's auto-indent and auto-pairing act) and through `session.insert` (they don't): a `\|>` pipeline, a ggplot `+` chain with arguments across lines, a `tribble` and a function. **Run** on a statement's first line, with no selection, ran the whole statement, and the coach's Console parser read the multi-line echo. | Keep typing through `editor.insert`, so learners see RStudio's auto-pairing. When Enter falls between a pair, RStudio moves the closer down a line; the coach steps past it, as a learner presses ↓, and sets each line's indentation to the reference's. `execution_behavior` is set to `statement` explicitly. |
+| **S2** Evidence channel (`s2_evidence.cjs`, `runtime/evidence.R`) | All 17 statements gave the same fingerprint live in RStudio as in a throwaway, network-less `Rscript` (the bake): a `read_csv()` result, grouped tibbles, dates, plots, `lm()`, assignments, 150,000-row tables. Equivalent code matched: a plot with positional arguments and one with named arguments and the colour in the layer; a tibble, a grouped tibble and a `data.frame`. `summarize(.by =)` and `group_by() \|> summarize()` order rows differently, so they match only on the order-free fingerprint. Enter to evidence: 85–390 ms for tables, 0.8–1.7 s for charts (mostly R drawing them). Fingerprinting took 44–48 ms for 150,000 rows and 1.1 s for `flights` (336,776 × 19), after the prompt has returned. An anonymous request got 401. The Console showed nothing extra (the loess message once). | Adopt it. Fingerprints are computed after the prompt returns (`later`), not in the task callback. Phase 1 trims the cost on large tables (an order-free fingerprint only when a step asks for one). |
+| **S3** Console width (in `s2_evidence.cjs`) | The docked Console at 1366×768 is 68 characters wide. `flights` printed 7 of its 19 columns there, against all 19 at width 200. | Confirms that comparing printed tokens can't check tibbles. Value fingerprints replace it. |
+| **S4** IDE actions (`s4_ide_actions.cjs`) | 13/13 with synthetic events, as the coach acts: Code › Reformat Document with Air (same as `air format`); Ctrl+Shift+M and Alt+- sent as synthetic keys inserted `\|>` and `<-`; a capture listener sees a learner press Alt+-; ticking and unticking **Restore .RData** in Global Options showed in the evidence within 0.3–1.1 s; `View()` opened tabs for a data frame and a list; `?mean` in Help; reprex rendered in the Viewer; File › New File › Quarto Document… created `Untitled1`; **Render** wrote `spike.html` in 7.4 s and the Viewer showed it; Visual and back left the document unchanged; Session › Restart R. | All usable. Details below. |
+| **S5** Lesson switch (`s5_s7_session.cjs`) | Restart R asked for 3–4 s after sign-in took 28–29 s; later restarts took 2.0–3.2 s, including one straight after that first one. Straight after a restart, opening a script took 0.5 s, saving it 1.0 s and clearing the Console 1.1 s. Attaching duckplyr prints "Overwriting dplyr methods with duckplyr methods"; Restart R unloads it. | Switching lesson restarts R, then resets the script as today. The hold-back is about the server session's first half-minute, not the R process's age, so only a switch in that window waits. |
+| **S6** Image and data (`s6/`) | **Base:** `rocker/tidyverse:4.6.2` plus nine packages from a dated Posit Package Manager snapshot (`resolute/2026-11-19`; the base is Ubuntu 26.04) and Air: 3,200 MB unpacked, 1,236 MB compressed. `rocker/rstudio:4.6.2` with only the lessons' packages is 2,921 MB and 1,117 MB, but it needed two system libraries that `rocker/tidyverse` brings (libuv for `fs`, so `gt` and reprex; libwebpmux for `ragg`), found only by loading every package. **Offline:** all 27 lesson packages load, Shiny included. Quarto 1.10.19 rendered HTML (`gt`, `reactable`, ggplot2) in 8.5 s, Word 2.8 s, PDF through Typst 2.8 s, revealjs 3.0 s, a dashboard 6.5 s, a two-page website 6.1 s and `quarto::quarto_render()` 4.6 s. Word refuses a document with an htmlwidget. **Trip archive** (a rough generator, `s6/archive.R`): 2,000,000 trips over 2021–2025, generated in 8.1 s, written as Parquet partitioned by year and month in 1.9 s (60 files, 36 MB). 2025 as CSV is 400,000 rows and 36.5 MB. A one-year query took 0.08 s. Peak R memory was 1.9 GB, at build time. **The existing audits** on this image: guided 21/21 (AI lockout included), demonstration 12/12 in 9.9 min, practice modes 19/19, with no warnings or page errors. **trivy:** the same 3 critical and 50 high findings as `rocker/rstudio:4.6.2`. All are in `linux-libc-dev` (kernel headers, no fix; a container uses the host's kernel), except Go's `stdlib` in `/usr/bin/pebble` (fixed in 1.27.4 upstream). The tidyverse base adds 52 medium and 6 low. | Keep `rocker/tidyverse`. Its ~120 MB is worth not tracking system libraries ourselves; the `rocker/rstudio` alternative stays the fallback if iximiuz start-up suffers. The archive and one year of CSV add about 72 MB. The lab is amd64 only, like iximiuz Labs, so arm64 isn't built or tested. |
+| **S7** Lesson 6's project (`s5_s7_session.cjs`) | File › New Project… › New Directory › New Project, named `practice`, then **Create Project**: RStudio reloaded the page in 2.8–3.2 s into `~/practice`, with the coach mounted once. The project menu (`#rstudio_project_menubutton_toolbar`) took the learner back to the lab's project. | Lesson 6 can do it for real, as its last step. |
+
+### What the spikes changed
+
+- **duckdb 2 stopped R at a question.** The first duckplyr call in RStudio asked `duckdb: create /home/rstudio/.duckdb? (Yes/no/cancel)` in the Console and waited, so R stayed busy and New Project then asked whether to quit a busy session. The image now creates `~/.duckdb`, after which there is no question and no message. The build-time generator must use `duckdb(shared_home = FALSE)`.
+- **RStudio has Air built in.** `use_air_formatter` uses an `air` on the `PATH` before downloading one from GitHub, so the image installs Air 0.13.0 (checked against the release's SHA-256) and the preferences turn it on. Lesson 4 uses Code › Reformat Document.
+- **The native pipe is already the default** (`insert_native_pipe_operator`), so lesson 3 teaches Ctrl+Shift+M without an options step.
+- **Rendered documents open in the Viewer.** RStudio's default (`rmd_viewer_type: window`) opens a new browser window, which iximiuz's frame would block. The preferences set `rmd_viewer_type` and `shiny_viewer_type` to `pane`.
+- **RStudio leaves a preference out of `rstudio-prefs.json` while it has its default value**, so the evidence reports each one's effective value from RStudio's preference schema.
+- **Submenus open on a lone `click` event.** The coach's full press (mousedown, then click) opens File › New File and closes it again. The main toolbar's New File button takes the full press.
+- **The visual editor asks once**, in a "Switch to Visual Mode" dialog, that visual mode "will re-write your markdown source code using Pandoc's default markdown writer". The answer is RStudio user state (`visual_mode_confirmed`), not a preference. Lesson 28 shows the dialog and narrates it.
+- **reprex on RStudio Server** renders into the Viewer and opens the Markdown file for copying. It also prints `[WARNING] Deprecated: --highlight-style` from the bundled Pandoc, which lesson 8 should explain or avoid.
+- **A learner typing multi-line code** ends up with a doubled closer: RStudio moves the auto-inserted `)` or `}` down when Enter is pressed between a pair, and the learner's own closer adds a second. Guided's hints should say so.
+
+## Phase 1: engine and world (20 November 2026)
+
+Phase 1 of `plan-docs/R4DS_CHAPTERS_PLAN.md` builds everything the 29 new lessons need before any of them is written: their data, their format, the bake that produces their reference results, and the coach changes. Two audit fixtures stand in for the lessons until Phase 2: `engine-check` has one statement of each kind, and `engine-actions` has one of each IDE action. The article lessons still run as before.
+
+### Larkhaven Bikes, the lessons' city
+
+`content/world/generate.R` generates a made-up lakeside city's bike-share scheme from one seed, in 21 seconds during the image build. Two runs write byte-identical files, the archive included. `check.R` then confirms every feature a lesson relies on (56 checks), and the build fails if one is missing.
+
+| File | Rows | Put there for lessons |
+| --- | --- | --- |
+| `trips.csv` | 149,747 trips in 2025 | Weekday rush hours for members, weekend afternoons for casual riders, a summer peak, rain and cold keeping riders away, faster e-bikes. Zero and negative durations, multi-day trips by lost bikes, missing end stations and distances, two trips across each daylight-saving change, two stations with no trips. |
+| `archive/` | 509,910 trips, 2021 to 2025, Parquet by year and month | Its 2025 equals `trips.csv`. |
+| `stations.csv` | 81 | One duplicated ID, two renamed stations, names in capitals and lower case, "St." and "St", "&" and "and", a double space, curly and straight apostrophes. |
+| `weather.csv` | 8,711 hours | Three sensor gaps, `-99` readings, no 2 am on 9 March and two 1 ams on 2 November. |
+| `bikes.csv`, `fares.csv` | 690, 12 | Bike IDs with structure, a dozen in an older format; fare periods, the current one open-ended. |
+| `survey.csv` | 1,500 | Satisfaction and agreement scales as text, five multi-select columns, comments with accents, emoji, capitals and promo codes, whose tone follows each rider's satisfaction. |
+| `exports/` | 12 monthly files | A title line above the header, column names written for people, `n/a`, `-` and blanks for missing values, units inside numbers (`2.41 km`, `38%`), US dates, one dock-fault count per file that isn't a number, old names before a rename. |
+| `station-months.csv`, `station-periods.csv`, `station-riders.csv` | about 80 each | Wide tables for tidying: one column per month; two variables in each column name; a `.value` layout. |
+| `maintenance.xlsx` | 4 sheets | A summary whose Depot column is filled in once per block; depot sheets with title rows, dates as Excel serial numbers, notes typed into a number column and a total row. |
+| `feed/` | 2 JSON files | GBFS 3.0's shape: names as lists of translations, vehicle counts as lists, fields only some stations have. |
+| `site/` | 4 pages | Station cards, some with a note; a fares table; news. |
+
+Changes from the plan, and why:
+
+- **Time zone `America/Toronto`, not `America/Chicago`.** The daylight-saving dates are the same, and a Canadian city fits the data's km, °C and spelling; an American one would use miles and °F.
+- **The archive is every trip since the scheme opened, about half a million, not 2 million.** Its 2025 is exactly `trips.csv`, so the two never disagree. It still makes the point: 9 MB of Parquet against 13.6 MB of CSV for one year.
+- **The big files live only in the image** (`/opt/lab/world`, 23 MB); each project's `data/` has copies of the small files and links to `trips.csv` and `archive/`. The small files are committed (724 KB) and the build fails if the image would generate different ones.
+- **`maintenance.xlsx` is written by hand** as SpreadsheetML: writexl stamps each workbook with the time, so its bytes change every run.
+- **No trailing space in a station name.** readr trims it when reading, so no lesson could find it.
+
+### The lesson format, version 2
+
+A lesson with `"version": 2` is checked strictly: it is in the collection, starts with a Setup step of `library()` calls, has 5 to 8 more steps of 1 to 3 statements, and every statement is formatted as Air formats it. A statement's `code` may span lines. `alternatives` are equivalent code the bake proves gives the same value and the audits type. Its `evidence` says how it is checked:
+
+| Evidence | Counts when (Guided and Solo) |
+| --- | --- |
+| `value` | A call since the mode began returned a value with the reference fingerprint (`"order": "any"`: ignoring row order). |
+| `assign` | A call assigned the reference name a value with the reference fingerprint. |
+| `ggplot` | A printed ggplot has the reference fingerprint. |
+| `attached` | A `library()` call named the package, and it is attached. |
+| `file` | The file changed since the mode began. |
+| `pattern`, `error` | The Console shows output matching a regular expression (`today()`), or an error matching one (a statement meant to fail). |
+| `ide` | RStudio's state holds: a preference, R restarted, a Source tab, the editor's mode or text, a shortcut pressed. |
+
+A call counts for one statement only, so printing `trips` doesn't also tick the step that read it in. IDE state counts only once it has been seen not to hold, so a setting already as the step wants it doesn't tick by itself. `"warning"` declares an expected warning, `"values"` R expressions whose results the explanation quotes, and the actions are `menu`, `option`, `format-document`, `new-file`, `open-file`, `render`, `editor-mode` and `shortcut`. `open-file` wasn't in the plan; the actions need it.
+
+### The bake
+
+`tools/bake.py` runs each lesson twice in throwaway containers and fails on: an error the statement doesn't expect, any warning it doesn't declare (deprecations included), a chart where none is expected or the reverse, missing evidence (an assignment that assigns nothing, a file not written), an alternative with a different value, code Air would format differently, or any difference between the two runs. It records fingerprints with the same `evidence.R` the live session uses. The fixture `engine-check` bakes in 5.5 seconds. Its first bakes caught a long `summarize()` line Air wraps, and a ggplot warning about three lost-bike trips with no distance, which `ggsave()` repeats.
+
+The stamp hashes the lesson, the world, `packages.lock`, `evidence.R`, `bake.R` and the runtime Dockerfile, not the image's digest as the plan had it: rebuilding an image changes its ID even when nothing it computes changes, so iximiuz would bake at every boot. The package lock pins what the digest would have. The article lessons are baked too, so `runtime/reference.R` and provisioning's per-start reference runs are gone; their values are unchanged.
+
+### The coach
+
+- **Multi-line statements.** The coach types each line one key at a time with RStudio's behaviour on, and sets each line's indentation to the reference's. When Enter falls between brackets, RStudio moves the closing one down a line; when the reference's next line starts with it, the coach steps down onto it instead of pressing Enter, and types over closers RStudio added. A 7-line `summarize()` and a 2-line ggplot are typed exactly. It then clicks the statement's first line and presses Run. Hints show the first line and how the second starts, and warn learners that RStudio moves the closer down for them.
+- **Checks from R's evidence** in all three modes (table above). Demonstration waits for the reference fingerprint before explaining, and quotes the bake's values.
+- **IDE actions,** with the pointer, as S4 proved them. Things found on the way: some option labels end in a colon; a Source tab's unsaved `*` is always in its markup and only hidden by CSS; RStudio's New Quarto Document dialog remembers the visual editor, so the coach unticks it (the Quarto lessons type in the source editor); a submenu opens on a lone click.
+- **A fresh start** also restarts R when the lesson changes to or from a new lesson (2.6 seconds in the audit), puts back settings the lesson asks the learner to change, and closes documents the lesson's actions open, discarding their changes.
+- **The picker for the new lessons** shows the chosen lesson on one line above the mode cards; Change opens the lessons by part, each with its step count and a tick once any mode is finished. A new tab opens on the first unfinished lesson, and a finished lesson offers "Next: lesson N". Progress is kept per run in localStorage.
+- **Files.** Before clicking a script below the fold of the Files pane, the coach scrolls the list to it.
+
+### Audit results
+
+One run each on the final code, with no warnings or page errors:
+
+| Audit | Result | What it covers |
+| --- | --- | --- |
+| `lesson_modes.cjs engine-check` | 5/5 | Demonstration (fast pacing) types all 9 statements (17 lines) exactly and explains every step; Guided ticks all 11 tasks from the Console and real menu clicks, with Show me on the 7-line `summarize()`; Solo ticks all 11 using the three alternatives. |
+| `lesson_modes.cjs engine-actions` | 5/5 | The same for 9 IDE actions: open file, Reformat Document with Air, Render, Visual and back, New Quarto Document, Ctrl+Shift+M. |
+| `lesson_switch.cjs` | 6/6 | The one-line picker at 1366x768, Change by part, Files scrolled to the script, a tick and "Next: lesson 92" after finishing, Restart R on the switch (dplyr gone), reload and Back. |
+| `practice_modes.cjs` (article lessons) | 19/19 | Unchanged from before Phase 1. |
+| `demo_mode.cjs` (article lessons) | 12/12 | Unchanged. |
+| `coach_in_ide.cjs` (`regional-revenue`) | 21/21 | Unchanged, AI-assistant lockout included. |
+
+`tests/test_publish_rootfs_image.py` passes 9/9; it now skips tracked files deleted in the working tree (`runtime/reference.R`).
+
+### Left for later phases
+
+- **Quarto lessons' typing.** Steps that type into a `.qmd` rather than run in the Console are for pilot 28 to design; Render, the visual editor and New Quarto Document already work as actions.
+- **State a fresh start doesn't reset yet:** the Help and Viewer panes and `View()` tabs (lessons 8 and 23), and lesson 6's new project.
+- **The DuckDB database file for lesson 21** isn't generated yet.
+- **Parallel audits** (plan §7) aren't built; the lesson audit runs one lesson at a time.
+- **The iximiuz rootfs isn't republished.** It packs the committed tree, and nothing from Phase 1 is committed.
 
 ## Remote playground (iximiuz Labs)
 

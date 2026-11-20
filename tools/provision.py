@@ -2,27 +2,28 @@
 """Materialize one run of one or more scenarios from scenarios/<id>/scenario.json.
 
 Writes:
-  run/project/         the learner's RStudio project (static files, .Rproj and,
-                       for each lesson with steps, the generated script)
-  run/public/          what the gateway serves to the coach: session.json and,
-                       for lessons with steps, steps.json with the expected output
-                       and each script's starting text
-  run/private/         the reference run's working files (never mounted)
+  run/project/         the learner's RStudio project (static files, .Rproj, data/ for lessons
+                       that use the Larkhaven Bikes data and, for each lesson with steps, the
+                       generated script)
+  run/public/          what the gateway serves to the coach: session.json and, for lessons
+                       with steps, steps.json with each statement's reference results and each
+                       script's starting text
 
-Several lessons with steps can share one run and project; the learner chooses a
-lesson and one of its modes (Demonstration, Guided, Solo) in the coach. Every
-line is first run in a throwaway, network-less container from the same runtime
-image. The run is not ready if any line errors, draws a plot when it shouldn't
-(or the reverse), or prints output that the lesson's capture patterns can't read.
+Several lessons with steps can share one run and project; the learner chooses a lesson and one of
+its modes (Demonstration, Guided, Solo) in the coach. The reference results come from the bake
+(tools/bake.py): its committed file when the stamp matches, otherwise it bakes the lesson now, in
+throwaway, network-less containers from the same runtime image. The run is not ready if the bake
+fails.
+
+Lessons with "version": 2 (the ones modelled on R for Data Science) give the coach fingerprints
+rather than expected output, so their answers aren't in the page.
 
   python3 -I tools/provision.py <repo-root> <runtime-image> <project-name> <scenario-id>...
 """
+import importlib.util
 import json
-import os
-import re
 import secrets
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -47,10 +48,6 @@ def fail(message):
     sys.exit(1)
 
 
-def normalise(text):
-    return " ".join(text.split())
-
-
 def heading(number, step):
     return f"# Step {number}. {step['title']}"
 
@@ -69,9 +66,7 @@ def strip_comment(code):
     return code.rstrip()
 
 
-def partial(code):
-    """A hint that shows how a line starts: plot(5, 5) -> plot(…), x <- y -> x <- …"""
-    line = strip_comment(code)
+def partial_line(line):
     if "(" in line:
         return line[: line.index("(") + 1] + "…)"
     if "<-" in line:
@@ -79,56 +74,64 @@ def partial(code):
     return "…"
 
 
+def partial(code):
+    """A hint that shows how a statement starts: plot(5, 5) -> plot(…), x <- y -> x <- …,
+    and over several lines, its first line and how the second starts: trips |> / filter(…)"""
+    lines = [strip_comment(line) for line in code.split("\n")]
+    lines = [line for line in lines if line.strip()]
+    if len(lines) == 1:
+        return partial_line(lines[0])
+    second = lines[1]
+    indent = second[: len(second) - len(second.lstrip())]
+    return f"{lines[0]}\n{indent}{partial_line(second.lstrip())}"
+
+
+def whole(code):
+    """The statement without comments, for the last hint."""
+    return "\n".join(line for line in (strip_comment(line) for line in code.split("\n")) if line.strip())
+
+
+def action_hints(run):
+    """Guided's two hints for an IDE action: where to look, then exactly what to do."""
+    action = run["action"]
+    if action == "menu":
+        return f"It's in RStudio's {run['menu'][0]} menu.", f"Choose {' › '.join(run['menu'])}."
+    if action == "option":
+        tick = "tick" if run["value"] else "untick"
+        return ("It's a setting in Tools › Global Options.",
+                f"In Tools › Global Options › {run['pane']}, {tick} {run['label']}, then press OK.")
+    if action == "format-document":
+        return "It's in the Code menu.", "Choose Code › Reformat Document."
+    if action == "new-file":
+        return "It's in the File menu.", f"Choose File › New File › {run['kind']}."
+    if action == "render":
+        return "Look at the toolbar above the document.", "Press Render, on the toolbar above the document."
+    if action == "editor-mode":
+        mode = "Visual" if run["to"] == "visual" else "Source"
+        return "Look at the toolbar above the document.", f"Press {mode}, at the left of the toolbar above the document."
+    if action == "shortcut":
+        return "It's a keyboard shortcut.", f"Press {run['keys']}."
+    if action == "open-file":
+        return "It's in the project folder.", f"Click {run['file']} in the Files pane."
+    fail(f"unknown action {action!r}")
+
+
 def render_script(scenario):
     """The script starts with only the step headings. Each step's code goes below
     its heading: typed by the coach in Demonstration, by the learner otherwise."""
+    about = f"Go deeper: {scenario['chapter']}" if scenario.get("chapter") else scenario["source"]
     lines = [
         f"# {scenario['title']}",
-        f"# {scenario['source']}",
+        f"# {about}",
         "#",
-        "# Each step's code goes below its heading. To run a line, put the cursor on",
-        "# it and press Ctrl+Enter (or click Run).",
+        "# Each step's code goes below its heading. To run a statement, put the cursor on",
+        "# its first line and press Ctrl+Enter (or click Run).",
         "",
     ]
     for number, step in enumerate(scenario["steps"], start=1):
         lines.append(heading(number, step))
         lines.append("")
     return "\n".join(lines)
-
-
-def reference_run(scenario, workdir, root, image):
-    workdir.mkdir(parents=True)
-    runs = [run for step in scenario["steps"] for run in step["runs"]]
-    for index, run in enumerate(runs, start=1):
-        (workdir / f"run-{index:03d}.R").write_text(run["code"] + "\n")
-    command = [
-        "docker", "run", "--rm", "--network", "none", "--user", f"{os.getuid()}:{os.getgid()}",
-        "--memory", "512m", "--cpus", "1", "--pids-limit", "256",
-        "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--read-only", "--tmpfs", "/tmp",
-        "-v", f"{workdir}:/ref",
-        "-v", f"{root / 'runtime' / 'reference.R'}:/opt/lab/reference.R:ro",
-        image, "timeout", "60", "Rscript", "/opt/lab/reference.R", "/ref",
-    ]
-    result = subprocess.run(command, capture_output=True, text=True)
-    for index, run in enumerate(runs, start=1):
-        err = workdir / f"run-{index:03d}.err"
-        if err.exists():
-            fail(f"reference run failed on `{run['code']}`: {err.read_text().strip()}")
-    if result.returncode != 0:
-        fail(f"reference run exited {result.returncode}: {result.stderr.strip()[-400:]}")
-    for index, run in enumerate(runs, start=1):
-        output = (workdir / f"run-{index:03d}.out").read_text().rstrip("\n")
-        plotted = (workdir / f"run-{index:03d}.plot").read_text().strip() == "1"
-        if plotted != (run["evidence"] == "plot"):
-            fail(f"`{run['code']}` {'drew' if plotted else 'did not draw'} a plot, "
-                 f"but its evidence is {run['evidence']!r}")
-        run["expected_output"] = output
-        run["expected_values"] = {}
-        for name, pattern in run.get("capture", {}).items():
-            match = re.search(pattern, normalise(output))
-            if not match:
-                fail(f"capture {name!r} does not match the output of `{run['code']}`: {output!r}")
-            run["expected_values"][name] = match.group(1)
 
 
 def load(root, scenario_id):
@@ -163,28 +166,77 @@ def copy_project(source, project, skip=()):
         shutil.copy2(path, target)
 
 
-def prepare_lesson(scenario, project, workdir, root, image):
-    """Write the lesson's script, run its reference, and return what the coach needs."""
+def load_module(root, name):
+    # provision.py runs isolated (python3 -I), so tools/ isn't on the import path.
+    spec = importlib.util.spec_from_file_location(name, root / "tools" / f"{name}.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def collection_info(root):
+    """Each collection lesson's number, part and Go deeper link."""
+    path = root / "content" / "lessons" / "collection.json"
+    info = {}
+    if path.exists():
+        number = 0
+        for part in json.loads(path.read_text())["parts"]:
+            for lesson in part["lessons"]:
+                number += 1
+                info[lesson["id"]] = {"number": number, "part": part["title"], "chapter": lesson["chapter"]}
+    return info
+
+
+# What the coach gets from the bake for each statement. Fingerprints, not values: lessons with
+# "version": 2 keep their answers out of the page. Older lessons check what the Console printed.
+EXPECTED = ("fp", "fp_any", "assigned", "library", "plot", "class", "dim", "files")
+
+
+def prepare_lesson(scenario, project, root, image, bake, collection):
+    """Write the lesson's script, get its baked reference results, and return what the coach needs."""
     modes = scenario["modes"]
     for step in scenario["steps"]:
         for run in step["runs"]:
+            what = run.get("code") or f"action {run.get('action')}"
             if ("guided" in modes or "solo" in modes) and not run.get("task"):
-                fail(f"`{run['code']}` needs a task: Guided and Solo show it instead of the code")
+                fail(f"`{what}` needs a task: Guided and Solo show it instead of the code")
             if ("demonstration" in modes or "guided" in modes) and not run.get("purpose"):
-                fail(f"`{run['code']}` needs a purpose: Demonstration and Show me say "
+                fail(f"`{what}` needs a purpose: Demonstration and Show me say "
                      f"\"Writing code to <purpose>\" while they type it")
     if (project / scenario["script"]).exists():
         fail(f"two lessons both use {scenario['script']}")
+    scenario.update(collection.get(scenario["id"], {}))
     # The coach puts the script back to this text whenever a mode starts afresh.
     scenario["starter"] = render_script(scenario)
     (project / scenario["script"]).write_text(scenario["starter"])
-    reference_run(scenario, workdir, root, image)
+    try:
+        baked = bake.ensure(root, image, scenario["id"], dict(scenario), log=lambda text: print(text, file=sys.stderr))
+    except bake.BakeError as error:
+        fail(f"the bake of {scenario['id']} failed: {error}")
+    records = baked["runs"]
+    runs = [run for step in scenario["steps"] for run in step["runs"]]
+    if len(records) != len(runs):
+        fail(f"the bake of {scenario['id']} has {len(records)} statements, but the lesson has {len(runs)}")
+    for run, record in zip(runs, records):
+        run["expected_values"] = record.get("values") or {}
+        if "code" not in run:
+            continue
+        if scenario.get("version") == 2:
+            run["expected"] = {key: record.get(key) for key in EXPECTED}
+            if run["evidence"] == "console":
+                run["expected_output"] = record["output"]
+        else:
+            run["expected_output"] = record["output"]
     for number, step in enumerate(scenario["steps"], start=1):
         step["heading"] = heading(number, step)
         for run in step["runs"]:
-            run["hint_partial"] = partial(run["code"])
-            run["hint_line"] = strip_comment(run["code"])
-    return {key: scenario[key] for key in ("id", "title", "summary", "source", "script", "starter", "modes", "steps")}
+            if "code" in run:
+                run["hint_partial"] = partial(run["code"])
+                run["hint_line"] = whole(run["code"])
+            else:
+                run["hint_where"], run["hint_how"] = action_hints(run)
+    keys = ("id", "title", "summary", "source", "script", "starter", "modes", "steps", "version", "number", "part", "chapter", "world")
+    return {key: scenario[key] for key in keys if key in scenario}
 
 
 def render_readme(lessons):
@@ -192,8 +244,10 @@ def render_readme(lessons):
     for lesson in lessons:
         lines += [f"- `{lesson['script']}`: {lesson['title']}. {lesson['summary']}"]
     lines += ["", "Choose a lesson and a mode in the Coach pane on the right. Each lesson's code",
-              "goes below its step headings in its script. To run a line, put the cursor on it",
-              "and press Ctrl+Enter, or click **Run**.", ""]
+              "goes below its step headings in its script. To run a statement, put the cursor on",
+              "its first line and press Ctrl+Enter, or click **Run**.", ""]
+    if any(lesson.get("world") for lesson in lessons):
+        lines += ["The lessons' data is in `data/`. Its README says what each file holds.", ""]
     return "\n".join(lines)
 
 
@@ -205,12 +259,16 @@ def main(root, image, project_name, *scenario_ids):
         fail("only lessons with steps can share a run")
 
     run = root / "run"
-    project, public, private = run / "project", run / "public", run / "private"
-    for folder in (project, public, private):
+    project, public = run / "project", run / "public"
+    for folder in (project, public):
         folder.mkdir(parents=True)
+    bake = load_module(root, "bake")
     # Lessons that share a run get one README listing them all.
     for _, source in scenarios:
-        copy_project(source, project, skip={"README.md"} if several else ())
+        if source.is_dir():
+            copy_project(source, project, skip={"README.md"} if several else ())
+    if any(scenario.get("world") for scenario, _ in scenarios):
+        bake.layout_world(root, project)
     (project / f"{project_name}.Rproj").write_text(RPROJ)
 
     session = {"run_id": secrets.token_hex(4), "project": project_name}
@@ -219,12 +277,13 @@ def main(root, image, project_name, *scenario_ids):
         # regional-revenue has no steps yet: its Guided mode is a stub with a Check work button.
         session.update(scenario=first["id"], title=first["title"], modes=first["modes"])
     else:
-        lessons = [prepare_lesson(scenario, project, private / "reference" / scenario["id"], root, image)
-                   for scenario, _ in scenarios]
+        collection = collection_info(root)
+        lessons = [prepare_lesson(scenario, project, root, image, bake, collection) for scenario, _ in scenarios]
         if several:
             (project / "README.md").write_text(render_readme(lessons))
         (public / "steps.json").write_text(json.dumps({"lessons": lessons}, indent=2))
-        session["lessons"] = [{key: lesson[key] for key in ("id", "title", "script", "modes")} for lesson in lessons]
+        session["lessons"] = [{key: lesson[key] for key in ("id", "title", "script", "modes", "number", "part") if key in lesson}
+                              for lesson in lessons]
     (public / "session.json").write_text(json.dumps(session, indent=2))
     print(f"provisioned {', '.join(scenario_ids)} in {project_name} as run {session['run_id']}")
 

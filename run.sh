@@ -60,7 +60,7 @@ case "${1:-up}" in
       done < lab.env
     fi
     stop_run
-    mkdir -p run
+    mkdir -p run/evidence
     password=$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 20)
     # HOST_UID/GID: RStudio's user must own the bind-mounted project to save into it.
     # GATEWAY_BIND: loopback by default. 0.0.0.0 serves plain HTTP on every interface (and Docker

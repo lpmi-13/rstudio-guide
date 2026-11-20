@@ -1,0 +1,23 @@
+---
+title: "Spike report"
+---
+
+## A table
+
+```{r}
+#| echo: false
+gt::gt(head(mtcars[, 1:4]))
+```
+
+## A widget
+
+```{r}
+reactable::reactable(head(mtcars[, 1:4]))
+```
+
+## A chart
+
+```{r}
+library(ggplot2)
+ggplot(mpg, aes(displ, hwy)) + geom_point()
+```

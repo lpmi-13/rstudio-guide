@@ -1,0 +1,18 @@
+---
+title: "Spike dashboard"
+format: dashboard
+---
+
+## Row
+
+```{r}
+#| title: Trips
+library(ggplot2)
+ggplot(mpg, aes(class)) + geom_bar()
+```
+
+```{r}
+#| content: valuebox
+#| title: "Cars"
+list(value = nrow(mpg), icon = "car-front", color = "primary")
+```

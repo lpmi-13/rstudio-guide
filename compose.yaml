@@ -17,6 +17,8 @@ services:
       RSTUDIO_SAME_SITE: ${SAME_SITE:-}
     volumes:
       - ./run/project:/home/rstudio/${LAB_SCENARIO}
+      # Written by runtime/evidence.R in each R session; served to the coach by the gateway.
+      - ./run/evidence:/home/rstudio/.lab
     ports:
       # Direct access for a no-gateway baseline. Loopback only.
       - "127.0.0.1:18787:8787"
@@ -31,5 +33,6 @@ services:
       - ./gateway/rstudio-proxy.conf:/etc/nginx/rstudio-proxy.conf:ro
       - ./coach:/usr/share/nginx/html/coach:ro
       - ./run/public:/usr/share/nginx/html/coach-run:ro
+      - ./run/evidence:/usr/share/nginx/html/coach-evidence:ro
     ports:
       - "${GATEWAY_BIND:-127.0.0.1}:8788:8788"

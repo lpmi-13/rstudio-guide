@@ -1,0 +1,1386 @@
+{
+  "last_updated": "2025-11-14T08:30:00-05:00",
+  "ttl": 60,
+  "version": "3.0",
+  "data": {
+    "stations": [
+      {
+        "station_id": "101",
+        "name": [
+          {
+            "text": "Market Square",
+            "language": "en"
+          },
+          {
+            "text": "Market Square",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70934,
+        "lon": -79.87266,
+        "capacity": 24,
+        "address": "147 Harbour Road"
+      },
+      {
+        "station_id": "102",
+        "name": [
+          {
+            "text": "MARKET SQUARE NORTH",
+            "language": "en"
+          },
+          {
+            "text": "MARKET SQUARE NORTH",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70183,
+        "lon": -79.86793,
+        "capacity": 23,
+        "address": "154 Harbour Road"
+      },
+      {
+        "station_id": "103",
+        "name": [
+          {
+            "text": "Town Hall",
+            "language": "en"
+          },
+          {
+            "text": "Town Hall",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.71013,
+        "lon": -79.8672,
+        "capacity": 34
+      },
+      {
+        "station_id": "104",
+        "name": [
+          {
+            "text": "Bridge St & Water St",
+            "language": "en"
+          },
+          {
+            "text": "Bridge St & Water St",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70155,
+        "lon": -79.86218,
+        "capacity": 28,
+        "address": "168 Harbour Road"
+      },
+      {
+        "station_id": "105",
+        "name": [
+          {
+            "text": "Larkhaven Central Station",
+            "language": "en"
+          },
+          {
+            "text": "Larkhaven Central Station",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70127,
+        "lon": -79.87421,
+        "capacity": 25,
+        "address": "175 Harbour Road",
+        "rental_uris": {
+          "android": "larkhaven://station/105",
+          "ios": "larkhaven://station/105"
+        }
+      },
+      {
+        "station_id": "106",
+        "name": [
+          {
+            "text": "Corn Exchange",
+            "language": "en"
+          },
+          {
+            "text": "Corn Exchange",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70461,
+        "lon": -79.87535,
+        "capacity": 22
+      },
+      {
+        "station_id": "107",
+        "name": [
+          {
+            "text": "Library Plaza",
+            "language": "en"
+          },
+          {
+            "text": "Library Plaza",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.69667,
+        "lon": -79.86948,
+        "capacity": 27,
+        "address": "189 Harbour Road"
+      },
+      {
+        "station_id": "108",
+        "name": [
+          {
+            "text": "Bellfounders Row",
+            "language": "en"
+          },
+          {
+            "text": "Bellfounders Row",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70495,
+        "lon": -79.86762,
+        "capacity": 27,
+        "address": "196 Bellfounders Row"
+      },
+      {
+        "station_id": "109",
+        "name": [
+          {
+            "text": "St. Agnes Square",
+            "language": "en"
+          },
+          {
+            "text": "St. Agnes Square",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70198,
+        "lon": -79.86545,
+        "capacity": 23
+      },
+      {
+        "station_id": "110",
+        "name": [
+          {
+            "text": "Guildhall Lane",
+            "language": "en"
+          },
+          {
+            "text": "Guildhall Lane",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70278,
+        "lon": -79.87108,
+        "capacity": 28,
+        "address": "20 Guildhall Lane",
+        "rental_uris": {
+          "android": "larkhaven://station/110",
+          "ios": "larkhaven://station/110"
+        }
+      },
+      {
+        "station_id": "111",
+        "name": [
+          {
+            "text": "Theatre Royal",
+            "language": "en"
+          },
+          {
+            "text": "Theatre Royal",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70578,
+        "lon": -79.86167,
+        "capacity": 32,
+        "address": "27 Harbour Road"
+      },
+      {
+        "station_id": "112",
+        "name": [
+          {
+            "text": "Courthouse",
+            "language": "en"
+          },
+          {
+            "text": "Courthouse",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70128,
+        "lon": -79.87773,
+        "capacity": 30
+      },
+      {
+        "station_id": "113",
+        "name": [
+          {
+            "text": "Harbour Front",
+            "language": "en"
+          },
+          {
+            "text": "Harbour Front",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.69406,
+        "lon": -79.86379,
+        "capacity": 21,
+        "address": "41 Harbour Road"
+      },
+      {
+        "station_id": "114",
+        "name": [
+          {
+            "text": "Ferry Landing",
+            "language": "en"
+          },
+          {
+            "text": "Ferry Landing",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.68965,
+        "lon": -79.85808,
+        "capacity": 23,
+        "address": "48 Harbour Road"
+      },
+      {
+        "station_id": "115",
+        "name": [
+          {
+            "text": "Cooper’s Wharf",
+            "language": "en"
+          },
+          {
+            "text": "Cooper’s Wharf",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.69165,
+        "lon": -79.87233,
+        "capacity": 18,
+        "rental_uris": {
+          "android": "larkhaven://station/115",
+          "ios": "larkhaven://station/115"
+        }
+      },
+      {
+        "station_id": "116",
+        "name": [
+          {
+            "text": "Harbour Master",
+            "language": "en"
+          },
+          {
+            "text": "Harbour Master",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.69389,
+        "lon": -79.8683,
+        "capacity": 25,
+        "address": "62 Harbour Road"
+      },
+      {
+        "station_id": "117",
+        "name": [
+          {
+            "text": "Quay Street (temporary)",
+            "language": "en"
+          },
+          {
+            "text": "Quay Street (temporary)",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.69075,
+        "lon": -79.87226,
+        "capacity": 27,
+        "address": "69 Quay Street (temporary)"
+      },
+      {
+        "station_id": "118",
+        "name": [
+          {
+            "text": "Chandlers Court",
+            "language": "en"
+          },
+          {
+            "text": "Chandlers Court",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.69287,
+        "lon": -79.8588,
+        "capacity": 27
+      },
+      {
+        "station_id": "119",
+        "name": [
+          {
+            "text": "Lighthouse Walk",
+            "language": "en"
+          },
+          {
+            "text": "Lighthouse Walk",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.69269,
+        "lon": -79.86624,
+        "capacity": 20,
+        "address": "83 Harbour Road"
+      },
+      {
+        "station_id": "120",
+        "name": [
+          {
+            "text": "Boatyard",
+            "language": "en"
+          },
+          {
+            "text": "Boatyard",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.68658,
+        "lon": -79.86895,
+        "capacity": 19,
+        "address": "90 Harbour Road",
+        "rental_uris": {
+          "android": "larkhaven://station/120",
+          "ios": "larkhaven://station/120"
+        }
+      },
+      {
+        "station_id": "121",
+        "name": [
+          {
+            "text": "Ropewalk",
+            "language": "en"
+          },
+          {
+            "text": "Ropewalk",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.68719,
+        "lon": -79.87081,
+        "capacity": 15
+      },
+      {
+        "station_id": "122",
+        "name": [
+          {
+            "text": "Castle  Gate",
+            "language": "en"
+          },
+          {
+            "text": "Castle  Gate",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.71294,
+        "lon": -79.88837,
+        "capacity": 15,
+        "address": "104 Harbour Road"
+      },
+      {
+        "station_id": "123",
+        "name": [
+          {
+            "text": "Castle Hill Park",
+            "language": "en"
+          },
+          {
+            "text": "Castle Hill Park",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70975,
+        "lon": -79.89048,
+        "capacity": 18,
+        "address": "111 Harbour Road"
+      },
+      {
+        "station_id": "124",
+        "name": [
+          {
+            "text": "St Agnes Church",
+            "language": "en"
+          },
+          {
+            "text": "St Agnes Church",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.71347,
+        "lon": -79.9003,
+        "capacity": 17
+      },
+      {
+        "station_id": "125",
+        "name": [
+          {
+            "text": "Keep Street",
+            "language": "en"
+          },
+          {
+            "text": "Keep Street",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70617,
+        "lon": -79.88539,
+        "capacity": 13,
+        "address": "125 Keep Street",
+        "rental_uris": {
+          "android": "larkhaven://station/125",
+          "ios": "larkhaven://station/125"
+        }
+      },
+      {
+        "station_id": "126",
+        "name": [
+          {
+            "text": "Barbican",
+            "language": "en"
+          },
+          {
+            "text": "Barbican",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70379,
+        "lon": -79.88739,
+        "capacity": 12,
+        "address": "132 Harbour Road"
+      },
+      {
+        "station_id": "127",
+        "name": [
+          {
+            "text": "Mill Rd and Kiln St",
+            "language": "en"
+          },
+          {
+            "text": "Mill Rd and Kiln St",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.71156,
+        "lon": -79.89612,
+        "capacity": 11
+      },
+      {
+        "station_id": "128",
+        "name": [
+          {
+            "text": "Tanner's Yard",
+            "language": "en"
+          },
+          {
+            "text": "Tanner's Yard",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.71018,
+        "lon": -79.88325,
+        "capacity": 11,
+        "address": "146 Harbour Road"
+      },
+      {
+        "station_id": "129",
+        "name": [
+          {
+            "text": "Gasworks Yard",
+            "language": "en"
+          },
+          {
+            "text": "Gasworks Yard",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70494,
+        "lon": -79.88906,
+        "capacity": 11,
+        "address": "153 Harbour Road"
+      },
+      {
+        "station_id": "130",
+        "name": [
+          {
+            "text": "university library",
+            "language": "en"
+          },
+          {
+            "text": "university library",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.715,
+        "lon": -79.85955,
+        "capacity": 28,
+        "rental_uris": {
+          "android": "larkhaven://station/130",
+          "ios": "larkhaven://station/130"
+        }
+      },
+      {
+        "station_id": "131",
+        "name": [
+          {
+            "text": "Science Park",
+            "language": "en"
+          },
+          {
+            "text": "Science Park",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.72777,
+        "lon": -79.86135,
+        "capacity": 33,
+        "address": "167 Harbour Road"
+      },
+      {
+        "station_id": "132",
+        "name": [
+          {
+            "text": "Student Union",
+            "language": "en"
+          },
+          {
+            "text": "Student Union",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.71831,
+        "lon": -79.84759,
+        "capacity": 31,
+        "address": "174 Harbour Road"
+      },
+      {
+        "station_id": "133",
+        "name": [
+          {
+            "text": "University West",
+            "language": "en"
+          },
+          {
+            "text": "University West",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.72005,
+        "lon": -79.86331,
+        "capacity": 24
+      },
+      {
+        "station_id": "134",
+        "name": [
+          {
+            "text": "Engineering Quad",
+            "language": "en"
+          },
+          {
+            "text": "Engineering Quad",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.71339,
+        "lon": -79.85529,
+        "capacity": 23,
+        "address": "188 Harbour Road"
+      },
+      {
+        "station_id": "135",
+        "name": [
+          {
+            "text": "Medical School",
+            "language": "en"
+          },
+          {
+            "text": "Medical School",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.71133,
+        "lon": -79.84608,
+        "capacity": 21,
+        "address": "195 Harbour Road",
+        "rental_uris": {
+          "android": "larkhaven://station/135",
+          "ios": "larkhaven://station/135"
+        }
+      },
+      {
+        "station_id": "136",
+        "name": [
+          {
+            "text": "Residences North",
+            "language": "en"
+          },
+          {
+            "text": "Residences North",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.71457,
+        "lon": -79.85103,
+        "capacity": 20
+      },
+      {
+        "station_id": "137",
+        "name": [
+          {
+            "text": "Sports Centre",
+            "language": "en"
+          },
+          {
+            "text": "Sports Centre",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.7208,
+        "lon": -79.8496,
+        "capacity": 23,
+        "address": "19 Harbour Road"
+      },
+      {
+        "station_id": "138",
+        "name": [
+          {
+            "text": "Observatory Road",
+            "language": "en"
+          },
+          {
+            "text": "Observatory Road",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.7168,
+        "lon": -79.8588,
+        "capacity": 26,
+        "address": "26 Observatory Road"
+      },
+      {
+        "station_id": "139",
+        "name": [
+          {
+            "text": "Millbrook Green",
+            "language": "en"
+          },
+          {
+            "text": "Millbrook Green",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.72849,
+        "lon": -79.90721,
+        "capacity": 13
+      },
+      {
+        "station_id": "140",
+        "name": [
+          {
+            "text": "Millbrook Shops",
+            "language": "en"
+          },
+          {
+            "text": "Millbrook Shops",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.73518,
+        "lon": -79.90733,
+        "capacity": 15,
+        "address": "40 Harbour Road",
+        "rental_uris": {
+          "android": "larkhaven://station/140",
+          "ios": "larkhaven://station/140"
+        }
+      },
+      {
+        "station_id": "141",
+        "name": [
+          {
+            "text": "Weir Lane",
+            "language": "en"
+          },
+          {
+            "text": "Weir Lane",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.72389,
+        "lon": -79.90036,
+        "capacity": 13,
+        "address": "47 Weir Lane"
+      },
+      {
+        "station_id": "142",
+        "name": [
+          {
+            "text": "Ash Grove",
+            "language": "en"
+          },
+          {
+            "text": "Ash Grove",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.72504,
+        "lon": -79.91608,
+        "capacity": 19
+      },
+      {
+        "station_id": "143",
+        "name": [
+          {
+            "text": "Elm Terrace",
+            "language": "en"
+          },
+          {
+            "text": "Elm Terrace",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.728,
+        "lon": -79.91466,
+        "capacity": 17,
+        "address": "61 Harbour Road"
+      },
+      {
+        "station_id": "144",
+        "name": [
+          {
+            "text": "Pinfold Street",
+            "language": "en"
+          },
+          {
+            "text": "Pinfold Street",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.72828,
+        "lon": -79.90634,
+        "capacity": 19,
+        "address": "68 Pinfold Street"
+      },
+      {
+        "station_id": "145",
+        "name": [
+          {
+            "text": "Millbrook School",
+            "language": "en"
+          },
+          {
+            "text": "Millbrook School",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.73064,
+        "lon": -79.90268,
+        "capacity": 19,
+        "rental_uris": {
+          "android": "larkhaven://station/145",
+          "ios": "larkhaven://station/145"
+        }
+      },
+      {
+        "station_id": "146",
+        "name": [
+          {
+            "text": "Orchard Close",
+            "language": "en"
+          },
+          {
+            "text": "Orchard Close",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.72334,
+        "lon": -79.89653,
+        "capacity": 12,
+        "address": "82 Harbour Road"
+      },
+      {
+        "station_id": "147",
+        "name": [
+          {
+            "text": "Northgate Library",
+            "language": "en"
+          },
+          {
+            "text": "Northgate Library",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.74326,
+        "lon": -79.86266,
+        "capacity": 17,
+        "address": "89 Harbour Road"
+      },
+      {
+        "station_id": "148",
+        "name": [
+          {
+            "text": "Northgate Junction",
+            "language": "en"
+          },
+          {
+            "text": "Northgate Junction",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.73011,
+        "lon": -79.8693,
+        "capacity": 19
+      },
+      {
+        "station_id": "149",
+        "name": [
+          {
+            "text": "Hospital",
+            "language": "en"
+          },
+          {
+            "text": "Hospital",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.73736,
+        "lon": -79.86914,
+        "capacity": 19,
+        "address": "103 Harbour Road"
+      },
+      {
+        "station_id": "150",
+        "name": [
+          {
+            "text": "Foundry Road",
+            "language": "en"
+          },
+          {
+            "text": "Foundry Road",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.74081,
+        "lon": -79.86348,
+        "capacity": 17,
+        "address": "110 Foundry Road",
+        "rental_uris": {
+          "android": "larkhaven://station/150",
+          "ios": "larkhaven://station/150"
+        }
+      },
+      {
+        "station_id": "151",
+        "name": [
+          {
+            "text": "Northgate Pool",
+            "language": "en"
+          },
+          {
+            "text": "Northgate Pool",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.744,
+        "lon": -79.86561,
+        "capacity": 15
+      },
+      {
+        "station_id": "152",
+        "name": [
+          {
+            "text": "Hatter's Lane",
+            "language": "en"
+          },
+          {
+            "text": "Hatter's Lane",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.73692,
+        "lon": -79.85261,
+        "capacity": 14,
+        "address": "124 Hatter's Lane"
+      },
+      {
+        "station_id": "153",
+        "name": [
+          {
+            "text": "Ridgeway",
+            "language": "en"
+          },
+          {
+            "text": "Ridgeway",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.73556,
+        "lon": -79.8674,
+        "capacity": 11,
+        "address": "131 Harbour Road"
+      },
+      {
+        "station_id": "154",
+        "name": [
+          {
+            "text": "Birch Avenue",
+            "language": "en"
+          },
+          {
+            "text": "Birch Avenue",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.73729,
+        "lon": -79.85909,
+        "capacity": 16
+      },
+      {
+        "station_id": "155",
+        "name": [
+          {
+            "text": "Eastfield Shops",
+            "language": "en"
+          },
+          {
+            "text": "Eastfield Shops",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.71002,
+        "lon": -79.82288,
+        "capacity": 12,
+        "address": "145 Harbour Road",
+        "rental_uris": {
+          "android": "larkhaven://station/155",
+          "ios": "larkhaven://station/155"
+        }
+      },
+      {
+        "station_id": "156",
+        "name": [
+          {
+            "text": "Eastfield Station",
+            "language": "en"
+          },
+          {
+            "text": "Eastfield Station",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.71085,
+        "lon": -79.83505,
+        "capacity": 16,
+        "address": "152 Harbour Road"
+      },
+      {
+        "station_id": "157",
+        "name": [
+          {
+            "text": "Brickworks",
+            "language": "en"
+          },
+          {
+            "text": "Brickworks",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.71637,
+        "lon": -79.83043,
+        "capacity": 17
+      },
+      {
+        "station_id": "158",
+        "name": [
+          {
+            "text": "Cedar Road",
+            "language": "en"
+          },
+          {
+            "text": "Cedar Road",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70978,
+        "lon": -79.83157,
+        "capacity": 16,
+        "address": "166 Cedar Road"
+      },
+      {
+        "station_id": "159",
+        "name": [
+          {
+            "text": "Linden Way",
+            "language": "en"
+          },
+          {
+            "text": "Linden Way",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.71428,
+        "lon": -79.83269,
+        "capacity": 19,
+        "address": "173 Linden Way"
+      },
+      {
+        "station_id": "160",
+        "name": [
+          {
+            "text": "Eastfield Community Centre",
+            "language": "en"
+          },
+          {
+            "text": "Eastfield Community Centre",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.71055,
+        "lon": -79.82142,
+        "capacity": 19,
+        "rental_uris": {
+          "android": "larkhaven://station/160",
+          "ios": "larkhaven://station/160"
+        }
+      },
+      {
+        "station_id": "161",
+        "name": [
+          {
+            "text": "Maple Crescent",
+            "language": "en"
+          },
+          {
+            "text": "Maple Crescent",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70815,
+        "lon": -79.83492,
+        "capacity": 15,
+        "address": "187 Harbour Road"
+      },
+      {
+        "station_id": "162",
+        "name": [
+          {
+            "text": "Rowan Street",
+            "language": "en"
+          },
+          {
+            "text": "Rowan Street",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.71524,
+        "lon": -79.82058,
+        "capacity": 18,
+        "address": "194 Rowan Street"
+      },
+      {
+        "station_id": "163",
+        "name": [
+          {
+            "text": "Riverside Walk",
+            "language": "en"
+          },
+          {
+            "text": "Riverside Walk",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.69722,
+        "lon": -79.85146,
+        "capacity": 18
+      },
+      {
+        "station_id": "164",
+        "name": [
+          {
+            "text": "Boathouse",
+            "language": "en"
+          },
+          {
+            "text": "Boathouse",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.69157,
+        "lon": -79.84884,
+        "capacity": 15,
+        "address": "18 Harbour Road"
+      },
+      {
+        "station_id": "165",
+        "name": [
+          {
+            "text": "Willow Bank",
+            "language": "en"
+          },
+          {
+            "text": "Willow Bank",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.6929,
+        "lon": -79.84567,
+        "capacity": 14,
+        "address": "25 Harbour Road",
+        "rental_uris": {
+          "android": "larkhaven://station/165",
+          "ios": "larkhaven://station/165"
+        }
+      },
+      {
+        "station_id": "166",
+        "name": [
+          {
+            "text": "Lock Keeper's Cottage",
+            "language": "en"
+          },
+          {
+            "text": "Lock Keeper's Cottage",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70055,
+        "lon": -79.85105,
+        "capacity": 16
+      },
+      {
+        "station_id": "167",
+        "name": [
+          {
+            "text": "Riverside Market",
+            "language": "en"
+          },
+          {
+            "text": "Riverside Market",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.69734,
+        "lon": -79.84171,
+        "capacity": 13,
+        "address": "39 Harbour Road"
+      },
+      {
+        "station_id": "168",
+        "name": [
+          {
+            "text": "Old Tannery",
+            "language": "en"
+          },
+          {
+            "text": "Old Tannery",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.69662,
+        "lon": -79.85861,
+        "capacity": 19,
+        "address": "46 Harbour Road"
+      },
+      {
+        "station_id": "169",
+        "name": [
+          {
+            "text": "Canal Basin",
+            "language": "en"
+          },
+          {
+            "text": "Canal Basin",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.69453,
+        "lon": -79.84746,
+        "capacity": 16
+      },
+      {
+        "station_id": "170",
+        "name": [
+          {
+            "text": "Towpath North",
+            "language": "en"
+          },
+          {
+            "text": "Towpath North",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.69252,
+        "lon": -79.83442,
+        "capacity": 15,
+        "address": "60 Harbour Road",
+        "rental_uris": {
+          "android": "larkhaven://station/170",
+          "ios": "larkhaven://station/170"
+        }
+      },
+      {
+        "station_id": "171",
+        "name": [
+          {
+            "text": "Fenwick Park Gates",
+            "language": "en"
+          },
+          {
+            "text": "Fenwick Park Gates",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.68568,
+        "lon": -79.9013,
+        "capacity": 22,
+        "address": "67 Harbour Road"
+      },
+      {
+        "station_id": "172",
+        "name": [
+          {
+            "text": "Lido",
+            "language": "en"
+          },
+          {
+            "text": "Lido",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.6891,
+        "lon": -79.89769,
+        "capacity": 27
+      },
+      {
+        "station_id": "173",
+        "name": [
+          {
+            "text": "Bandstand",
+            "language": "en"
+          },
+          {
+            "text": "Bandstand",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.68874,
+        "lon": -79.89212,
+        "capacity": 27,
+        "address": "81 Harbour Road"
+      },
+      {
+        "station_id": "174",
+        "name": [
+          {
+            "text": "Rose Garden",
+            "language": "en"
+          },
+          {
+            "text": "Rose Garden",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.69196,
+        "lon": -79.90167,
+        "capacity": 18,
+        "address": "88 Harbour Road"
+      },
+      {
+        "station_id": "175",
+        "name": [
+          {
+            "text": "Westmoor Road",
+            "language": "en"
+          },
+          {
+            "text": "Westmoor Road",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70725,
+        "lon": -79.94087,
+        "capacity": 16,
+        "rental_uris": {
+          "android": "larkhaven://station/175",
+          "ios": "larkhaven://station/175"
+        }
+      },
+      {
+        "station_id": "176",
+        "name": [
+          {
+            "text": "Westmoor Farm Shop",
+            "language": "en"
+          },
+          {
+            "text": "Westmoor Farm Shop",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70143,
+        "lon": -79.92873,
+        "capacity": 16,
+        "address": "102 Harbour Road"
+      },
+      {
+        "station_id": "177",
+        "name": [
+          {
+            "text": "Heathfield",
+            "language": "en"
+          },
+          {
+            "text": "Heathfield",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70093,
+        "lon": -79.92629,
+        "capacity": 18,
+        "address": "109 Harbour Road"
+      },
+      {
+        "station_id": "178",
+        "name": [
+          {
+            "text": "Westmoor Commons",
+            "language": "en"
+          },
+          {
+            "text": "Westmoor Commons",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.70397,
+        "lon": -79.92316,
+        "capacity": 19
+      },
+      {
+        "station_id": "180",
+        "name": [
+          {
+            "text": "Saltings Lane",
+            "language": "en"
+          },
+          {
+            "text": "Saltings Lane",
+            "language": "fr"
+          }
+        ],
+        "lat": 44.68428,
+        "lon": -79.84466,
+        "capacity": 17,
+        "address": "130 Saltings Lane"
+      }
+    ]
+  }
+}

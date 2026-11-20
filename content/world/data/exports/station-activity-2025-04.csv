@@ -1,0 +1,80 @@
+Larkhaven Bikes - station activity - April 2025
+Station ID,Station Name,Neighbourhood,Trips Started,Trips Ended,Avg Trip Distance,Avg Duration (min),E-bike Share,Dock Faults,Last Inspected
+101,Market Square,Market Square,301,356,2.53 km,12.9,40%,0,n/a
+102,MARKET SQUARE NORTH,Market Square,216,317,2.13 km,10.3,48%,0,-
+103,Town Hall,Market Square,161,244,2.57 km,12.3,43%,1,
+104,Bridge St & Water St,Market Square,180,239,2.15 km,11.0,41%,1,04/03/2025
+105,Larkhaven Central Station,Market Square,375,483,2.20 km,11.4,43%,,04/14/2025
+106,Corn Exchange,Market Square,233,304,2.31 km,12.6,40%,1,04/01/2025
+107,Library Plaza,Market Square,289,333,2.16 km,11.2,n/a,1,04/21/2025
+108,Bellfounders Row,Market Square,222,272,2.38 km,12.5,42%,2,04/21/2025
+109,St. Agnes Square,Market Square,147,183,2.19 km,11.5,39%,2,04/28/2025
+110,Guildhall Lane,Market Square,223,263,2.14 km,10.8,42%,1,04/14/2025
+111,Theatre Royal,Market Square,122,126,2.29 km,11.7,35%,1,04/06/2025
+112,Courthouse,Market Square,171,253,2.30 km,12.0,39%,0,04/22/2025
+113,Harbour Front,Old Harbour,182,211,2.36 km,12.5,47%,1,04/08/2025
+114,Ferry Landing,Old Harbour,199,205,2.84 km,14.3,45%,0,04/15/2025
+115,Cooper’s Wharf,Old Harbour,109,131,2.44 km,12.3,47%,0,04/06/2025
+116,Harbour Master,Old Harbour,186,192,1.99 km,11.0,45%,1,04/20/2025
+117,Quay Street,Old Harbour,220,228,2.25 km,13.5,43%,0,04/04/2025
+118,Chandlers Court,Old Harbour,99,107,2.42 km,12.7,38%,0,04/27/2025
+119,Lighthouse Walk,Old Harbour,163,180,2.41 km,13.6,46%,1,04/01/2025
+120,Boatyard,Old Harbour,168,153,2.89 km,14.5,39%,0,04/27/2025
+121,Ropewalk,Old Harbour,151,139,3.21 km,16.9,42%,1,04/15/2025
+122,Castle  Gate,Castle Hill,147,133,2.84 km,13.0,48%,0,04/13/2025
+123,Castle Hill Park,Castle Hill,157,169,2.78 km,13.8,37%,0,04/01/2025
+124,St Agnes Church,Castle Hill,83,101,3.59 km,16.7,45%,2,04/24/2025
+125,Keep Street,Castle Hill,245,249,2.62 km,13.4,37%,2,04/08/2025
+126,Barbican,Castle Hill,141,147,2.65 km,12.9,38%,0,04/18/2025
+127,Mill Rd and Kiln St,Castle Hill,104,93,3.46 km,16.3,39%,0,04/27/2025
+128,Tanner's Yard,Castle Hill,122,136,2.50 km,11.9,48%,0,04/15/2025
+129,Gasworks Yard,Castle Hill,79,86,2.91 km,14.2,41%,0,04/11/2025
+130,university library,University,330,380,2.73 km,13.7,42%,0,04/08/2025
+131,Science Park,University,146,171,3.39 km,15.9,45%,0,04/24/2025
+132,Student Union,University,270,305,3.15 km,15.2,37%,0,-
+133,Teachers' College,University,107,111,2.72 km,13.0,50%,0,04/28/2025
+134,Engineering Quad,University,125,124,2.69 km,13.9,38%,1,04/02/2025
+135,Medical School,University,207,210,2.88 km,13.7,43%,1,04/14/2025
+136,Residences North,University,217,246,2.75 km,14.2,37%,0,04/07/2025
+137,Sports Centre,University,269,237,3.11 km,15.1,n/a,1,04/21/2025
+138,Observatory Road,University,157,175,2.65 km,13.0,36%,0,04/10/2025
+139,Millbrook Green,Millbrook,76,52,4.49 km,19.5,50%,0,04/17/2025
+140,Millbrook Shops,Millbrook,157,100,4.58 km,20.0,47%,1,04/12/2025
+141,Weir Lane,Millbrook,76,50,4.05 km,17.3,39%,1,04/15/2025
+142,Ash Grove,Millbrook,83,40,4.72 km,19.8,47%,1,04/24/2025
+143,Elm Terrace,Millbrook,141,66,4.72 km,20.7,36%,0,04/25/2025
+144,Pinfold Street,Millbrook,82,45,4.14 km,20.1,41%,2,04/04/2025
+145,Millbrook School,Millbrook,168,143,4.48 km,19.8,36%,0,04/17/2025
+146,Orchard Close,Millbrook,67,60,3.88 km,n/a,45%,0,04/10/2025
+147,Northgate Library,Northgate,82,63,4.69 km,21.4,38%,1,04/14/2025
+148,Northgate Junction,Northgate,100,102,3.55 km,15.5,44%,0,04/12/2025
+149,Hospital,Northgate,59,49,4.13 km,18.6,29%,0,04/19/2025
+150,Foundry Road,Northgate,145,85,4.29 km,19.2,43%,0,04/10/2025
+151,Northgate Pool,Northgate,85,45,4.19 km,20.2,48%,-,04/16/2025
+152,Hatter's Lane,Northgate,119,87,3.91 km,18.1,41%,1,04/05/2025
+153,Ridgeway,Northgate,177,139,3.52 km,15.6,38%,3,04/11/2025
+154,Birch Avenue,Northgate,147,105,3.58 km,16.9,37%,0,04/23/2025
+155,Eastfield Shops,Eastfield,63,48,4.13 km,17.7,43%,0,04/19/2025
+156,Eastfield Station,Eastfield,76,66,3.33 km,n/a,38%,0,04/09/2025
+157,Brickworks,Eastfield,75,65,3.61 km,15.6,45%,1,04/17/2025
+158,Cedar Road,Eastfield,73,64,3.53 km,16.2,27%,0,04/11/2025
+159,Linden Way,Eastfield,50,37,3.21 km,14.8,34%,0,
+160,Eastfield Community Centre,Eastfield,134,67,4.37 km,19.0,42%,2,04/02/2025
+161,Maple Crescent,Eastfield,86,84,3.17 km,14.4,38%,1,04/11/2025
+162,Rowan Street,Eastfield,82,59,4.50 km,19.6,41%,1,04/13/2025
+163,Riverside Walk,Riverside,85,75,2.80 km,13.9,46%,1,04/06/2025
+164,Boathouse,Riverside,81,80,3.04 km,13.4,47%,0,04/06/2025
+165,Willow Bank,Riverside,127,121,2.95 km,14.5,39%,0,n/a
+166,Lock Keeper's Cottage,Riverside,62,79,2.28 km,11.7,44%,0,04/26/2025
+167,Riverside Market,Riverside,117,106,3.31 km,15.7,50%,0,04/05/2025
+168,Old Tannery,Riverside,132,148,2.55 km,13.7,44%,0,04/28/2025
+169,Canal Basin,Riverside,115,111,3.32 km,14.8,49%,0,04/23/2025
+170,Towpath North,Riverside,70,55,3.81 km,18.1,30%,0,04/13/2025
+171,Fenwick Park Gates,Fenwick Park,185,123,3.94 km,,39%,0,04/20/2025
+172,Lido,Fenwick Park,149,126,3.59 km,19.0,35%,2,04/21/2025
+173,Bandstand,Fenwick Park,209,177,3.43 km,18.8,43%,1,04/28/2025
+174,Rose Garden,Fenwick Park,188,158,4.05 km,19.9,40%,1,04/09/2025
+175,Westmoor Road,Westmoor,75,35,5.76 km,27.0,n/a,0,04/03/2025
+176,Westmoor Farm Shop,Westmoor,125,62,5.33 km,23.1,45%,0,04/15/2025
+177,Heathfield,Westmoor,116,77,4.98 km,21.4,41%,see log,04/08/2025
+178,Westmoor Commons,Westmoor,99,58,4.67 km,20.0,41%,1,04/27/2025

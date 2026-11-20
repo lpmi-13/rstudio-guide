@@ -1,0 +1,106 @@
+{
+  "id": "engine-check",
+  "version": 2,
+  "fixture": true,
+  "part": "Audit fixtures",
+  "number": 92,
+  "world": true,
+  "title": "Engine check",
+  "modes": ["demonstration", "guided", "solo"],
+  "script": "engine-check.R",
+  "source": "A fixture for the audits: one statement of each kind the new lessons use.",
+  "summary": "Read a year of Larkhaven Bikes trips, summarise and chart them, save the chart, and work two of RStudio's settings and menus.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse)",
+      "runs": [
+        {"code": "library(tidyverse)", "evidence": "attached",
+         "purpose": "load the tidyverse packages",
+         "task": "Load the tidyverse with `library()`."}
+      ],
+      "explain": "`library(tidyverse)` attaches ggplot2, dplyr, readr and the other core tidyverse packages, so their functions can be used by name."
+    },
+    {
+      "id": "read",
+      "title": "Read the trips: read_csv()",
+      "runs": [
+        {"code": "trips <- read_csv(\"data/trips.csv\")", "evidence": "assign",
+         "alternatives": ["trips = read_csv('data/trips.csv', show_col_types = FALSE)"],
+         "values": {"n_trips": "format(nrow(trips), big.mark = \",\")"},
+         "purpose": "read every 2025 trip into `trips`",
+         "task": "Read `data/trips.csv` into a variable called `trips` with `read_csv()`."}
+      ],
+      "explain": "`trips` has {n_trips} rows, one per trip in 2025."
+    },
+    {
+      "id": "summarise",
+      "title": "Casual trips per station: summarize()",
+      "runs": [
+        {"code": "trips |>\n  filter(member_type == \"casual\") |>\n  summarize(\n    trips = n(),\n    median_minutes = median(duration_min),\n    .by = start_station\n  )",
+         "evidence": "value", "order": "any",
+         "alternatives": ["trips |> filter(member_type == 'casual') |> group_by(start_station) |> summarize(trips = n(), median_minutes = median(duration_min))"],
+         "values": {"stations": "as.character(n_distinct(trips$start_station[trips$member_type == 'casual']))"},
+         "purpose": "count casual riders' trips and their median length at each start station",
+         "task": "Keep only casual riders' trips, then count the trips and find the median `duration_min` for each `start_station`."}
+      ],
+      "explain": "One row for each of the {stations} stations where a casual rider started a trip."
+    },
+    {
+      "id": "week",
+      "title": "One week of trips: filter()",
+      "runs": [
+        {"code": "week <- trips |>\n  filter(month(started_at) == 6, day(started_at) <= 7)", "evidence": "assign",
+         "values": {"n_week": "format(nrow(week), big.mark = \",\")"},
+         "purpose": "keep the first week of June in `week`",
+         "task": "Keep the trips that started from 1 to 7 June in a variable called `week`."}
+      ],
+      "explain": "`week` holds {n_week} trips."
+    },
+    {
+      "id": "chart",
+      "title": "Distance and duration: ggplot()",
+      "runs": [
+        {"code": "ggplot(week, aes(x = distance_km, y = duration_min, colour = bike_type)) +\n  geom_point(alpha = 0.4)",
+         "evidence": "ggplot", "warning": "Removed \\d+ rows? containing missing values",
+         "alternatives": ["ggplot(week) + geom_point(aes(distance_km, duration_min, colour = bike_type), alpha = 0.4)"],
+         "purpose": "plot each trip's duration against its distance, coloured by bike type",
+         "task": "Draw a scatter plot of `duration_min` against `distance_km` for `week`, coloured by `bike_type`, with `alpha = 0.4`."},
+        {"code": "ggsave(\"distance.png\", width = 6, height = 4)", "evidence": "file", "path": "distance.png", "warning": "Removed \\d+ rows? containing missing values",
+         "purpose": "save the chart as distance.png",
+         "task": "Save the chart as `distance.png`, 6 by 4 inches, with `ggsave()`."}
+      ],
+      "explain": "Each point is a trip. For the same distance, e-bike trips take less time. ggplot2 warns that it left out a few trips: lost bikes, whose distance is unknown."
+    },
+    {
+      "id": "console",
+      "title": "Today, a typo and a warning",
+      "runs": [
+        {"code": "today()", "evidence": "pattern", "pattern": "^\\[1\\] \"\\d{4}-\\d{2}-\\d{2}\"$",
+         "purpose": "show today's date",
+         "task": "Show today's date with `today()`."},
+        {"code": "summary(trip)", "evidence": "error", "error": "object 'trip' not found",
+         "purpose": "summarise a variable whose name is misspelled",
+         "task": "Run `summary(trip)`, with `trips` misspelled, to see R's error."},
+        {"code": "as.numeric(c(\"12\", \"twelve\"))", "evidence": "value", "warning": "NAs introduced by coercion",
+         "purpose": "turn text into numbers, where one can't be",
+         "task": "Convert `c(\"12\", \"twelve\")` to numbers with `as.numeric()`."}
+      ],
+      "explain": "`today()` shows a different date each day. R couldn't find `trip`, so it stopped with an error. `as.numeric()` turned \"twelve\" into `NA` and warned about it."
+    },
+    {
+      "id": "ide",
+      "title": "RStudio: Global Options and Restart R",
+      "runs": [
+        {"action": "option", "pane": "General", "label": "Restore .RData into workspace at startup", "value": true,
+         "evidence": "ide", "ide": {"pref": "load_workspace", "value": true},
+         "purpose": "tick Restore .RData in Global Options (the lab starts with it off)",
+         "task": "In Tools › Global Options › General, tick Restore .RData into workspace at startup, then press OK."},
+        {"action": "menu", "menu": ["Session", "Restart R"], "evidence": "ide", "ide": {"restarted": true},
+         "purpose": "restart R",
+         "task": "Restart R from the Session menu."}
+      ],
+      "explain": "R started again with nothing in the Environment. RStudio saves no .RData here, so there was nothing to restore."
+    }
+  ]
+}

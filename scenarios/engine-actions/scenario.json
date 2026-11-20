@@ -1,0 +1,143 @@
+{
+  "id": "engine-actions",
+  "version": 2,
+  "fixture": true,
+  "part": "Audit fixtures",
+  "number": 91,
+  "title": "Engine actions",
+  "modes": [
+    "demonstration",
+    "guided",
+    "solo"
+  ],
+  "script": "engine-actions.R",
+  "source": "A fixture for the audits: the IDE actions the workflow and Quarto lessons use.",
+  "summary": "Reformat a messy script, render a Quarto report, switch to the visual editor and back, start a new Quarto document and press the pipe shortcut.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(dplyr)",
+      "runs": [
+        {
+          "code": "library(dplyr)",
+          "evidence": "attached",
+          "purpose": "load dplyr",
+          "task": "Load dplyr with `library()`."
+        }
+      ],
+      "explain": "dplyr is attached. The tidyverse from the other fixture isn't: R restarted when the lesson changed."
+    },
+    {
+      "id": "format",
+      "title": "Reformat a messy script",
+      "runs": [
+        {
+          "action": "open-file",
+          "file": "messy.R",
+          "evidence": "ide",
+          "ide": {
+            "tab": "^messy\\.R$"
+          },
+          "purpose": "open messy.R",
+          "task": "Open `messy.R` from the Files pane."
+        },
+        {
+          "action": "format-document",
+          "evidence": "ide",
+          "ide": {
+            "editor_text": "# A script written in a hurry\nfast <- trips |>\n  filter(duration_min < 10, bike_type == \"electric\") |>\n  select(trip_id, start_station, duration_min)\nkm_to_miles <- function(km) {\n  km * 0.621371\n}\n"
+          },
+          "purpose": "reformat the whole script with Air",
+          "task": "Reformat `messy.R` with Code › Reformat Document."
+        }
+      ],
+      "explain": "Air put spaces around operators, one pipe step on each line, and the function's body on its own line."
+    },
+    {
+      "id": "render",
+      "title": "Render a report",
+      "runs": [
+        {
+          "action": "open-file",
+          "file": "report.qmd",
+          "evidence": "ide",
+          "ide": {
+            "tab": "^report\\.qmd$"
+          },
+          "purpose": "open report.qmd",
+          "task": "Open `report.qmd` from the Files pane."
+        },
+        {
+          "action": "render",
+          "file": "report.qmd",
+          "evidence": "file",
+          "path": "report.html",
+          "purpose": "render the report to HTML",
+          "task": "Render `report.qmd` with the Render button."
+        }
+      ],
+      "explain": "Quarto ran the code chunk and wrote report.html, which the Viewer shows."
+    },
+    {
+      "id": "visual",
+      "title": "The visual editor",
+      "runs": [
+        {
+          "action": "editor-mode",
+          "to": "visual",
+          "evidence": "ide",
+          "ide": {
+            "editor_mode": "visual"
+          },
+          "purpose": "switch report.qmd to the visual editor",
+          "task": "Switch `report.qmd` to the visual editor."
+        },
+        {
+          "action": "editor-mode",
+          "to": "source",
+          "evidence": "ide",
+          "ide": {
+            "editor_mode": "source"
+          },
+          "purpose": "switch back to the source editor",
+          "task": "Switch back to the source editor."
+        }
+      ],
+      "explain": "The visual editor shows the document as it will look; the source editor shows its markdown."
+    },
+    {
+      "id": "new",
+      "title": "A new Quarto document",
+      "runs": [
+        {
+          "action": "new-file",
+          "kind": "Quarto Document…",
+          "evidence": "ide",
+          "ide": {
+            "tab": "^Untitled\\d*\\*?$"
+          },
+          "purpose": "start a new Quarto document",
+          "task": "Start a new Quarto document with File › New File › Quarto Document…, then press Create."
+        }
+      ],
+      "explain": "RStudio opened an untitled Quarto document with a title and an HTML format."
+    },
+    {
+      "id": "shortcut",
+      "title": "The pipe shortcut",
+      "runs": [
+        {
+          "action": "shortcut",
+          "keys": "Ctrl+Shift+M",
+          "evidence": "ide",
+          "ide": {
+            "chord": "Ctrl+Shift+M"
+          },
+          "purpose": "type the pipe with its shortcut",
+          "task": "In the new document, press Ctrl+Shift+M."
+        }
+      ],
+      "explain": "Ctrl+Shift+M types the pipe, `|>`, wherever the cursor is."
+    }
+  ]
+}

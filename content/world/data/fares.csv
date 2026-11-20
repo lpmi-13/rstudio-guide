@@ -1,0 +1,13 @@
+fare_id,member_type,bike_type,valid_from,valid_to,unlock_fee,per_minute
+1,casual,classic,2021-04-15,2023-03-31,1,0.12
+2,casual,electric,2021-04-15,2023-03-31,1,0.25
+3,member,classic,2021-04-15,2023-03-31,0,0
+4,member,electric,2021-04-15,2023-03-31,0,0.12
+5,casual,classic,2023-04-01,2025-03-31,1.25,0.15
+6,casual,electric,2023-04-01,2025-03-31,1.25,0.3
+7,member,classic,2023-04-01,2025-03-31,0,0
+8,member,electric,2023-04-01,2025-03-31,0,0.15
+9,casual,classic,2025-04-01,,1.5,0.18
+10,casual,electric,2025-04-01,,1.5,0.35
+11,member,classic,2025-04-01,,0,0
+12,member,electric,2025-04-01,,0,0.18

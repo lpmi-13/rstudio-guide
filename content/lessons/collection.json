@@ -1,0 +1,180 @@
+{
+  "_comment": "The lessons in order, in the six parts of R for Data Science (2e), which inspired them. A lesson's number is its position here; its folder is scenarios/<id>/. \"chapter\" is the lesson's Go deeper link.",
+  "parts": [
+    {
+      "title": "Whole game",
+      "lessons": [
+        {
+          "id": "01-data-visualization",
+          "title": "Data visualization",
+          "chapter": "https://r4ds.hadley.nz/data-visualize.html"
+        },
+        {
+          "id": "02-workflow-basics",
+          "title": "Workflow: basics",
+          "chapter": "https://r4ds.hadley.nz/workflow-basics.html"
+        },
+        {
+          "id": "03-data-transformation",
+          "title": "Data transformation",
+          "chapter": "https://r4ds.hadley.nz/data-transform.html"
+        },
+        {
+          "id": "04-workflow-code-style",
+          "title": "Workflow: code style",
+          "chapter": "https://r4ds.hadley.nz/workflow-style.html"
+        },
+        {
+          "id": "05-data-tidying",
+          "title": "Data tidying",
+          "chapter": "https://r4ds.hadley.nz/data-tidy.html"
+        },
+        {
+          "id": "06-workflow-scripts-projects",
+          "title": "Workflow: scripts and projects",
+          "chapter": "https://r4ds.hadley.nz/workflow-scripts.html"
+        },
+        {
+          "id": "07-data-import",
+          "title": "Data import",
+          "chapter": "https://r4ds.hadley.nz/data-import.html"
+        },
+        {
+          "id": "08-workflow-getting-help",
+          "title": "Workflow: getting help",
+          "chapter": "https://r4ds.hadley.nz/workflow-help.html"
+        }
+      ]
+    },
+    {
+      "title": "Visualize",
+      "lessons": [
+        {
+          "id": "09-layers",
+          "title": "Layers",
+          "chapter": "https://r4ds.hadley.nz/layers.html"
+        },
+        {
+          "id": "10-exploratory-data-analysis",
+          "title": "Exploratory data analysis",
+          "chapter": "https://r4ds.hadley.nz/EDA.html"
+        },
+        {
+          "id": "11-communication",
+          "title": "Communication",
+          "chapter": "https://r4ds.hadley.nz/communication.html"
+        }
+      ]
+    },
+    {
+      "title": "Transform",
+      "lessons": [
+        {
+          "id": "12-logical-vectors",
+          "title": "Logical vectors",
+          "chapter": "https://r4ds.hadley.nz/logicals.html"
+        },
+        {
+          "id": "13-numbers",
+          "title": "Numbers",
+          "chapter": "https://r4ds.hadley.nz/numbers.html"
+        },
+        {
+          "id": "14-strings",
+          "title": "Strings",
+          "chapter": "https://r4ds.hadley.nz/strings.html"
+        },
+        {
+          "id": "15-regular-expressions",
+          "title": "Regular expressions",
+          "chapter": "https://r4ds.hadley.nz/regexps.html"
+        },
+        {
+          "id": "16-factors",
+          "title": "Factors",
+          "chapter": "https://r4ds.hadley.nz/factors.html"
+        },
+        {
+          "id": "17-dates-and-times",
+          "title": "Dates and times",
+          "chapter": "https://r4ds.hadley.nz/datetimes.html"
+        },
+        {
+          "id": "18-missing-values",
+          "title": "Missing values",
+          "chapter": "https://r4ds.hadley.nz/missing-values.html"
+        },
+        {
+          "id": "19-joins",
+          "title": "Joins",
+          "chapter": "https://r4ds.hadley.nz/joins.html"
+        }
+      ]
+    },
+    {
+      "title": "Import",
+      "lessons": [
+        {
+          "id": "20-spreadsheets",
+          "title": "Spreadsheets",
+          "chapter": "https://r4ds.hadley.nz/spreadsheets.html"
+        },
+        {
+          "id": "21-databases",
+          "title": "Databases",
+          "chapter": "https://r4ds.hadley.nz/databases.html"
+        },
+        {
+          "id": "22-larger-than-memory-data",
+          "title": "Larger-than-memory data",
+          "chapter": "https://r4ds.hadley.nz/arrow.html"
+        },
+        {
+          "id": "23-hierarchical-data",
+          "title": "Hierarchical data",
+          "chapter": "https://r4ds.hadley.nz/rectangling.html"
+        },
+        {
+          "id": "24-web-scraping",
+          "title": "Web scraping",
+          "chapter": "https://r4ds.hadley.nz/webscraping.html"
+        }
+      ]
+    },
+    {
+      "title": "Program",
+      "lessons": [
+        {
+          "id": "25-functions",
+          "title": "Functions",
+          "chapter": "https://r4ds.hadley.nz/functions.html"
+        },
+        {
+          "id": "26-iteration",
+          "title": "Iteration",
+          "chapter": "https://r4ds.hadley.nz/iteration.html"
+        },
+        {
+          "id": "27-base-r",
+          "title": "A field guide to base R",
+          "chapter": "https://r4ds.hadley.nz/base-R.html"
+        }
+      ]
+    },
+    {
+      "title": "Communicate",
+      "lessons": [
+        {
+          "id": "28-quarto",
+          "title": "Quarto",
+          "chapter": "https://r4ds.hadley.nz/quarto.html"
+        },
+        {
+          "id": "29-quarto-formats",
+          "title": "Quarto formats",
+          "chapter": "https://r4ds.hadley.nz/quarto-formats.html"
+        }
+      ]
+    }
+  ]
+}
