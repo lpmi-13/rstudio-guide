@@ -58,6 +58,7 @@
   // Shortcuts pressed in RStudio, for lessons that teach one (Alt+- for <-, Ctrl+Shift+M for |>).
   // Pressing one leaves nothing R can see, so the coach watches for the keys themselves.
   coach.chords = [];
+  coach.chordAt = {}; // each shortcut's last press, which the 50-entry log above could lose
   window.addEventListener('keydown', event => {
     const host = document.getElementById('rs-coach-host');
     if (host && event.composedPath().includes(host)) return;
@@ -65,6 +66,7 @@
     if (!(event.ctrlKey || event.altKey || event.metaKey) || ['Control', 'Alt', 'Shift', 'Meta'].includes(key)) return;
     const chord = [event.ctrlKey && 'Ctrl', event.metaKey && 'Cmd', event.altKey && 'Alt', event.shiftKey && 'Shift', key].filter(Boolean).join('+');
     coach.chords.push({chord, at: Date.now(), trusted: event.isTrusted});
+    coach.chordAt[chord] = Date.now();
     if (coach.chords.length > 50) coach.chords.shift();
   }, true);
   if (shield) {
@@ -116,6 +118,8 @@
       return Boolean(img && img.naturalWidth > 0 && img.ownerDocument.defaultView.getComputedStyle(img).display !== 'none');
     },
     runButton: () => ide.sourceButton(/^Run\b/),
+    // A Quarto document's toolbar has a Run menu (Run Selected Line(s), Run Current Chunk…) instead.
+    runMenu: () => [...document.querySelectorAll('#rstudio_Source_pane button[aria-haspopup="true"]')].find(b => shown(b) && b.textContent.trim() === 'Run'),
     saveButton: () => ide.sourceButton(/^Save current document\b/),
     sourceButton: title => [...document.querySelectorAll('#rstudio_Source_pane button')]
       .find(b => shown(b) && title.test(b.getAttribute('title') || '')),
@@ -1147,7 +1151,8 @@
         return (doc.state?.attached || []).includes(want.library) ? take(c => c.library === want.library) : null;
       case 'file': {
         const file = (doc.state?.files || []).find(f => f.path === run.path && f.mtime !== mark.files?.[run.path]);
-        return file ? {key: `file:${run.path}:${file.mtime}`} : null;
+        const key = file && `file:${run.path}:${file.mtime}`;
+        return key && !claimed.has(key) ? {key} : null; // each version of the file counts once
       }
       case 'ide': {
         const id = `ide:${JSON.stringify(run.ide)}`;
@@ -1182,9 +1187,10 @@
     if (want.viewer) checks.push(ide.viewerShows());
     if (want.help) checks.push(new RegExp(want.help).test(ide.helpTitle() || ''));
     if (want.project) checks.push((doc.state?.wd || '').endsWith(`/${want.project}`));
-    if (want.chord) checks.push(coach.chords.some(c => c.chord === want.chord && c.at >= mark.at));
+    if (want.chord) checks.push(pressedSince(want.chord, mark));
     if (want.editor_mode) checks.push(want.editor_mode === 'visual' ? Boolean(ide.visualEditor()) : Boolean(ide.activeEditor()) && !ide.visualEditor());
     if ('editor_text' in want) checks.push(ide.activeEditor()?.getValue() === want.editor_text);
+    if (want.editor_match) checks.push(new RegExp(want.editor_match, 'm').test(ide.activeEditor()?.getValue() ?? ''));
     return checks.length > 0 && checks.every(Boolean);
   }
   // Console-side evidence for "pattern" (today(), timings) and "error" (a statement meant to fail):
@@ -1203,13 +1209,26 @@
 
   // Whether `run` is done, by the evidence its kind uses: R's record, the Console, or RStudio itself.
   // Returns {key, output} or null. Older lessons' "console" and "plot" lines are matched as before.
+  // A statement with `keys` (Ctrl+Shift+M, to type |>) also needs the shortcut pressed since the mode
+  // began; `run.keysMissing` says when R's result is right but the shortcut hasn't been used, so
+  // Guided can say so. Demonstration presses it while typing, and checks R's evidence alone.
   function runDone(run, view, doc, mark, claimed, off = {}) {
-    if (run.action || usesEvidence(run)) return doc && mark ? evidenceMatch(run, doc, mark, claimed, off) : null;
-    if (run.evidence === 'pattern' || run.evidence === 'error') return consoleMatch(run, view, claimed);
-    const match = matchRun(run, view);
-    return match && {...match, key: `console:${match.index}`};
+    let match;
+    if (run.action || usesEvidence(run)) match = doc && mark ? evidenceMatch(run, doc, mark, claimed, off) : null;
+    else if (run.evidence === 'pattern' || run.evidence === 'error') match = consoleMatch(run, view, claimed);
+    else {
+      match = matchRun(run, view);
+      match = match && {...match, key: `console:${match.index}`};
+    }
+    if (run.code && run.keys) {
+      run.keysMissing = Boolean(match) && !pressedSince(run.keys, mark);
+      if (run.keysMissing) return null;
+    }
+    return match;
   }
+  const pressedSince = (chord, mark) => Boolean(mark) && (coach.chordAt[chord] || 0) >= mark.at;
   // Code in a hint: inline for one line, as a block for a statement over several.
+  const keysHint = run => (run.keys ? ` Type each <code>|&gt;</code> with ${escapeHtml(run.keys)}.` : '');
   const codeHtml = text => (text.includes('\n') ? `<pre class="code">${escapeHtml(text)}</pre>` : `<code>${escapeHtml(text)}</code>`);
   // The control a hint points at for an IDE action.
   const actionControl = run => (run.action === 'menu' ? ide.menubar(run.menu[0])
@@ -1583,7 +1602,8 @@
     // between a pair, RStudio moves the closer down a line; if the reference's next line starts with
     // that closer, the coach steps down onto it (as a learner presses ↓) rather than pressing Enter,
     // so the statement doesn't end up with the closer twice.
-    async function typeStatement(editor, row, code) {
+    // With `shortcut` (Ctrl+Shift+M), each |> is typed with it, as the lesson teaches.
+    async function typeStatement(editor, row, code, shortcut = null) {
       const session = editor.session;
       const lines = code.split('\n');
       const lengthBefore = session.getLength();
@@ -1623,6 +1643,21 @@
           const column = indent + i;
           const at = editor.getCursorPosition();
           if (at.row !== r || at.column !== column) moveTo(r, column);
+          if (shortcut === 'Ctrl+Shift+M' && body.startsWith('|>', i)) {
+            const before = session.getLine(r);
+            sendKeys(editor.textInput.getElement(), shortcut);
+            await pause(typeMs);
+            const cursor = editor.getCursorPosition();
+            // RStudio types " |> ", one space each side; keep the reference's spacing (no trailing space).
+            if (session.getLine(r) !== before && cursor.row === r) session.replace({start: {row: r, column: 0}, end: {row: r, column: cursor.column}}, want.slice(0, column + 2));
+            else editor.insert('|>'); // the shortcut did nothing here
+            moveTo(r, column + 2);
+            note('demo_action', {action: 'shortcut', keys: shortcut});
+            state.actions += 1;
+            keys += 1;
+            i += 1;
+            continue;
+          }
           if (closers.includes(c) && session.getLine(r)[column] === c) moveTo(r, column + 1); // added with its pair: type over it
           else editor.insert(c);
           // RStudio re-indents some lines as they are typed (a closing brace, say): keep the reference's.
@@ -1683,11 +1718,11 @@
         await pause(leadMs);
         await clickInEditor(editor, row, 0); // at its start, so a long line doesn't scroll the editor sideways
       } else {
-        say(`Writing code to ${run.purpose}`);
+        say(`Writing code to ${run.purpose}` + (run.keys ? `, typing each |> with ${run.keys}` : ''));
         spotlight(() => editorRowsRect(editor, headingRow, Math.max(block.last + 1, editor.getCursorPosition().row)));
         await pause(leadMs);
         await clickInEditor(editor, block.last, lines[block.last].length);
-        ({first: row, last} = await typeStatement(editor, block.last, run.code));
+        ({first: row, last} = await typeStatement(editor, block.last, run.code, run.keys));
         spotlight(() => editorRowsRect(editor, headingRow, last));
         if (count > 1) {
           await heed(400);
@@ -1699,11 +1734,18 @@
       await heed(400);
 
       // With no selection, Run sends the statement the cursor is on, comment included.
-      say(count > 1 ? 'Pressing Run to send the whole statement, all its lines, to the Console (Ctrl+Enter does the same)'
-        : 'Pressing Run to send this line to the Console (Ctrl+Enter does the same)');
+      const runMenu = !ide.runButton() && ide.runMenu();
+      const press = runMenu ? 'Pressing Run › Run Selected Line(s)' : 'Pressing Run';
+      say(count > 1 ? `${press} to send the whole statement, all its lines, to the Console (Ctrl+Enter does the same)`
+        : `${press} to send this line to the Console (Ctrl+Enter does the same)`);
       const before = {echoes: countEchoes(ide.consoleText(), run.code), plot: ide.plotImage()?.src || null,
         mark: usesEvidence(run) ? await evidenceMark() : null};
-      if (!(await clickOn(ide.runButton, 'run'))) throw new Error('The Run button in the Source pane is not visible.');
+      if (runMenu) {
+        if (!(await clickOn(ide.runMenu, 'run menu'))) throw new Error('The Run menu in the Source pane is not visible.');
+        const item = () => ide.menuItem(/^Run Selected Line/);
+        if (!(await waitFor(item, 4000))) throw new Error('The Run menu has no Run Selected Line(s) item.');
+        await clickOn(item, 'menu Run Selected Line(s)');
+      } else if (!(await clickOn(ide.runButton, 'run'))) throw new Error('The Run button in the Source pane is not visible.');
       note('demo_action', {action: 'run', line: row + 1, lines: count});
 
       const charts = ['plot', 'ggplot'].includes(run.evidence);
@@ -1846,6 +1888,22 @@
         if (run.to === 'visual' && await waitFor(() => ask() || ide.visualEditor(), 10000) && ask()) {
           await clickOn(() => ask() && [...ask().querySelectorAll('button')].find(b => shown(b) && /Use Visual Mode/.test(b.textContent)), 'dialog Use Visual Mode');
         }
+      } else if (run.action === 'type') {
+        await openScript();
+        const editor = ide.activeEditor();
+        if (!editor) throw new Error(`${script} is not open in the Source pane.`);
+        const lines = editor.session.getDocument().getAllLines();
+        let row = run.after ? lines.findIndex(line => new RegExp(run.after).test(line)) : lines.length - 1;
+        if (row < 0) throw new Error(`${script} has no line matching ${run.after}, so the coach can't tell where this goes. Start this mode again to reset it.`);
+        if (!run.after) while (row > 0 && !lines[row].trim()) row -= 1; // after the last line with text
+        say(`Writing ${run.purpose}`);
+        spotlight(() => editorRowsRect(editor, row, Math.max(row + 1, editor.getCursorPosition().row)));
+        await pause(leadMs);
+        await clickInEditor(editor, row, lines[row].length);
+        const {first, last} = await typeStatement(editor, row, run.text);
+        spotlight(() => editorRowsRect(editor, first, last));
+        await heed(400);
+        await save();
       } else if (run.action === 'shortcut') {
         say(`${purpose}: ${run.keys}`);
         // Into the open document, in whichever editor it shows.
@@ -1859,7 +1917,7 @@
         throw new Error(`The coach can't do the action ${run.action}.`);
       }
       note('demo_action', {action: run.action, step: step.id});
-      spotlight(run.evidence === 'file' ? ide.viewer : ide.console);
+      if (run.action !== 'type') spotlight(run.evidence === 'file' ? ide.viewer : ide.console); // typed text keeps its spotlight
       const started = Date.now();
       let slow = false;
       for (;;) {
@@ -2036,13 +2094,14 @@
     function hintsFor(s, r) {
       const step = steps[s];
       const run = step.runs[r];
+      if (run.action === 'type') return [escapeHtml(run.hint_where), `It starts like this: ${codeHtml(run.hint_partial)}`, `Add exactly this: ${codeHtml(run.hint_line)}`];
       if (run.action) return [escapeHtml(run.hint_where), escapeHtml(run.hint_how)];
       const several = run.code.includes('\n');
       return [
-        `Type it on a new line below <code>${escapeHtml(step.heading)}</code> in ${escapeHtml(script)}. With the cursor on ${several ? 'its first line' : 'that line'}, press Ctrl+Enter or click Run.` +
+        `Type it on a new line below <code>${escapeHtml(step.heading)}</code> in ${escapeHtml(script)}. With the cursor on ${several ? 'its first line' : 'that line'}, press Ctrl+Enter or ${/\.qmd$/.test(script) ? 'choose Run › Run Selected Line(s)' : 'click Run'}.` +
           (several && /[([{]\n/.test(run.code) ? ' When you press Enter between brackets, RStudio moves the closing one down a line for you, so don\'t type it twice.' : ''),
-        `It starts like this: ${codeHtml(run.hint_partial)}`,
-        `The whole ${several ? 'statement' : 'line'} is ${codeHtml(run.hint_line)}`,
+        `It starts like this: ${codeHtml(run.hint_partial)}` + keysHint(run),
+        `The whole ${several ? 'statement' : 'line'} is ${codeHtml(run.hint_line)}` + keysHint(run),
       ];
     }
 
@@ -2114,6 +2173,7 @@
         if (error && !(wanted?.evidence === 'error')) return `R reported: ${error.replace(/\.$/, '')}. Fix the line, then run it again.`;
         if (lesson.version !== 2 && steps.some(step => step.runs.some(run => matchRun(run, view, k)?.index === k))) return '';
         if (view.quietMs < 2500) return g.feedback; // a chart may still be loading, or R's evidence arriving
+        if (wanted?.keysMissing) return `That's the right result. This task also asks you to type the pipe, |>, with ${wanted.keys}: press it once where the pipe goes, then run the statement again.`;
         const ran = entry.code.trim().split('\n')[0] + (entry.code.trim().includes('\n') ? ' …' : '');
         return lesson.version === 2 ? `RStudio ran ${ran}, but R's result isn't what this step asks for. Check the task, or ask for a hint.`
           : `RStudio ran ${ran}, but that isn't what this line asks for. Check the task, or ask for a hint.`;
@@ -2141,7 +2201,9 @@
         for (const [r, run] of steps[s].runs.entries()) {
           if (g.done[key(s, r)]) continue;
           const match = runDone(run, view, doc, g.mark, new Set(g.claims), g.off);
-          if (match && view.quietMs >= 600) complete(s, r, g.showing ? 'coach' : 'learner', match.output, match.key);
+          // Only the task Show me is doing counts as the coach's: the learner may move on and run the
+          // next one while the coach is still saving the script.
+          if (match && view.quietMs >= 600) complete(s, r, g.showing && g.show?.k === key(s, r) ? 'coach' : 'learner', match.output, match.key);
         }
         if (g.showing || current() < 0) return;
         const feedback = feedbackFor(view);
@@ -2170,7 +2232,7 @@
       const step = steps[s];
       g.showing = true;
       g.feedback = '';
-      g.show = {stopped: false, actions: 0, values: {}};
+      g.show = {stopped: false, actions: 0, values: {}, k: key(s, r)};
       pointerFrom(showBtn);
       render();
       note('show_me', {step: step.id, line: r});
@@ -2268,7 +2330,7 @@
         li.className = solo.checked ? (solo.checked.seen[k] ? 'done' : 'missing') : '';
         li.querySelector('.hint').hidden = Boolean(solo.hints[k]);
         const run = steps[s].runs[r];
-        li.querySelector('.hint-text').innerHTML = !solo.hints[k] ? '' : run.action ? escapeHtml(run.hint_how) : `It starts like this: ${codeHtml(run.hint_partial)}`;
+        li.querySelector('.hint-text').innerHTML = !solo.hints[k] ? '' : run.action === 'type' ? `It starts like this: ${codeHtml(run.hint_partial)}` : run.action ? escapeHtml(run.hint_how) : `It starts like this: ${codeHtml(run.hint_partial)}` + keysHint(run);
       }
       const results = $('.results');
       results.hidden = !solo.checked;
@@ -2402,7 +2464,7 @@
   function stepBlock(lines, heading) {
     const at = lines.findIndex(line => line.trimEnd() === heading);
     if (at < 0) return null;
-    let end = lines.findIndex((line, r) => r > at && /^# Step \d+\. /.test(line));
+    let end = lines.findIndex((line, r) => r > at && /^(# Step \d+\. |```)/.test(line)); // in a .qmd, the chunk's fence
     if (end < 0) end = lines.length;
     let last = at;
     for (let r = at + 1; r < end; r += 1) if (lines[r].trim()) last = r;

@@ -77,11 +77,11 @@ def layout_world(root, project):
 def statements(scenario):
     """The lesson's statements in order, as bake.R reads them."""
     runs = []
-    for step in scenario["steps"]:
+    for number, step in enumerate(scenario["steps"], start=1):
         for run in step["runs"]:
             item = {key: run[key] for key in ("code", "action", "menu", "path", "file", "evidence", "warning", "error",
-                                              "pattern", "order", "values", "capture", "alternatives") if key in run}
-            item.update(index=len(runs), step=step["id"])
+                                              "pattern", "order", "values", "capture", "alternatives", "text", "after") if key in run}
+            item.update(index=len(runs), step=step["id"], heading=f"# Step {number}. {step['title']}")
             runs.append(item)
     return runs
 
@@ -141,7 +141,10 @@ def bake(root, image, scenario_id, scenario):
                 project.mkdir(parents=True)
             if scenario.get("world"):
                 layout_world(root, project)
-            (work / "plan.json").write_text(json.dumps({"lesson": scenario_id, "strict": scenario.get("version") == 2, "runs": plan}))
+            if isinstance(scenario.get("starter"), str):  # a Quarto lesson's document, which its steps edit and render
+                (project / scenario["script"]).write_text(scenario["starter"])
+            (work / "plan.json").write_text(json.dumps({"lesson": scenario_id, "strict": scenario.get("version") == 2,
+                                                        "script": scenario.get("script"), "runs": plan}))
             workdirs.append(work)
         with concurrent.futures.ThreadPoolExecutor(2) as pool:
             first, second = pool.map(lambda w: run_container(image, w, limits), workdirs)

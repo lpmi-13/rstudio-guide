@@ -1,0 +1,161 @@
+{
+  "id": "01-data-visualization",
+  "version": 2,
+  "world": true,
+  "title": "Data visualization",
+  "modes": ["demonstration", "guided", "solo"],
+  "script": "01-data-visualization.R",
+  "summary": "Chart one week of Larkhaven Bikes trips with ggplot2: a scatter plot coloured by bike type, with trend lines, labels and colours every reader can tell apart, saved as a PNG; then bar charts, histograms, boxplots, density curves and small multiples.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse)",
+      "runs": [
+        {"code": "library(tidyverse)", "evidence": "attached",
+         "purpose": "load the tidyverse, which includes ggplot2",
+         "task": "Load the tidyverse with `library()`."}
+      ],
+      "explain": "`library(tidyverse)` attaches ggplot2, which draws every chart in this lesson, along with readr for reading files and the rest of the core tidyverse."
+    },
+    {
+      "id": "read",
+      "title": "A week of trips: read_csv() and glimpse()",
+      "runs": [
+        {"code": "week <- read_csv(\"data/trips-week.csv\")", "evidence": "assign",
+         "alternatives": ["week = read_csv('data/trips-week.csv', show_col_types = FALSE)"],
+         "values": {"n_week": "format(nrow(week), big.mark = \",\")"},
+         "purpose": "read one week of trips into `week`",
+         "task": "Read `data/trips-week.csv` into a variable called `week` with `read_csv()`."},
+        {"code": "glimpse(week)", "evidence": "value",
+         "alternatives": ["week |> glimpse()"],
+         "purpose": "list `week`'s columns, with their types and first values",
+         "task": "Look at `week`'s columns with `glimpse()`."}
+      ],
+      "explain": "`read_csv()` read {n_week} trips into `week`, one row per trip, from Monday 2 to Sunday 8 June 2025, and its message says which type it gave each column. `glimpse()` lists the columns down the Console, each with its type and first few values: `<dbl>` for numbers such as `distance_km`, `<chr>` for text such as `bike_type`, and `<dttm>` for date-times such as `started_at`. Every chart in this lesson is drawn from these columns."
+    },
+    {
+      "id": "scatter",
+      "title": "Distance and duration: ggplot() and geom_point()",
+      "runs": [
+        {"code": "ggplot(week, aes(x = distance_km, y = duration_min)) +\n  geom_point()", "evidence": "ggplot",
+         "alternatives": [
+           "ggplot(week, aes(distance_km, duration_min)) + geom_point()",
+           "ggplot(week) + geom_point(aes(x = distance_km, y = duration_min))"
+         ],
+         "values": {"max_km": "format(max(week$distance_km))"},
+         "purpose": "plot each trip's duration against its distance",
+         "task": "Draw a scatter plot of `week` with `distance_km` on the x-axis and `duration_min` on the y-axis, using `ggplot()`, `aes()` and `geom_point()`."}
+      ],
+      "explain": "A ggplot2 chart has three parts. The data is `week`. The aesthetic mappings in `aes()` say which column goes where: `distance_km` along the x-axis, `duration_min` up the y-axis. The geom says how each row is drawn: `geom_point()` draws one point per trip, and `+` adds it to the chart. The points rise to the right, so longer trips take longer; the furthest right is {max_km} km. At any one distance they spread upwards: some riders take their time."
+    },
+    {
+      "id": "colour",
+      "title": "Colour by bike type: mappings and settings",
+      "runs": [
+        {"code": "ggplot(week, aes(x = distance_km, y = duration_min, colour = bike_type)) +\n  geom_point(alpha = 0.3) +\n  geom_smooth(method = \"lm\")", "evidence": "ggplot",
+         "alternatives": [
+           "ggplot(week, aes(distance_km, duration_min, color = bike_type)) + geom_point(alpha = 0.3) + geom_smooth(method = lm)",
+           "ggplot(week, aes(distance_km, duration_min)) + geom_point(aes(colour = bike_type), alpha = 0.3) + geom_smooth(aes(colour = bike_type), method = \"lm\")"
+         ],
+         "values": {
+           "classic_10": "format(round(predict(lm(duration_min ~ distance_km, data = week[week$bike_type == \"classic\", ]), data.frame(distance_km = 10))))",
+           "electric_10": "format(round(predict(lm(duration_min ~ distance_km, data = week[week$bike_type == \"electric\", ]), data.frame(distance_km = 10))))"
+         },
+         "purpose": "colour the trips by bike type, and add a straight line for each",
+         "task": "Draw the scatter plot again with `colour = bike_type` added to `aes()`, the points at `alpha = 0.3`, and a straight line for each bike type from `geom_smooth(method = \"lm\")`."}
+      ],
+      "explain": "`colour = bike_type` is inside `aes()`, so it's a mapping: each point takes its colour from its trip's bike type, and ggplot2 adds a legend saying which is which. `alpha = 0.3` is outside `aes()`, so it's a setting: every point is 30% opaque, and crowded areas show darker. The colour mapping is in `ggplot()`, so every layer uses it, and `geom_smooth()` fitted one straight line per bike type (the Console's message names its formula, `y ~ x`). At 10 km the classic line is at about {classic_10} minutes and the electric one at about {electric_10}: e-bikes are faster."
+    },
+    {
+      "id": "polish",
+      "title": "Labels and colours for every reader: labs() and ggsave()",
+      "runs": [
+        {"code": "ggplot(week, aes(x = distance_km, y = duration_min, colour = bike_type)) +\n  geom_point(alpha = 0.3) +\n  geom_smooth(method = \"lm\") +\n  scale_colour_viridis_d(end = 0.8) +\n  labs(\n    title = \"E-bikes cover the same distance faster\",\n    x = \"Distance (km)\",\n    y = \"Duration (minutes)\",\n    colour = \"Bike type\"\n  )", "evidence": "ggplot",
+         "alternatives": [
+           "ggplot(week, aes(distance_km, duration_min, color = bike_type)) + geom_point(alpha = 0.3) + geom_smooth(method = 'lm') + labs(title = 'E-bikes cover the same distance faster', x = 'Distance (km)', y = 'Duration (minutes)', color = 'Bike type') + scale_color_viridis_d(end = 0.8)"
+         ],
+         "purpose": "add a title and axis labels, and use colours every reader can tell apart",
+         "task": "Add `scale_colour_viridis_d(end = 0.8)` to the last chart, and `labs()` with the title \"E-bikes cover the same distance faster\", x \"Distance (km)\", y \"Duration (minutes)\" and colour \"Bike type\"."},
+        {"code": "ggsave(\"distance-duration.png\", width = 7, height = 5)", "evidence": "file", "path": "distance-duration.png",
+         "purpose": "save the chart as distance-duration.png",
+         "task": "Save the chart as `distance-duration.png`, 7 by 5 inches, with `ggsave()`."}
+      ],
+      "explain": "`labs()` gave the chart a title and put words a reader understands in place of column names, on the axes and the legend. `scale_colour_viridis_d()` replaced ggplot2's default red and blue with colours from the viridis palette, which people with the common kinds of colour blindness can tell apart and which stay distinct in greyscale. The `_d` is for discrete values such as bike types, and `end = 0.8` stops before the palette's palest yellow. `ggsave()` saved the last chart drawn as `distance-duration.png`, 7 by 5 inches, in the project folder: it's in the Files pane."
+    },
+    {
+      "id": "bars",
+      "title": "Counting categories: geom_bar()",
+      "runs": [
+        {"code": "ggplot(week, aes(x = member_type)) +\n  geom_bar()", "evidence": "ggplot",
+         "alternatives": [
+           "ggplot(week, aes(member_type)) + geom_bar()",
+           "ggplot(week) + geom_bar(aes(x = member_type))"
+         ],
+         "values": {
+           "n_member": "format(sum(week$member_type == \"member\"), big.mark = \",\")",
+           "n_casual": "format(sum(week$member_type == \"casual\"), big.mark = \",\")"
+         },
+         "purpose": "count the trips by member type",
+         "task": "Draw a bar chart of how many trips each `member_type` made, with `geom_bar()`."},
+        {"code": "ggplot(week, aes(x = member_type, fill = bike_type)) +\n  geom_bar()", "evidence": "ggplot",
+         "alternatives": ["ggplot(week, aes(member_type, fill = bike_type)) + geom_bar()"],
+         "purpose": "split each bar by bike type",
+         "task": "Draw the bar chart again with each bar filled by `bike_type`."}
+      ],
+      "explain": "`geom_bar()` counts the rows in each category, so its y-axis, `count`, isn't a column of `week`: ggplot2 computed it. Members made {n_member} of the week's trips and casual riders {n_casual}. `fill = bike_type` splits each bar by a second category, which shows how two categories relate: a larger share of members' trips were on classic bikes. For bars, `fill` colours the inside; `colour` would only colour the outline."
+    },
+    {
+      "id": "histograms",
+      "title": "How long, and when: geom_histogram()",
+      "runs": [
+        {"code": "ggplot(week, aes(x = duration_min)) +\n  geom_histogram(binwidth = 2)", "evidence": "ggplot",
+         "alternatives": ["ggplot(week, aes(duration_min)) + geom_histogram(binwidth = 2)"],
+         "values": {
+           "peak_from": "with(layer_data(last_plot()), format(xmin[which.max(count)]))",
+           "peak_to": "with(layer_data(last_plot()), format(xmax[which.max(count)]))"
+         },
+         "purpose": "show how long trips take, in two-minute bins",
+         "task": "Draw a histogram of `duration_min` with bins 2 minutes wide (`binwidth = 2`)."},
+        {"code": "ggplot(week, aes(x = started_at)) +\n  geom_histogram(binwidth = 3600)", "evidence": "ggplot",
+         "alternatives": ["ggplot(week, aes(started_at)) + geom_histogram(binwidth = 60 * 60)"],
+         "purpose": "show when trips start, hour by hour",
+         "task": "Draw a histogram of `started_at` with one bin per hour: `binwidth = 3600`, in seconds."}
+      ],
+      "explain": "A histogram shows how a number is spread out: it cuts the x-axis into bins and counts the trips in each. With `binwidth = 2`, each bar is two minutes wide, and the tallest, from {peak_from} to {peak_to} minutes, is the most common trip length. The bars trail off to the right: a few trips last an hour or more. `started_at` is a date-time, counted in seconds, so `binwidth = 3600` makes one bar per hour. Weekdays have two peaks, the morning and evening rush hours; Saturday and Sunday have one, in the afternoon. A different bin width can change the picture: too wide hides the shape, too narrow turns it into noise."
+    },
+    {
+      "id": "groups",
+      "title": "Comparing groups: geom_boxplot() and geom_density()",
+      "runs": [
+        {"code": "ggplot(week, aes(x = member_type, y = duration_min)) +\n  geom_boxplot()", "evidence": "ggplot",
+         "alternatives": ["ggplot(week, aes(member_type, duration_min)) + geom_boxplot()"],
+         "values": {
+           "median_member": "format(median(week$duration_min[week$member_type == \"member\"]))",
+           "median_casual": "format(median(week$duration_min[week$member_type == \"casual\"]))"
+         },
+         "purpose": "compare members' and casual riders' trip durations with boxplots",
+         "task": "Draw a boxplot of `duration_min` for each `member_type` with `geom_boxplot()`."},
+        {"code": "ggplot(week, aes(x = duration_min, colour = member_type)) +\n  geom_density()", "evidence": "ggplot",
+         "alternatives": ["ggplot(week, aes(duration_min, color = member_type)) + geom_density()"],
+         "purpose": "compare the same durations as density curves",
+         "task": "Draw density curves of `duration_min`, coloured by `member_type`, with `geom_density()`."}
+      ],
+      "explain": "Both charts compare a number across groups. In a boxplot, the line across each box is the median: half the trips took less, {median_member} minutes for members and {median_casual} for casual riders. The box holds the middle half of the trips, and the dots above it are unusually long ones. A density curve is a smoothed histogram whose area is always 1, so groups of different sizes can be compared. Members' curve peaks sooner and higher; casual riders' spreads further to the right. Casual riders' trips take longer."
+    },
+    {
+      "id": "facets",
+      "title": "Small multiples: facet_wrap()",
+      "runs": [
+        {"code": "ggplot(week, aes(x = distance_km, y = duration_min, colour = bike_type)) +\n  geom_point(alpha = 0.3) +\n  facet_wrap(~member_type)", "evidence": "ggplot",
+         "alternatives": ["ggplot(week, aes(distance_km, duration_min, color = bike_type)) + geom_point(alpha = 0.3) + facet_wrap(vars(member_type))"],
+         "values": {
+           "max_member": "format(max(week$duration_min[week$member_type == \"member\"]))",
+           "max_casual": "format(max(week$duration_min[week$member_type == \"casual\"]))"
+         },
+         "purpose": "draw the scatter plot again, one panel per member type",
+         "task": "Draw the scatter plot of `duration_min` against `distance_km`, coloured by `bike_type` with `alpha = 0.3`, again, with one panel per `member_type` from `facet_wrap()`."}
+      ],
+      "explain": "`facet_wrap(~member_type)` split the chart into one panel per member type, on the same axes, so a third variable can be compared without crowding one chart. Members' trips stay close to a line, the longest {max_member} minutes: they ride straight to where they're going. Casual riders' trips spread far above it, up to {max_casual} minutes. In both panels, e-bike trips sit below classic ones."
+    }
+  ]
+}

@@ -52,6 +52,14 @@ check(nrow(fall) >= 1, "trips: one across the fall-back change (clock end before
 check(setequal(setdiff(stations$station_id, trips$start_station), c(179, 180)), "trips: stations 179 and 180 have no trips")
 check(all(stats::na.omit(c(trips$start_station, trips$end_station)) %in% stations$station_id), "trips: every station is in stations.csv")
 
+# One week of complete trips (lesson 1)
+week <- quiet_csv(path("trips-week.csv"))
+in_week <- trips |> filter(started_at >= as.POSIXct("2025-06-02", tz = "UTC"), started_at < as.POSIXct("2025-06-09", tz = "UTC"))
+check(identical(week$trip_id, in_week$trip_id[!is.na(in_week$end_station) & in_week$duration_min > 0]), "trips-week: 2-8 June's trips, less the faulty ones")
+check(nrow(week) >= 3000 && nrow(week) <= 6000, sprintf("trips-week: a few thousand trips (%d)", nrow(week)))
+check(!anyNA(week) && all(week$duration_min > 0) && max(week$duration_min) < 240, "trips-week: no missing values, no zero, negative or multi-day durations")
+check(setequal(unique(weekdays(week$started_at)), weekdays(as.Date("2025-06-02") + 0:6)), "trips-week: all seven days")
+
 # Archive
 con <- DBI::dbConnect(duckdb::duckdb(shared_home = FALSE))
 glob <- path("archive", "**", "*.parquet")

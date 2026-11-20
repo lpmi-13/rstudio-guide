@@ -9,6 +9,7 @@ Times are local clock times in Larkhaven, which changes its clocks for daylight 
 | File | What it holds |
 | --- | --- |
 | `trips.csv` | Every trip in 2025: one row per trip, with its bike, start and end times and stations, rider type, bike type, distance in km and duration in minutes. |
+| `trips-week.csv` | One week of trips from `trips.csv`, Monday 2 to Sunday 8 June 2025: only the complete ones, which ended at a dock and have a duration above zero. Small enough to chart trip by trip. |
 | `archive/` | Every trip since the scheme opened (2021 to 2025), as Parquet files in one folder per year and month. |
 | `stations.csv` | The station registry: ID, name, neighbourhood, latitude and longitude, number of docks, opening date, and a former name for stations that were renamed. |
 | `bikes.csv` | Each bike: its ID, type (classic or electric), model and the date it entered service. |

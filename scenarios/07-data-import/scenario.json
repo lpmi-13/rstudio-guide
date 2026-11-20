@@ -1,0 +1,124 @@
+{
+  "id": "07-data-import",
+  "version": 2,
+  "world": true,
+  "title": "Data import",
+  "modes": ["demonstration", "guided", "solo"],
+  "script": "07-data-import.R",
+  "summary": "Read the Larkhaven Bikes monthly station exports, which were written for people rather than R: skip a title line, declare missing-value codes and column types, find parsing problems, clean the names and numbers, read twelve files at once, save the result, and type a small table by hand.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse) and library(janitor)",
+      "runs": [
+        {"code": "library(tidyverse)", "evidence": "attached",
+         "purpose": "load the tidyverse, which includes readr",
+         "task": "Load the tidyverse with `library()`."},
+        {"code": "library(janitor)", "evidence": "attached",
+         "purpose": "load janitor, for cleaning column names",
+         "task": "Load janitor with `library()`."}
+      ],
+      "explain": "readr, part of the tidyverse, reads text files such as CSV. janitor has tools for tidying messy data; this lesson uses one of them. Its message lists two statistics functions it replaces, which this lesson doesn't use."
+    },
+    {
+      "id": "first-look",
+      "title": "A first look: read_csv(), skip and na",
+      "runs": [
+        {"code": "read_csv(\"data/exports/station-activity-2025-01.csv\")", "evidence": "value",
+         "warning": "One or more parsing issues",
+         "purpose": "read January's station export as it is",
+         "task": "Read `data/exports/station-activity-2025-01.csv` with `read_csv()`, without any other arguments."},
+        {"code": "read_csv(\"data/exports/station-activity-2025-01.csv\", skip = 1)", "evidence": "value",
+         "alternatives": ["read_csv(file = 'data/exports/station-activity-2025-01.csv', skip = 1)"],
+         "values": {"n_rows": "format(nrow(read_csv(\"data/exports/station-activity-2025-01.csv\", skip = 1, show_col_types = FALSE)))"},
+         "purpose": "read it again, skipping the title line",
+         "task": "Read the same file again, skipping its first line with `skip = 1`."},
+        {"code": "read_csv(\n  \"data/exports/station-activity-2025-01.csv\",\n  skip = 1,\n  na = c(\"\", \"n/a\", \"-\")\n)", "evidence": "value",
+         "alternatives": ["read_csv('data/exports/station-activity-2025-01.csv', skip = 1, na = c('n/a', '-', ''))"],
+         "purpose": "read it again, with the codes the export uses for missing values",
+         "task": "Read it again with `skip = 1`, and tell `read_csv()` that empty cells, `n/a` and `-` mean a missing value: `na = c(\"\", \"n/a\", \"-\")`."}
+      ],
+      "explain": "The file's first line is a title, not column names, so the first read made one column named after the title, put each whole line in it, and warned about parsing issues. `skip = 1` skips the title: {n_rows} stations, with 10 named columns. In that read, `Avg Duration (min)` is text (`<chr>`), because the export writes a missing value as `n/a`, `-` or nothing. `na` lists the codes that mean missing; with them, the column is a number (`<dbl>`), with `NA` where a value is missing."
+    },
+    {
+      "id": "types",
+      "title": "Column types: col_types and problems()",
+      "runs": [
+        {"code": "jan <- read_csv(\n  \"data/exports/station-activity-2025-01.csv\",\n  skip = 1,\n  na = c(\"\", \"n/a\", \"-\"),\n  col_types = cols(`Dock Faults` = col_integer())\n)", "evidence": "assign",
+         "warning": "One or more parsing issues",
+         "alternatives": ["jan = read_csv('data/exports/station-activity-2025-01.csv', skip = 1, na = c('', 'n/a', '-'), col_types = cols(`Dock Faults` = 'i'))"],
+         "purpose": "read January into `jan`, with `Dock Faults` as whole numbers",
+         "task": "Read the file into `jan` as in the last statement, adding `col_types = cols(`Dock Faults` = col_integer())` so that column is read as whole numbers."},
+        {"code": "problems(jan)", "evidence": "pattern", "pattern": "an integer\\s+2 \\(est\\.\\)",
+         "purpose": "list the values that didn't fit their column's type",
+         "task": "List the parsing problems in `jan` with `problems()`."}
+      ],
+      "explain": "Left to guess, `read_csv()` made `Dock Faults` text. `col_types` says what a column holds instead: `col_integer()` for whole numbers. One value isn't a whole number, so R warned, and `problems()` says where: in column 9, where it expected an integer, it found `2 (est.)`, someone's estimate. That cell is `NA` in `jan`; the others are whole numbers, or `NA` where the export left them missing. Names with spaces, such as `Dock Faults`, need backticks in code."
+    },
+    {
+      "id": "clean",
+      "title": "Names and units: clean_names() and parse_number()",
+      "runs": [
+        {"code": "jan |>\n  clean_names() |>\n  mutate(\n    avg_trip_distance = parse_number(avg_trip_distance),\n    e_bike_share = parse_number(e_bike_share)\n  )", "evidence": "value",
+         "alternatives": ["jan |> clean_names() |> mutate(e_bike_share = parse_number(e_bike_share), avg_trip_distance = parse_number(avg_trip_distance))"],
+         "values": {
+           "first_distance": "jan$`Avg Trip Distance`[1]",
+           "first_distance_number": "format(parse_number(jan$`Avg Trip Distance`[1]))",
+           "first_share": "jan$`E-bike Share`[1]",
+           "first_share_number": "format(parse_number(jan$`E-bike Share`[1]))"
+         },
+         "purpose": "give the columns names that are easy to type, and take the units out of two of them",
+         "task": "Clean `jan`'s column names with `clean_names()`, then turn `avg_trip_distance` and `e_bike_share` into numbers with `parse_number()` inside `mutate()`."}
+      ],
+      "explain": "`clean_names()` rewrote every column name in snake case, lower case with words joined by underscores: `Avg Duration (min)` became `avg_duration_min`, which needs no backticks. `parse_number()` reads the number out of a piece of text and drops what's around it: `{first_distance}` became {first_distance_number} and `{first_share}` became {first_share_number}. A unit belongs in a column's name or its notes, not in every cell, where it stops the column being a number."
+    },
+    {
+      "id": "many",
+      "title": "Twelve files into one: read_csv() with id",
+      "runs": [
+        {"code": "files <- list.files(\"data/exports\", full.names = TRUE)", "evidence": "assign",
+         "alternatives": ["files = list.files(path = 'data/exports', full.names = TRUE)"],
+         "purpose": "list the monthly export files in `files`",
+         "task": "Store the paths of the files in `data/exports` in `files`, with `list.files()` and `full.names = TRUE`."},
+        {"code": "activity <- read_csv(files, skip = 1, na = c(\"\", \"n/a\", \"-\"), id = \"file\") |>\n  clean_names()", "evidence": "assign",
+         "alternatives": ["activity = clean_names(read_csv(files, skip = 1, na = c('', 'n/a', '-'), id = 'file'))"],
+         "values": {"n_activity": "format(nrow(activity))"},
+         "purpose": "read all twelve months into `activity`, recording each row's file",
+         "task": "Read every file in `files` into `activity` with one `read_csv()` call: `skip = 1`, the same `na`, and `id = \"file\"`. Then clean its names."},
+        {"code": "activity |> summarize(trips = sum(trips_started), .by = file)", "evidence": "value",
+         "alternatives": ["summarize(activity, trips = sum(trips_started), .by = file)"],
+         "values": {
+           "january": "format(sum(activity$trips_started[grepl(\"-01.csv\", activity$file, fixed = TRUE)]), big.mark = \",\")",
+           "july": "format(sum(activity$trips_started[grepl(\"-07.csv\", activity$file, fixed = TRUE)]), big.mark = \",\")"
+         },
+         "purpose": "total the trips started in each file, that is each month",
+         "task": "Total `trips_started` for each `file` with `summarize()` and `.by`."}
+      ],
+      "explain": "`list.files()` found the 12 monthly exports. Given all their paths, `read_csv()` read them into one data frame of {n_activity} rows, which works because they share the same columns. `id = \"file\"` added a column saying which file each row came from, so the months stay apart: the stations started {january} trips in January and {july} in July."
+    },
+    {
+      "id": "save",
+      "title": "Saving data: write_csv() and write_rds()",
+      "runs": [
+        {"code": "write_csv(activity, \"activity.csv\")", "evidence": "file", "path": "activity.csv",
+         "purpose": "save `activity` as a CSV file",
+         "task": "Save `activity` as `activity.csv` with `write_csv()`."},
+        {"code": "write_rds(activity, \"activity.rds\")", "evidence": "file", "path": "activity.rds",
+         "purpose": "save `activity` as an RDS file",
+         "task": "Save `activity` as `activity.rds` with `write_rds()`."}
+      ],
+      "explain": "Both files are in the Files pane. A CSV file is plain text that any program can open, but it doesn't record column types: reading it back means `read_csv()` guesses them again, so any types you set by hand need setting again. An RDS file stores the R object exactly, types and all, but only R reads it. Parquet, in lesson 22, keeps the types and can be read by many tools."
+    },
+    {
+      "id": "by-hand",
+      "title": "Small data by hand: tribble()",
+      "runs": [
+        {"code": "depots <- tribble(\n  ~depot      , ~mechanics ,\n  \"Northgate\" ,          3 ,\n  \"Harbour\"   ,          2 ,\n  \"Eastfield\" ,          3\n)", "evidence": "assign",
+         "alternatives": ["depots = tibble(depot = c('Northgate', 'Harbour', 'Eastfield'), mechanics = c(3, 2, 3))"],
+         "purpose": "type a small table of the three depots and their mechanics into `depots`",
+         "task": "Make a data frame `depots` with `tribble()`: a column `depot` holding \"Northgate\", \"Harbour\" and \"Eastfield\", and a column `mechanics` holding 3, 2 and 3."}
+      ],
+      "explain": "`tribble()` builds a small data frame from values you type, one row per line, with the column names first, each after a `~`. It suits lookup tables like this one: the scheme's three repair depots and how many mechanics each has. RStudio's formatter, Air, lines the columns up so the code reads like the table it makes. `tibble()` builds the same thing a column at a time."
+    }
+  ]
+}

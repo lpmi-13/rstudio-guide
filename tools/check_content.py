@@ -29,10 +29,12 @@ ACTIONS = {
     "editor-mode": ("to",),
     "shortcut": ("keys",),
     "open-file": ("file",),
+    "type": ("text",),
 }
-IDE_CHECKS = ("pref", "value", "restarted", "tab", "viewer", "help", "project", "chord", "editor_text", "editor_mode")
+IDE_CHECKS = ("pref", "value", "restarted", "tab", "viewer", "help", "project", "chord", "editor_text", "editor_mode", "editor_match")
 RUN_KEYS = {"code", "action", "menu", "purpose", "task", "evidence", "show", "capture", "values", "alternatives", "order",
-            "warning", "error", "pattern", "path", "file", "ide", "control", "pane", "label", "value", "kind", "to", "keys"}
+            "warning", "error", "pattern", "path", "file", "ide", "control", "pane", "label", "value", "kind", "to", "keys",
+            "text", "after", "where"}
 PLACEHOLDER = re.compile(r"\{(\w+)\}")
 
 
@@ -77,6 +79,16 @@ def check_lesson(folder, collection, problems):
     if not isinstance(steps, list) or not steps:
         problem("needs steps")
         return
+    # A lesson whose script is a Quarto document gives the document's starting text ("starter"),
+    # instead of a script of step headings. A step with code still needs its heading in it (as an R
+    # comment inside a chunk), because that's where the coach types the code.
+    starter = lesson.get("starter")
+    if isinstance(script, str) and script.endswith(".qmd") and not isinstance(starter, str):
+        problem("a lesson whose script is a .qmd needs a starter: the document's starting text")
+    if isinstance(starter, str):
+        for number, step in enumerate(steps, start=1):
+            if any("code" in run for run in step.get("runs", [])) and f"# Step {number}. {step.get('title')}" not in starter.split("\n"):
+                problem(f"step {step.get('id')!r} has code, so the starter needs its heading, # Step {number}. {step.get('title')}")
     if strict and not fixture:
         first = steps[0]
         if not first.get("id") == "setup" or not all(r.get("evidence") == "attached" for r in first.get("runs", [])):
@@ -117,6 +129,12 @@ def check_run(run, where, modes, strict, values, problem):
         return
     if has_code and (not isinstance(run["code"], str) or not run["code"].strip()):
         problem(f"{where}: code must be text")
+    # On a statement, "keys" teaches a shortcut: the coach types each |> with Ctrl+Shift+M, and
+    # Guided and Solo count the statement once the learner has pressed it too.
+    if has_code and "keys" in run and (run["keys"] != "Ctrl+Shift+M" or "|>" not in str(run["code"])):
+        problem(f"{where}: on a statement, keys can only be \"Ctrl+Shift+M\", for code with |>")
+    if has_code and "keys" in run and not all("|>" in str(a) for a in run.get("alternatives", [])):
+        problem(f"{where}: with keys, every alternative must use |> too (the task asks for the shortcut)")
     if ("guided" in modes or "solo" in modes) and not run.get("task"):
         problem(f"{where}: needs a task (Guided and Solo show it instead of the code)")
     if ("demonstration" in modes or "guided" in modes) and not run.get("purpose"):
@@ -138,6 +156,13 @@ def check_run(run, where, modes, strict, values, problem):
         problem(f"{where}: file evidence needs a path")
     if evidence == "pattern":
         compiles(run.get("pattern"), f"{where}: pattern", problem)
+    if has_action and run.get("action") == "type":
+        if not isinstance(run.get("text"), str) or not run["text"].strip():
+            problem(f"{where}: a type action needs the text to type")
+        if "after" in run:
+            compiles(run["after"], f"{where}: after", problem)
+    if isinstance(run.get("ide"), dict) and "editor_match" in run["ide"]:
+        compiles(run["ide"]["editor_match"], f"{where}: editor_match", problem)
     if evidence == "error":
         compiles(run.get("error"), f"{where}: error", problem)
     if evidence == "ide":

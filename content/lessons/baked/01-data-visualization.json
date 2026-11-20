@@ -1,0 +1,444 @@
+{
+ "lesson": "01-data-visualization",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "week",
+     "class": "spec_tbl_df",
+     "code": "week = read_csv('data/trips-week.csv', show_col_types = FALSE)",
+     "dim": [
+      4540,
+      10
+     ],
+     "fp": "850d6021e84462d03174ed63cad2f913",
+     "fp_any": "850d6021e84462d03174ed63cad2f913"
+    }
+   ],
+   "assigned": "week",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    4540,
+    10
+   ],
+   "files": [],
+   "fp": "850d6021e84462d03174ed63cad2f913",
+   "fp_any": "850d6021e84462d03174ed63cad2f913",
+   "index": 1,
+   "messages": [
+    "Rows: 4540 Columns: 10",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): bike_id, member_type, bike_type\ndbl  (5): trip_id, start_station, end_station, distance_km, duration_min\ndttm (2): started_at, ended_at",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "read",
+   "values": {
+    "n_week": "4,540"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "spec_tbl_df",
+     "code": "week |> glimpse()",
+     "dim": [
+      4540,
+      10
+     ],
+     "fp": "850d6021e84462d03174ed63cad2f913",
+     "fp_any": "850d6021e84462d03174ed63cad2f913"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    4540,
+    10
+   ],
+   "files": [],
+   "fp": "850d6021e84462d03174ed63cad2f913",
+   "fp_any": "850d6021e84462d03174ed63cad2f913",
+   "index": 2,
+   "messages": [],
+   "output": "Rows: 4,540\nColumns: 10\n$ trip_id       <dbl> 406697, 406698, 406699, 406700, 406701, 406702, 406703, 406704, 406705, 406706, 406707, 406708, 406709, 406710, 406711, 406712, 406713, 406714, 406715, 406716, 406717, 406718, …\n$ bike_id       <chr> \"LB-C-00062\", \"LB-C-00328\", \"LB-C-00316\", \"LB-C-00386\", \"LB-E-00268\", \"LB-E-00018\", \"LB-C-00267\", \"LB-C-00156\", \"LB-C-00399\", \"LB00133\", \"LB-E-00134\", \"LB-C-00369\", \"LB-C-00408…\n$ started_at    <dttm> 2025-06-02 00:07:04, 2025-06-02 00:11:23, 2025-06-02 00:39:43, 2025-06-02 00:48:05, 2025-06-02 00:52:33, 2025-06-02 01:50:29, 2025-06-02 02:36:43, 2025-06-02 02:45:54, 2025-06…\n$ ended_at      <dttm> 2025-06-02 00:13:41, 2025-06-02 00:18:13, 2025-06-02 01:01:01, 2025-06-02 01:20:33, 2025-06-02 01:13:46, 2025-06-02 01:58:15, 2025-06-02 02:51:53, 2025-06-02 02:59:49, 2025-06…\n$ start_station <dbl> 105, 106, 159, 156, 136, 117, 115, 160, 143, 132, 119, 112, 122, 157, 174, 178, 114, 160, 134, 166, 142, 159, 105, 177, 130, 178, 124, 162, 152, 135, 156, 174, 150, 128, 155, 1…\n$ end_station   <dbl> 113, 116, 154, 108, 174, 120, 105, 170, 129, 109, 117, 176, 128, 132, 125, 168, 136, 135, 133, 168, 143, 135, 110, 105, 107, 131, 124, 135, 132, 135, 166, 173, 152, 107, 136, 1…\n$ member_type   <chr> \"member\", \"member\", \"member\", \"casual\", \"member\", \"casual\", \"casual\", \"member\", \"casual\", \"member\", \"casual\", \"member\", \"member\", \"member\", \"member\", \"member\", \"member\", \"membe…\n$ bike_type     <chr> \"classic\", \"classic\", \"classic\", \"classic\", \"electric\", \"electric\", \"classic\", \"classic\", \"classic\", \"classic\", \"electric\", \"classic\", \"classic\", \"classic\", \"electric\", \"electr…\n$ distance_km   <dbl> 1.67, 1.67, 4.35, 3.64, 7.58, 1.03, 1.43, 3.20, 4.82, 3.38, 0.19, 5.40, 0.63, 2.03, 2.88, 7.02, 3.96, 2.74, 1.25, 0.93, 0.53, 1.50, 0.38, 5.71, 2.87, 7.57, 1.07, 3.02, 2.65, 4.…\n$ duration_min  <dbl> 6.6, 6.8, 21.3, 32.5, 21.2, 7.8, 15.2, 13.9, 30.4, 19.4, 1.6, 29.1, 5.6, 10.0, 11.4, 23.5, 12.0, 16.1, 10.1, 5.9, 3.5, 6.9, 4.7, 19.9, 13.5, 23.0, 5.6, 11.8, 11.9, 21.6, 15.2, …",
+   "plot": false,
+   "step": "read",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week, aes(distance_km, duration_min)) + geom_point()",
+     "dim": 1,
+     "fp": "cd772e7b83b49bb7c98d0068fd3ad829",
+     "fp_any": null
+    },
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week) + geom_point(aes(x = distance_km, y = duration_min))",
+     "dim": 1,
+     "fp": "cd772e7b83b49bb7c98d0068fd3ad829",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "cd772e7b83b49bb7c98d0068fd3ad829",
+   "fp_any": null,
+   "index": 3,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "scatter",
+   "values": {
+    "max_km": "13.04"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week, aes(distance_km, duration_min, color = bike_type)) + geom_point(alpha = 0.3) + geom_smooth(method = lm)",
+     "dim": 1,
+     "fp": "8aaa284647c1c20bc0a1d6aa4a51ac9e",
+     "fp_any": null
+    },
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week, aes(distance_km, duration_min)) + geom_point(aes(colour = bike_type), alpha = 0.3) + geom_smooth(aes(colour = bike_type), method = \"lm\")",
+     "dim": 1,
+     "fp": "8aaa284647c1c20bc0a1d6aa4a51ac9e",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "8aaa284647c1c20bc0a1d6aa4a51ac9e",
+   "fp_any": null,
+   "index": 4,
+   "messages": [
+    "`geom_smooth()` using formula = 'y ~ x'"
+   ],
+   "output": "",
+   "plot": true,
+   "step": "colour",
+   "values": {
+    "classic_10": "51",
+    "electric_10": "36"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week, aes(distance_km, duration_min, color = bike_type)) + geom_point(alpha = 0.3) + geom_smooth(method = 'lm') + labs(title = 'E-bikes cover the same distance faster', x = 'Distance (km)', y = 'Duration (minutes)', color = 'Bike type') + scale_color_viridis_d(end = 0.8)",
+     "dim": 1,
+     "fp": "ec849da9f6508b917b2cd4ed265fbcfb",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "ec849da9f6508b917b2cd4ed265fbcfb",
+   "fp_any": null,
+   "index": 5,
+   "messages": [
+    "`geom_smooth()` using formula = 'y ~ x'"
+   ],
+   "output": "",
+   "plot": true,
+   "step": "polish",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "character",
+   "dim": 1,
+   "files": [
+    "distance-duration.png"
+   ],
+   "fp": "76da5cff363591d970155b3a9b7d4470",
+   "fp_any": null,
+   "index": 6,
+   "messages": [
+    "`geom_smooth()` using formula = 'y ~ x'"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "polish",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week, aes(member_type)) + geom_bar()",
+     "dim": 1,
+     "fp": "6b5cacd40e3fc9b27ca98c3c5a18a231",
+     "fp_any": null
+    },
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week) + geom_bar(aes(x = member_type))",
+     "dim": 1,
+     "fp": "6b5cacd40e3fc9b27ca98c3c5a18a231",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "6b5cacd40e3fc9b27ca98c3c5a18a231",
+   "fp_any": null,
+   "index": 7,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "bars",
+   "values": {
+    "n_casual": "1,775",
+    "n_member": "2,765"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week, aes(member_type, fill = bike_type)) + geom_bar()",
+     "dim": 1,
+     "fp": "6f4ad8078425884cba7b62286d3f9ce5",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "6f4ad8078425884cba7b62286d3f9ce5",
+   "fp_any": null,
+   "index": 8,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "bars",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week, aes(duration_min)) + geom_histogram(binwidth = 2)",
+     "dim": 1,
+     "fp": "aa5b2ccc53e143136af30d8ded885282",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "aa5b2ccc53e143136af30d8ded885282",
+   "fp_any": null,
+   "index": 9,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "histograms",
+   "values": {
+    "peak_from": "7",
+    "peak_to": "9"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week, aes(started_at)) + geom_histogram(binwidth = 60 * 60)",
+     "dim": 1,
+     "fp": "eb32042fae5bbabfb24601e136b5fda2",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "eb32042fae5bbabfb24601e136b5fda2",
+   "fp_any": null,
+   "index": 10,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "histograms",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week, aes(member_type, duration_min)) + geom_boxplot()",
+     "dim": 1,
+     "fp": "787e7fa6b03a4c69b5d1a8a49d155c16",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "787e7fa6b03a4c69b5d1a8a49d155c16",
+   "fp_any": null,
+   "index": 11,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "groups",
+   "values": {
+    "median_casual": "16.2",
+    "median_member": "12.1"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week, aes(duration_min, color = member_type)) + geom_density()",
+     "dim": 1,
+     "fp": "0dba2c207a6f49515a56f11091444dd6",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "0dba2c207a6f49515a56f11091444dd6",
+   "fp_any": null,
+   "index": 12,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "groups",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week, aes(distance_km, duration_min, color = bike_type)) + geom_point(alpha = 0.3) + facet_wrap(vars(member_type))",
+     "dim": 1,
+     "fp": "8a4a67ef01912bdef95c0fbdcae8c56f",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "8a4a67ef01912bdef95c0fbdcae8c56f",
+   "fp_any": null,
+   "index": 13,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "facets",
+   "values": {
+    "max_casual": "104.5",
+    "max_member": "64.7"
+   },
+   "visible": true,
+   "warnings": []
+  }
+ ],
+ "stamp": {
+  "evidence": "6975ac8d7ad699c3a66635638064a328ac1710406b714d34220eb9bced7dbb8c",
+  "format": "1",
+  "image": "3c0b182f40fef71d474a0cb37e54efd6011616ae218ee460ff82417f952dd665",
+  "lesson": "55b6ec876534e8d7422e264460226da8ead6608fa5f71ff6e9e42b9abd9c6b42",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "9472982345c75b9e0a26c182169d195b09e2d6cf627aebf393bc826f06f28b58",
+  "world": "b5da1a346392e6f2105f0c5c907fee44ee37abd0549a94593dda88cdf46a47a1"
+ }
+}

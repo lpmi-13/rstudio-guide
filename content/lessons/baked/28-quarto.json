@@ -1,0 +1,175 @@
+{
+ "lesson": "28-quarto",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [
+    "28-quarto.qmd"
+   ],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [
+    "gt"
+   ],
+   "class": "character",
+   "dim": 18,
+   "files": [
+    "28-quarto.qmd"
+   ],
+   "fp": "451ec94f44a545c8a435dd0f301147c4",
+   "fp_any": null,
+   "index": 1,
+   "library": "gt",
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "files": [
+    "28-quarto_files/libs/bootstrap/bootstrap-c1c07594e57ec10855c209f24173fbb0.min.css",
+    "28-quarto_files/libs/bootstrap/bootstrap-icons.css",
+    "28-quarto_files/libs/bootstrap/bootstrap-icons.woff",
+    "28-quarto_files/libs/bootstrap/bootstrap.min.js",
+    "28-quarto_files/libs/clipboard/clipboard.min.js",
+    "28-quarto_files/libs/quarto-html/anchor.min.js",
+    "28-quarto_files/libs/quarto-html/popper.min.js",
+    "28-quarto_files/libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css",
+    "28-quarto_files/libs/quarto-html/quarto.js",
+    "28-quarto_files/libs/quarto-html/tabsets/tabsets.js",
+    "28-quarto_files/libs/quarto-html/tippy.css",
+    "28-quarto_files/libs/quarto-html/tippy.umd.min.js",
+    "28-quarto.html"
+   ],
+   "index": 2,
+   "step": "render"
+  },
+  {
+   "files": [
+    "28-quarto.qmd"
+   ],
+   "index": 3,
+   "step": "prose"
+  },
+  {
+   "files": [
+    "28-quarto.qmd"
+   ],
+   "index": 4,
+   "step": "prose"
+  },
+  {
+   "files": [
+    "28-quarto_files/libs/bootstrap/bootstrap-c1c07594e57ec10855c209f24173fbb0.min.css",
+    "28-quarto.html"
+   ],
+   "index": 5,
+   "step": "prose"
+  },
+  {
+   "files": [
+    "28-quarto.qmd"
+   ],
+   "index": 6,
+   "step": "chart"
+  },
+  {
+   "files": [
+    "28-quarto_files/figure-html/trips-by-day-1.png",
+    "28-quarto_files/libs/bootstrap/bootstrap-c1c07594e57ec10855c209f24173fbb0.min.css",
+    "28-quarto.html"
+   ],
+   "index": 7,
+   "step": "chart"
+  },
+  {
+   "files": [
+    "28-quarto.qmd"
+   ],
+   "index": 8,
+   "step": "table"
+  },
+  {
+   "files": [
+    "28-quarto_files/figure-html/trips-by-day-1.png",
+    "28-quarto_files/libs/bootstrap/bootstrap-c1c07594e57ec10855c209f24173fbb0.min.css",
+    "28-quarto.html"
+   ],
+   "index": 9,
+   "step": "table"
+  },
+  {
+   "files": [
+    "28-quarto.qmd"
+   ],
+   "index": 10,
+   "step": "yaml"
+  },
+  {
+   "files": [
+    "28-quarto_files/figure-html/trips-by-day-1.png",
+    "28-quarto_files/libs/bootstrap/bootstrap-c1c07594e57ec10855c209f24173fbb0.min.css",
+    "28-quarto.html"
+   ],
+   "index": 11,
+   "step": "yaml"
+  },
+  {
+   "files": [],
+   "index": 12,
+   "step": "visual"
+  },
+  {
+   "files": [],
+   "index": 13,
+   "step": "visual"
+  },
+  {
+   "files": [],
+   "index": 14,
+   "step": "new"
+  }
+ ],
+ "stamp": {
+  "evidence": "6975ac8d7ad699c3a66635638064a328ac1710406b714d34220eb9bced7dbb8c",
+  "format": "1",
+  "image": "3c0b182f40fef71d474a0cb37e54efd6011616ae218ee460ff82417f952dd665",
+  "lesson": "34c5746a405b09a84fe75dfc43b3d6f36e4825c0cb0304078b5991645680ba89",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "9472982345c75b9e0a26c182169d195b09e2d6cf627aebf393bc826f06f28b58",
+  "world": "b5da1a346392e6f2105f0c5c907fee44ee37abd0549a94593dda88cdf46a47a1"
+ }
+}

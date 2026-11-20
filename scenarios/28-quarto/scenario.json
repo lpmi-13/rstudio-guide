@@ -1,0 +1,206 @@
+{
+  "id": "28-quarto",
+  "version": 2,
+  "world": true,
+  "title": "Quarto",
+  "modes": [
+    "demonstration",
+    "guided",
+    "solo"
+  ],
+  "script": "28-quarto.qmd",
+  "summary": "Write a short report on a week of Larkhaven Bikes trips in a Quarto document: prose, code chunks and their options, inline code, a chart, a table and the YAML header, rendered to a web page after each step; then the visual editor, and starting a document of your own.",
+  "starter": "---\ntitle: \"A week of Larkhaven Bikes\"\nformat: html\n---\n\n```{r}\n#| label: setup\n#| include: false\n# Step 1. Setup: library(tidyverse) and library(gt)\n```\n\nA short report on the trips Larkhaven Bikes riders made from Monday 2 to Sunday 8 June 2025.\n",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse) and library(gt)",
+      "runs": [
+        {
+          "code": "library(tidyverse)",
+          "evidence": "attached",
+          "purpose": "load the tidyverse in the report's setup chunk",
+          "task": "In the setup chunk of `28-quarto.qmd`, below the Step 1 heading, load the tidyverse with `library()`, and run the line."
+        },
+        {
+          "code": "library(gt)",
+          "evidence": "attached",
+          "purpose": "load gt, for tables, in the same chunk",
+          "task": "Below it, load gt with `library()`, and run that line too."
+        }
+      ],
+      "explain": "R code in a Quarto document goes in chunks: blocks that open with three backticks and `r` in curly brackets, and close with three backticks. Run › Run Selected Line(s) sent each line to the Console, as in a script, so both packages are attached there too. The `#|` lines at the top of the chunk are its options: `label: setup` names the chunk, and `include: false` keeps its code and output out of the report."
+    },
+    {
+      "id": "render",
+      "title": "Render: from document to report",
+      "runs": [
+        {
+          "action": "render",
+          "file": "28-quarto.qmd",
+          "evidence": "file",
+          "path": "28-quarto.html",
+          "purpose": "render the document to a web page",
+          "task": "Render `28-quarto.qmd` with the Render button above it."
+        }
+      ],
+      "explain": "Render saved the document, ran its chunks in a new R session, and turned the result into a web page, `28-quarto.html`, which the Viewer shows. The header between the `---` lines set its title and its format, `html`. The new R session knows only what the document itself loads: the setup chunk's `library()` calls count, but what you ran in the Console doesn't. That's what makes a document reproducible."
+    },
+    {
+      "id": "prose",
+      "title": "Text, a chunk and inline code",
+      "runs": [
+        {
+          "action": "type",
+          "text": "\n## The week in numbers\n\n```{r}\n#| label: data\n#| include: false\nweek <- read_csv(\"data/trips-week.csv\")\n```",
+          "evidence": "ide",
+          "ide": {
+            "editor_match": "^(?=[\\s\\S]*^## The week in numbers\\s*$)(?=[\\s\\S]*read_csv\\([^)]*trips-week\\.csv)"
+          },
+          "purpose": "a heading and a chunk that reads the week's trips",
+          "task": "At the end of the document, add a heading `## The week in numbers`, then a chunk with `#| label: data` and `#| include: false` that reads `data/trips-week.csv` into `week` with `read_csv()`."
+        },
+        {
+          "action": "type",
+          "text": "\nRiders made `r nrow(week)` trips that week.",
+          "evidence": "ide",
+          "ide": {
+            "editor_match": "`r [^`]*nrow\\(week\\)[^`]*`"
+          },
+          "purpose": "a sentence that counts the trips with inline code",
+          "task": "Below the chunk, add the sentence \"Riders made `r nrow(week)` trips that week.\", with the inline code between backticks."
+        },
+        {
+          "action": "render",
+          "file": "28-quarto.qmd",
+          "evidence": "file",
+          "path": "28-quarto.html",
+          "purpose": "render the report again",
+          "task": "Render the document again."
+        }
+      ],
+      "explain": "A line starting with `##` is a heading in Markdown, the language of a Quarto document's text. The new chunk reads the week's trips into `week`, and `include: false` keeps it out of the report. Inline code, the `r nrow(week)` between backticks in the sentence, runs as the document renders and puts its result into the sentence, so the report gives the number of trips. Render again after the data changes, and the number changes with it."
+    },
+    {
+      "id": "chart",
+      "title": "A chart: options for figures",
+      "runs": [
+        {
+          "action": "type",
+          "text": "\n## Trips by day\n\n```{r}\n#| label: trips-by-day\n#| echo: false\n#| fig-width: 7\n#| fig-height: 3\nggplot(week, aes(x = as_date(started_at), fill = member_type)) +\n  geom_bar() +\n  labs(x = NULL, y = \"Trips\", fill = NULL)\n```",
+          "evidence": "ide",
+          "ide": {
+            "editor_match": "^(?=[\\s\\S]*^## Trips by day\\s*$)(?=[\\s\\S]*#\\| echo: false)(?=[\\s\\S]*#\\| fig-width: 7)(?=[\\s\\S]*#\\| fig-height: 3)(?=[\\s\\S]*geom_bar\\()"
+          },
+          "purpose": "a chunk that draws the trips by day, without showing its code",
+          "task": "Add a heading `## Trips by day` and a chunk that draws a bar chart of `week` with `x = as_date(started_at)` and `fill = member_type`, with the options `#| echo: false`, `#| fig-width: 7` and `#| fig-height: 3`."
+        },
+        {
+          "action": "render",
+          "file": "28-quarto.qmd",
+          "evidence": "file",
+          "path": "28-quarto.html",
+          "purpose": "render the report with its chart",
+          "task": "Render the document again."
+        }
+      ],
+      "explain": "`echo: false` shows the chart but not the code that drew it, which suits readers who don't use R. `fig-width` and `fig-height` set the chart's size in inches. `label` names a chunk, and Quarto's messages use the name: a chunk that fails is reported as `[trips-by-day]`, say. One more option to know: `cache: true` keeps a slow chunk's results between renders until its code changes."
+    },
+    {
+      "id": "table",
+      "title": "A table: gt()",
+      "runs": [
+        {
+          "action": "type",
+          "text": "\n## Riders and bikes\n\n```{r}\n#| label: riders-bikes\n#| echo: false\nweek |>\n  count(member_type, bike_type) |>\n  gt()\n```",
+          "evidence": "ide",
+          "ide": {
+            "editor_match": "^(?=[\\s\\S]*^## Riders and bikes\\s*$)(?=[\\s\\S]*count\\([^)]*member_type)(?=[\\s\\S]*gt\\(\\))"
+          },
+          "purpose": "a chunk that counts the trips by member type and bike type, as a table",
+          "task": "Add a heading `## Riders and bikes` and a chunk with `#| echo: false` that counts `week` by `member_type` and `bike_type` with `count()`, then passes the result to `gt()`."
+        },
+        {
+          "action": "render",
+          "file": "28-quarto.qmd",
+          "evidence": "file",
+          "path": "28-quarto.html",
+          "purpose": "render the report with its table",
+          "task": "Render the document again."
+        }
+      ],
+      "explain": "`gt()` turns a data frame into a formatted table, so the report shows a table with a header row instead of R's printout. gt has functions for column labels, number formats, titles and footnotes, all added with the pipe."
+    },
+    {
+      "id": "yaml",
+      "title": "The YAML header: author and date",
+      "runs": [
+        {
+          "action": "type",
+          "text": "author: \"Larkhaven Bikes data team\"\ndate: today",
+          "after": "^title:",
+          "where": "in the YAML header, just below the title line",
+          "evidence": "ide",
+          "ide": {
+            "editor_match": "^(?=[\\s\\S]*^author: .+$)(?=[\\s\\S]*^date: today\\s*$)"
+          },
+          "purpose": "an author and a date in the YAML header",
+          "task": "In the YAML header, below the title, add `author: \"Larkhaven Bikes data team\"` and `date: today`."
+        },
+        {
+          "action": "render",
+          "file": "28-quarto.qmd",
+          "evidence": "file",
+          "path": "28-quarto.html",
+          "purpose": "render the report with its author and date",
+          "task": "Render the document again."
+        }
+      ],
+      "explain": "The YAML header, between the `---` lines, holds the document's settings, one `key: value` per line. `author` and `date` appear under the title, and `date: today` is the date the report was rendered. The `format` line chooses the output; lesson 29 renders the same document to Word, PDF and slides."
+    },
+    {
+      "id": "visual",
+      "title": "The visual editor",
+      "runs": [
+        {
+          "action": "editor-mode",
+          "to": "visual",
+          "evidence": "ide",
+          "ide": {
+            "editor_mode": "visual"
+          },
+          "purpose": "switch the report to the visual editor",
+          "task": "Switch `28-quarto.qmd` to the visual editor with the Visual button."
+        },
+        {
+          "action": "editor-mode",
+          "to": "source",
+          "evidence": "ide",
+          "ide": {
+            "editor_mode": "source"
+          },
+          "purpose": "switch back to the source editor",
+          "task": "Switch back to the source editor with the Source button."
+        }
+      ],
+      "explain": "The visual editor shows the document much as the report will look, with headings, tables and inline code, and its toolbar formats text like a word processor. RStudio asks once before the first switch, because the visual editor rewrites the Markdown in its own standard way. The source editor shows the Markdown as typed, which is how this lesson wrote it. Both edit the same file."
+    },
+    {
+      "id": "new",
+      "title": "A document of your own: New Quarto Document",
+      "runs": [
+        {
+          "action": "new-file",
+          "kind": "Quarto Document…",
+          "evidence": "ide",
+          "ide": {
+            "tab": "^Untitled\\d*\\*?$"
+          },
+          "purpose": "start a new Quarto document",
+          "task": "Start a new Quarto document with File › New File › Quarto Document…, then press Create."
+        }
+      ],
+      "explain": "RStudio opened an untitled Quarto document with a YAML header and a sample chunk. Saving it gives it a name, and Render works on it as on this report. A new report starts the way this one did: a title in the YAML header, then a setup chunk."
+    }
+  ]
+}

@@ -175,6 +175,12 @@ local({
     if (!is.null(run$action)) {
       # IDE actions change RStudio, not R, except these.
       if (identical(run$action, "menu") && identical(unlist(run$menu), c("Session", "Restart R"))) restart()
+      if (identical(run$action, "type")) {
+        lines <- readLines(plan$script, warn = FALSE)
+        at <- if (is.null(run$after)) max(c(0L, which(nzchar(trimws(lines))))) else which(grepl(run$after, lines, perl = TRUE))[1]
+        if (is.na(at)) fail(run, sprintf("no line of %s matches %s", plan$script, run$after))
+        else writeLines(append(lines, strsplit(run$text, "\n", fixed = TRUE)[[1]], after = at), plan$script)
+      }
       if (identical(run$action, "render")) {
         rendered <- console(sprintf("quarto::quarto_render(%s, quiet = TRUE)", deparse(run$file)), print = FALSE)
         if (!rendered$ok) fail(run, sprintf("rendering %s failed: %s", run$file, rendered$error))
@@ -202,6 +208,22 @@ local({
     }
     # A chart an alternative drew isn't the statement's.
     before_drawing <- drawing()
+
+    # In a lesson whose script is a Quarto document, the statement also goes into the document,
+    # below its step's heading in a chunk, as the coach types it, so that rendering runs it too.
+    if (isTRUE(grepl("\\.qmd$", plan$script))) {
+      lines <- readLines(plan$script, warn = FALSE)
+      at <- match(run$heading, trimws(lines, "right"))
+      if (is.na(at)) {
+        fail(run, sprintf("%s has no line %s", plan$script, run$heading))
+      } else {
+        end <- which(seq_along(lines) > at & grepl("^(# Step \\d+\\. |```)", lines))[1]
+        if (is.na(end)) end <- length(lines) + 1L
+        block <- seq.int(at, end - 1L)
+        last <- max(block[nzchar(trimws(lines[block]))])
+        writeLines(append(lines, strsplit(run$code, "\n", fixed = TRUE)[[1]], after = last), plan$script)
+      }
+    }
 
     res <- console(run$code)
     record$output <- res$output

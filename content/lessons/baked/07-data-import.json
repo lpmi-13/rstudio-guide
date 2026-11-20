@@ -1,0 +1,440 @@
+{
+ "lesson": "07-data-import",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [
+    "janitor"
+   ],
+   "class": "character",
+   "dim": 18,
+   "files": [],
+   "fp": "29464c571e35b4b85c0c707479a5893d",
+   "fp_any": null,
+   "index": 1,
+   "library": "janitor",
+   "messages": [
+    "\nAttaching package: ‘janitor’\n",
+    "The following objects are masked from ‘package:stats’:\n\n    chisq.test, fisher.test\n"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    79,
+    1
+   ],
+   "files": [],
+   "fp": "fff72d5f4ef7f7c86fecaf045a5905d8",
+   "fp_any": "a888861d8f63429b1f863aaac3fb60e5",
+   "index": 2,
+   "messages": [
+    "Rows: 79 Columns: 1",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr (1): Larkhaven Bikes - station activity - January 2025",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "# A tibble: 79 × 1\n   `Larkhaven Bikes - station activity - January 2025`                                                                                         \n   <chr>                                                                                                                                       \n 1 Station ID,Station Name,Neighbourhood,Trips Started,Trips Ended,Avg Trip Distance,Avg Duration (min),E-bike Share,Dock Faults,Last Inspected\n 2 101,Market Square,Market Square,102,137,2.35 km,10.2,51%,-,n/a                                                                              \n 3 102,MARKET SQUARE NORTH,Market Square,90,122,2.41 km,12.3,38%,1,-                                                                           \n 4 103,Town Hall,Market Square,67,94,2.56 km,12.9,48%,0,                                                                                       \n 5 104,Bridge St & Water St,Market Square,67,104,2.44 km,12.3,39%,0,01/11/2025                                                                 \n 6 105,Larkhaven Central Station,Market Square,141,165,2.33 km,11.6,38%,1,01/25/2025                                                           \n 7 106,Corn Exchange,Market Square,75,121,2.20 km,11.9,41%,1,n/a                                                                               \n 8 107,Library Plaza,Market Square,115,120,2.17 km,10.8,37%,0,01/20/2025                                                                       \n 9 108,Bellfounders Row,Market Square,83,89,2.21 km,11.1,45%,0,01/08/2025                                                                      \n10 109,St. Agnes Square,Market Square,60,68,1.85 km,10.0,50%,0,01/26/2025                                                                      \n# ℹ 69 more rows",
+   "plot": false,
+   "step": "first-look",
+   "values": {},
+   "visible": true,
+   "warnings": [
+    "One or more parsing issues, call `problems()` on your data frame for details, e.g.:\n  dat <- vroom(...)\n  problems(dat)"
+   ]
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "spec_tbl_df",
+     "code": "read_csv(file = 'data/exports/station-activity-2025-01.csv', skip = 1)",
+     "dim": [
+      78,
+      10
+     ],
+     "fp": "2d2ad9585762256a94990bcd4a9f8002",
+     "fp_any": "2d2ad9585762256a94990bcd4a9f8002"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    78,
+    10
+   ],
+   "files": [],
+   "fp": "2d2ad9585762256a94990bcd4a9f8002",
+   "fp_any": "2d2ad9585762256a94990bcd4a9f8002",
+   "index": 3,
+   "messages": [
+    "Rows: 78 Columns: 10",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr (7): Station Name, Neighbourhood, Avg Trip Distance, Avg Duration (min), E-bike Share, Dock Faults, Last Inspected\ndbl (3): Station ID, Trips Started, Trips Ended",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "# A tibble: 78 × 10\n   `Station ID` `Station Name`            Neighbourhood `Trips Started` `Trips Ended` `Avg Trip Distance` `Avg Duration (min)` `E-bike Share` `Dock Faults` `Last Inspected`\n          <dbl> <chr>                     <chr>                   <dbl>         <dbl> <chr>               <chr>                <chr>          <chr>         <chr>           \n 1          101 Market Square             Market Square             102           137 2.35 km             10.2                 51%            -             n/a             \n 2          102 MARKET SQUARE NORTH       Market Square              90           122 2.41 km             12.3                 38%            1             -               \n 3          103 Town Hall                 Market Square              67            94 2.56 km             12.9                 48%            0             <NA>            \n 4          104 Bridge St & Water St      Market Square              67           104 2.44 km             12.3                 39%            0             01/11/2025      \n 5          105 Larkhaven Central Station Market Square             141           165 2.33 km             11.6                 38%            1             01/25/2025      \n 6          106 Corn Exchange             Market Square              75           121 2.20 km             11.9                 41%            1             n/a             \n 7          107 Library Plaza             Market Square             115           120 2.17 km             10.8                 37%            0             01/20/2025      \n 8          108 Bellfounders Row          Market Square              83            89 2.21 km             11.1                 45%            0             01/08/2025      \n 9          109 St. Agnes Square          Market Square              60            68 1.85 km             10.0                 50%            0             01/26/2025      \n10          110 Guildhall Lane            Market Square              90            85 2.33 km             10.4                 40%            0             01/20/2025      \n# ℹ 68 more rows",
+   "plot": false,
+   "step": "first-look",
+   "values": {
+    "n_rows": "78"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "spec_tbl_df",
+     "code": "read_csv('data/exports/station-activity-2025-01.csv', skip = 1, na = c('n/a', '-', ''))",
+     "dim": [
+      78,
+      10
+     ],
+     "fp": "ff9970b0382fea118675c38507740e73",
+     "fp_any": "ff9970b0382fea118675c38507740e73"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    78,
+    10
+   ],
+   "files": [],
+   "fp": "ff9970b0382fea118675c38507740e73",
+   "fp_any": "ff9970b0382fea118675c38507740e73",
+   "index": 4,
+   "messages": [
+    "Rows: 78 Columns: 10",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr (6): Station Name, Neighbourhood, Avg Trip Distance, E-bike Share, Dock Faults, Last Inspected\ndbl (4): Station ID, Trips Started, Trips Ended, Avg Duration (min)",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "# A tibble: 78 × 10\n   `Station ID` `Station Name`            Neighbourhood `Trips Started` `Trips Ended` `Avg Trip Distance` `Avg Duration (min)` `E-bike Share` `Dock Faults` `Last Inspected`\n          <dbl> <chr>                     <chr>                   <dbl>         <dbl> <chr>                              <dbl> <chr>          <chr>         <chr>           \n 1          101 Market Square             Market Square             102           137 2.35 km                             10.2 51%            <NA>          <NA>            \n 2          102 MARKET SQUARE NORTH       Market Square              90           122 2.41 km                             12.3 38%            1             <NA>            \n 3          103 Town Hall                 Market Square              67            94 2.56 km                             12.9 48%            0             <NA>            \n 4          104 Bridge St & Water St      Market Square              67           104 2.44 km                             12.3 39%            0             01/11/2025      \n 5          105 Larkhaven Central Station Market Square             141           165 2.33 km                             11.6 38%            1             01/25/2025      \n 6          106 Corn Exchange             Market Square              75           121 2.20 km                             11.9 41%            1             <NA>            \n 7          107 Library Plaza             Market Square             115           120 2.17 km                             10.8 37%            0             01/20/2025      \n 8          108 Bellfounders Row          Market Square              83            89 2.21 km                             11.1 45%            0             01/08/2025      \n 9          109 St. Agnes Square          Market Square              60            68 1.85 km                             10   50%            0             01/26/2025      \n10          110 Guildhall Lane            Market Square              90            85 2.33 km                             10.4 40%            0             01/20/2025      \n# ℹ 68 more rows",
+   "plot": false,
+   "step": "first-look",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "jan",
+     "class": "spec_tbl_df",
+     "code": "jan = read_csv('data/exports/station-activity-2025-01.csv', skip = 1, na = c('', 'n/a', '-'), col_types = cols(`Dock Faults` = 'i'))",
+     "dim": [
+      78,
+      10
+     ],
+     "fp": "9982f6eeba45a9ad41fe6d0fe82516db",
+     "fp_any": "9982f6eeba45a9ad41fe6d0fe82516db"
+    }
+   ],
+   "assigned": "jan",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    78,
+    10
+   ],
+   "files": [],
+   "fp": "9982f6eeba45a9ad41fe6d0fe82516db",
+   "fp_any": "9982f6eeba45a9ad41fe6d0fe82516db",
+   "index": 5,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "types",
+   "values": {},
+   "visible": false,
+   "warnings": [
+    "One or more parsing issues, call `problems()` on your data frame for details, e.g.:\n  dat <- vroom(...)\n  problems(dat)"
+   ]
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    1,
+    5
+   ],
+   "files": [],
+   "fp": "58145162b64f8705f1e23e3317dd369e",
+   "fp_any": "58145162b64f8705f1e23e3317dd369e",
+   "index": 6,
+   "messages": [],
+   "output": "# A tibble: 1 × 5\n    row   col expected   actual   file                                                   \n  <int> <int> <chr>      <chr>    <chr>                                                  \n1    47     9 an integer 2 (est.) /work/project/data/exports/station-activity-2025-01.csv",
+   "plot": false,
+   "step": "types",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "jan |> clean_names() |> mutate(e_bike_share = parse_number(e_bike_share), avg_trip_distance = parse_number(avg_trip_distance))",
+     "dim": [
+      78,
+      10
+     ],
+     "fp": "25232f3711e0ac7e20166e0c1dd9fe1f",
+     "fp_any": "25232f3711e0ac7e20166e0c1dd9fe1f"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    78,
+    10
+   ],
+   "files": [],
+   "fp": "25232f3711e0ac7e20166e0c1dd9fe1f",
+   "fp_any": "25232f3711e0ac7e20166e0c1dd9fe1f",
+   "index": 7,
+   "messages": [],
+   "output": "# A tibble: 78 × 10\n   station_id station_name              neighbourhood trips_started trips_ended avg_trip_distance avg_duration_min e_bike_share dock_faults last_inspected\n        <dbl> <chr>                     <chr>                 <dbl>       <dbl>             <dbl>            <dbl>        <dbl>       <int> <chr>         \n 1        101 Market Square             Market Square           102         137              2.35             10.2           51          NA <NA>          \n 2        102 MARKET SQUARE NORTH       Market Square            90         122              2.41             12.3           38           1 <NA>          \n 3        103 Town Hall                 Market Square            67          94              2.56             12.9           48           0 <NA>          \n 4        104 Bridge St & Water St      Market Square            67         104              2.44             12.3           39           0 01/11/2025    \n 5        105 Larkhaven Central Station Market Square           141         165              2.33             11.6           38           1 01/25/2025    \n 6        106 Corn Exchange             Market Square            75         121              2.2              11.9           41           1 <NA>          \n 7        107 Library Plaza             Market Square           115         120              2.17             10.8           37           0 01/20/2025    \n 8        108 Bellfounders Row          Market Square            83          89              2.21             11.1           45           0 01/08/2025    \n 9        109 St. Agnes Square          Market Square            60          68              1.85             10             50           0 01/26/2025    \n10        110 Guildhall Lane            Market Square            90          85              2.33             10.4           40           0 01/20/2025    \n# ℹ 68 more rows",
+   "plot": false,
+   "step": "clean",
+   "values": {
+    "first_distance": "2.35 km",
+    "first_distance_number": "2.35",
+    "first_share": "51%",
+    "first_share_number": "51"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "files",
+     "class": "character",
+     "code": "files = list.files(path = 'data/exports', full.names = TRUE)",
+     "dim": 12,
+     "fp": "0f3602f4fd4a5cdb167adf2c93692574",
+     "fp_any": null
+    }
+   ],
+   "assigned": "files",
+   "attached": [],
+   "class": "character",
+   "dim": 12,
+   "files": [],
+   "fp": "0f3602f4fd4a5cdb167adf2c93692574",
+   "fp_any": null,
+   "index": 8,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "many",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "activity",
+     "class": "spec_tbl_df",
+     "code": "activity = clean_names(read_csv(files, skip = 1, na = c('', 'n/a', '-'), id = 'file'))",
+     "dim": [
+      936,
+      11
+     ],
+     "fp": "dd15a7ff125fc030acb9312642b0cdde",
+     "fp_any": "dd15a7ff125fc030acb9312642b0cdde"
+    }
+   ],
+   "assigned": "activity",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    936,
+    11
+   ],
+   "files": [],
+   "fp": "dd15a7ff125fc030acb9312642b0cdde",
+   "fp_any": "dd15a7ff125fc030acb9312642b0cdde",
+   "index": 9,
+   "messages": [
+    "Rows: 936 Columns: 11",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr (6): Station Name, Neighbourhood, Avg Trip Distance, E-bike Share, Dock Faults, Last Inspected\ndbl (4): Station ID, Trips Started, Trips Ended, Avg Duration (min)",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "many",
+   "values": {
+    "n_activity": "936"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "summarize(activity, trips = sum(trips_started), .by = file)",
+     "dim": [
+      12,
+      2
+     ],
+     "fp": "e8fd3530ab65ce8d61e95cc05b86d60b",
+     "fp_any": "e8fd3530ab65ce8d61e95cc05b86d60b"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    12,
+    2
+   ],
+   "files": [],
+   "fp": "e8fd3530ab65ce8d61e95cc05b86d60b",
+   "fp_any": "e8fd3530ab65ce8d61e95cc05b86d60b",
+   "index": 10,
+   "messages": [],
+   "output": "# A tibble: 12 × 2\n   file                                      trips\n   <chr>                                     <dbl>\n 1 data/exports/station-activity-2025-01.csv  4335\n 2 data/exports/station-activity-2025-02.csv  4121\n 3 data/exports/station-activity-2025-03.csv  8326\n 4 data/exports/station-activity-2025-04.csv 11361\n 5 data/exports/station-activity-2025-05.csv 17791\n 6 data/exports/station-activity-2025-06.csv 20098\n 7 data/exports/station-activity-2025-07.csv 20106\n 8 data/exports/station-activity-2025-08.csv 20084\n 9 data/exports/station-activity-2025-09.csv 16408\n10 data/exports/station-activity-2025-10.csv 13239\n11 data/exports/station-activity-2025-11.csv  8247\n12 data/exports/station-activity-2025-12.csv  5631",
+   "plot": false,
+   "step": "many",
+   "values": {
+    "january": "4,335",
+    "july": "20,106"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    936,
+    11
+   ],
+   "files": [
+    "activity.csv"
+   ],
+   "fp": "dd15a7ff125fc030acb9312642b0cdde",
+   "fp_any": "dd15a7ff125fc030acb9312642b0cdde",
+   "index": 11,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "save",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    936,
+    11
+   ],
+   "files": [
+    "activity.rds"
+   ],
+   "fp": "dd15a7ff125fc030acb9312642b0cdde",
+   "fp_any": "dd15a7ff125fc030acb9312642b0cdde",
+   "index": 12,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "save",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "depots",
+     "class": "tbl_df",
+     "code": "depots = tibble(depot = c('Northgate', 'Harbour', 'Eastfield'), mechanics = c(3, 2, 3))",
+     "dim": [
+      3,
+      2
+     ],
+     "fp": "8d57cf37f5ec47f4f9e83c9dd6fc6628",
+     "fp_any": "47da7029be45aba45b98d732d4296bbd"
+    }
+   ],
+   "assigned": "depots",
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    3,
+    2
+   ],
+   "files": [],
+   "fp": "8d57cf37f5ec47f4f9e83c9dd6fc6628",
+   "fp_any": "47da7029be45aba45b98d732d4296bbd",
+   "index": 13,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "by-hand",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  }
+ ],
+ "stamp": {
+  "evidence": "6975ac8d7ad699c3a66635638064a328ac1710406b714d34220eb9bced7dbb8c",
+  "format": "1",
+  "image": "3c0b182f40fef71d474a0cb37e54efd6011616ae218ee460ff82417f952dd665",
+  "lesson": "805ae64fc6a0ab4cf6725cf7662ad4470b7b07e0dfefb6beb412272f0ac9585d",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "9472982345c75b9e0a26c182169d195b09e2d6cf627aebf393bc826f06f28b58",
+  "world": "b5da1a346392e6f2105f0c5c907fee44ee37abd0549a94593dda88cdf46a47a1"
+ }
+}

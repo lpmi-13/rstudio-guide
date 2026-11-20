@@ -113,6 +113,8 @@ def action_hints(run):
         return "It's a keyboard shortcut.", f"Press {run['keys']}."
     if action == "open-file":
         return "It's in the project folder.", f"Click {run['file']} in the Files pane."
+    if action == "type":
+        return f"It goes {run.get('where', 'at the end of the document')}.", ""
     fail(f"unknown action {action!r}")
 
 
@@ -206,8 +208,10 @@ def prepare_lesson(scenario, project, root, image, bake, collection):
     if (project / scenario["script"]).exists():
         fail(f"two lessons both use {scenario['script']}")
     scenario.update(collection.get(scenario["id"], {}))
-    # The coach puts the script back to this text whenever a mode starts afresh.
-    scenario["starter"] = render_script(scenario)
+    # The coach puts the script back to this text whenever a mode starts afresh. A lesson whose
+    # script is a Quarto document gives the document's starting text itself.
+    if not isinstance(scenario.get("starter"), str):
+        scenario["starter"] = render_script(scenario)
     (project / scenario["script"]).write_text(scenario["starter"])
     try:
         baked = bake.ensure(root, image, scenario["id"], dict(scenario), log=lambda text: print(text, file=sys.stderr))
@@ -235,6 +239,10 @@ def prepare_lesson(scenario, project, root, image, bake, collection):
                 run["hint_line"] = whole(run["code"])
             else:
                 run["hint_where"], run["hint_how"] = action_hints(run)
+                if run["action"] == "type":
+                    text = [line for line in run["text"].split("\n") if line.strip()]
+                    run["hint_partial"] = "\n".join(text[:2]) + ("\n…" if len(text) > 2 else "")
+                    run["hint_line"] = run["text"].strip("\n")
     keys = ("id", "title", "summary", "source", "script", "starter", "modes", "steps", "version", "number", "part", "chapter", "world")
     return {key: scenario[key] for key in keys if key in scenario}
 

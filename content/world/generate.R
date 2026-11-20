@@ -359,6 +359,13 @@ trips_out <- trips |>
 trips_2025 <- trips_out |> filter(startsWith(started_at, "2025-"))
 write(trips_2025, "trips.csv")
 
+# One week of complete trips, Monday 2 to Sunday 8 June 2025: small enough to chart trip by trip
+# (lesson 1). It leaves out the trips the operator's systems recorded wrongly: no end dock (lost
+# bikes and dock faults) or a duration of zero or less (false starts and clock errors).
+trips_week <- trips_2025 |>
+  filter(started_at >= "2025-06-02", started_at < "2025-06-09", !is.na(end_station), duration_min > 0)
+write(trips_week, "trips-week.csv")
+
 # The archive: every trip since the scheme opened, as Parquet files partitioned by year and month.
 # Times are stored as they appear in trips.csv (local clock times, no time zone), so a year read from
 # the archive equals the same year read from the CSV.

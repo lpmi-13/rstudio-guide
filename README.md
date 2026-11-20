@@ -17,23 +17,64 @@ Final runs: the guided audit passed 21/21, including the AI-assistant lockout, a
 
 One intermittent failure appeared earlier, before the fix in finding 7: Chromium dropped the sign-in page's scripts while Docker was still changing the host network. It has not recurred in those 8 provisions, but that is evidence, not proof. The audits still check for it and report it as a warning if it happens.
 
+## Work ledger
+
+Where the work stands and what's left, so it can resume from here. Updated 20 November 2026. The plan for the new lessons is `~/projects/plan-docs/R4DS_CHAPTERS_PLAN.md` (its §6 lists the phases). Each finished phase has a decision record in this README, named below.
+
+### Done
+
+| When | Work | Record |
+| --- | --- | --- |
+| 19 Nov 2026 | The coach spike: docking in the sidebar, the lesson and mode picker, Demonstration, Guided and Solo on the two article lessons, the `regional-revenue` Guided stub, and the iximiuz playground (rootfs v4, `698a722`). | The sections from "Docking into the sidebar" to "Findings", and "Remote playground" |
+| 20 Nov 2026 | A plan for 29 lessons modelled on R for Data Science, with all-original material; decisions settled (plan §9). | The plan |
+| 20 Nov 2026 | Phase 0: seven spikes, and the runtime moved to `rocker/tidyverse:4.6.2` with Air and R's evidence channel. | "Phase 0 spikes for the new lessons" |
+| 20 Nov 2026 | arm64 dropped: the lab is built and tested for amd64 only. | Requirements |
+| 20 Nov 2026 | Phase 1: the Larkhaven Bikes data, the version 2 lesson format and its validator, the bake, the coach changes, two audit fixtures and two new audits. Every audit passes. Committed as `072e01c` on `main`, which is one commit ahead of `origin/main` (not pushed). | "Phase 1: engine and world" |
+| 20 Nov 2026 | Phase 2 pilots: lessons 1 Data visualization, 3 Data transformation, 7 Data import and 28 Quarto, with what they needed: a week of trips in the world, the pipe shortcut, and Quarto lessons that type into a document. Each bakes and passes its lesson audit in all three modes. Not committed yet. | "Phase 2: the four pilot lessons" |
+
+### Outstanding, in order
+
+1. **Phase 2, the pilots' review (next).** The user reviews the four pilots' tone, depth and step count (plan §6), ideally by watching a Demonstration of each: `./run.sh up 01-data-visualization`, and so on. Changes from the review go into the pilots, and the template they set, before Phase 3.
+2. **Phase 2, the swap.** Make the pilots `run.sh`'s default run. Port the probes of `tests/demo_mode.cjs` and `tests/practice_modes.cjs` to the pilots, then delete `scenarios/graphical-tools/` and `scenarios/statistical-tools/` and their baked files. Rewrite this README's lesson sections.
+3. **Phase 3, the other 25 lessons,** part by part. A lesson is done when its bake passes, its lesson audit passes in all three modes, and it has been reviewed against its concepts list (plan §5). Some lessons need engine work first:
+   - lesson 21 needs a DuckDB database file in the world;
+   - lessons 8 and 23 need a fresh start that also resets the Help and Viewer panes and closes `View()` tabs;
+   - lesson 6 needs a New Project step (spike S7 showed it works);
+   - lesson 4 needs a messy script to reformat (`editor_text` evidence already checks the result).
+   Parallel audits (plan §7) would cut a full run from about two hours to half an hour.
+4. **Phase 4, release.** Update the decision records, republish the iximiuz rootfs with `iximiuz/publish-rootfs-image.sh` (never `create` again) and measure start-up, and review the security of `/coach/api/evidence`.
+
+Also open: the playground still runs rootfs v4, from before the mode picker; Guided says nothing when a Quarto render fails (the error shows only in RStudio's Background Jobs tab); and the points under "Plan deviations and open points" at the end.
+
+### Picking up again
+
+- **Read first:** the plan's §4.2 (lesson format), §5 (each lesson's concepts and draft steps) and §6, then this README's "Phase 1" and "Phase 2" sections. The pilots are the templates: `scenarios/01-data-visualization/` for charts, `03-data-transformation/` for pipelines (and the pipe shortcut), `07-data-import/` for files and warnings, `28-quarto/` for a Quarto document. `scenarios/engine-check/scenario.json` shows each kind of evidence, and `scenarios/engine-actions/scenario.json` each IDE action.
+- **Checks, in the order they're useful:** `python3 -I tools/check_content.py` (seconds), `python3 -I tools/bake.py rstudio-guide-runtime:local <lesson>` (seconds per lesson), `NODE_PATH=$(npm root -g) node tests/lesson_modes.cjs <lesson> results/<lesson>` (a few minutes). Then the other audits under "Run it".
+- **Things that catch people out:**
+  - `tests/coach_in_ide.cjs` expects `./run.sh up regional-revenue` first; run against any other run, most of its probes fail.
+  - Changing `runtime/` or `content/world/` means `./run.sh up` rebuilds the image, and the lessons re-bake because their stamps change. After a deliberate package change, run `tools/update_packages_lock.sh` and review the diff, or the image won't build.
+  - The audits share port 8788 and the `run/` folder, so run them one at a time.
+  - On this machine an RTK hook rewrites `find`, `head`, `diff`, `cat` and `curl` and can corrupt their output; call `/usr/bin/find` and the like, or `rtk proxy`, when the output is evidence.
+
 ## Run it
 
 ```bash
 ./run.sh up                      # both lessons in one project, "lessons" (the default)
 ./run.sh up statistical-tools    # one lesson only (or graphical-tools, or regional-revenue)
+./run.sh up 01-data-visualization   # a pilot lesson (or 03-data-transformation, 07-data-import, 28-quarto)
 ./run.sh up engine-check         # an audit fixture for the new lessons' engine (or engine-actions)
 ./run.sh down                    # stop and delete the run directory
 
 # Checks of the lessons' content, and their reference results (both also run as part of `up`).
 python3 -I tools/check_content.py
-python3 -I tools/bake.py rstudio-guide-runtime:local engine-check engine-actions
+python3 -I tools/bake.py rstudio-guide-runtime:local engine-check engine-actions 01-data-visualization
 
 # Audits (need @playwright/test installed globally). Each provisions its own runs.
 ./run.sh up regional-revenue && NODE_PATH=$(npm root -g) node tests/coach_in_ide.cjs results
 NODE_PATH=$(npm root -g) node tests/demo_mode.cjs results
 NODE_PATH=$(npm root -g) node tests/practice_modes.cjs results
 NODE_PATH=$(npm root -g) node tests/lesson_modes.cjs engine-check results/engine-check
+NODE_PATH=$(npm root -g) node tests/lesson_modes.cjs 01-data-visualization results/lesson-01
 NODE_PATH=$(npm root -g) node tests/lesson_switch.cjs results/lesson-switch
 ```
 
@@ -56,7 +97,7 @@ After signing in, choose a lesson and then **Demonstration**, **Guided** or **So
 
 | Piece | File | Notes |
 | --- | --- | --- |
-| Scenarios | `scenarios/<id>/scenario.json`, `scenarios/<id>/project/` | `graphical-tools` and `statistical-tools` offer `"modes": ["demonstration", "guided", "solo"]` and can share a run; `regional-revenue` offers only its Guided stub. A lesson's steps, code, evidence type, captured values, narration (each line's `purpose`) and the task shown to a learner for each line all live in one file. Lessons with `"version": 2` use the format for the lessons modelled on R for Data Science (see Phase 1); `engine-check` and `engine-actions` are audit fixtures in that format. |
+| Scenarios | `scenarios/<id>/scenario.json`, `scenarios/<id>/project/` | `graphical-tools` and `statistical-tools` offer `"modes": ["demonstration", "guided", "solo"]` and can share a run; `regional-revenue` offers only its Guided stub. A lesson's steps, code, evidence type, captured values, narration (each line's `purpose`) and the task shown to a learner for each line all live in one file. Lessons with `"version": 2` use the format for the lessons modelled on R for Data Science (see Phase 1): so far the four pilots (see Phase 2), and `engine-check` and `engine-actions`, audit fixtures in that format. A lesson whose script is a Quarto document gives the document's starting text instead of generated headings. |
 | Lessons | `content/lessons/collection.json`, `content/lessons/baked/` | The 29 lessons modelled on R for Data Science, in the book's six parts, each with its Go deeper link; a lesson's number is its place in the list. `baked/` holds each lesson's reference results (see Bake). |
 | World | `content/world/generate.R`, `check.R`, `data/` | Larkhaven Bikes, the made-up city all the new lessons use, generated from one seed (see Phase 1). The small files are committed; the image generates everything and fails to build if its small files differ. |
 | Provisioning | `tools/provision.py` | Copies each lesson's files into one project (named after the lesson, or `lessons` when there are several, with a README listing them; it refuses clashing file names), adds `data/` for lessons that use the world, and generates each lesson's script from `scenario.json`: a header and one `# Step N.` heading per step, with no code yet. The coach or the learner types it, depending on the mode. Every statement needs a `task` when Guided or Solo is offered, and gets generated hints (how it starts, `plot(…)` or `trips |>` then `filter(…)`, and the whole statement without comments); an IDE action gets two (where to look, then exactly what to do). The reference results come from the bake. The run is not reported ready if the bake fails. It writes `run/public/session.json` (the lessons and their modes) and `steps.json` for the coach. `run.sh` reports Ready only after the gateway answers and the host network has settled (finding 7). |
@@ -374,6 +415,50 @@ One run each on the final code, with no warnings or page errors:
 - **The DuckDB database file for lesson 21** isn't generated yet.
 - **Parallel audits** (plan §7) aren't built; the lesson audit runs one lesson at a time.
 - **The iximiuz rootfs isn't republished.** It packs the committed tree, and nothing from Phase 1 is committed.
+
+## Phase 2: the four pilot lessons (20 November 2026)
+
+The first four lessons modelled on R for Data Science, one of each kind the plan names (§6): charts, pipelines, messy files, and a Quarto document. Each one bakes, with both runs identical, and passes `tests/lesson_modes.cjs` in all three modes. They wait for a review of tone, depth and step count before Phase 3. Until the swap, `./run.sh up` still starts the two article lessons; `./run.sh up 01-data-visualization` (or `03-data-transformation`, `07-data-import`, `28-quarto`) starts a pilot.
+
+| Lesson | Steps after Setup | Statements | What the learner does |
+| --- | --- | --- | --- |
+| **1 Data visualization** | 8 | 14 | On one week of trips (4,540, from 2 to 8 June): `glimpse()`; a scatter plot of duration against distance; colour mapped to bike type, points set to `alpha = 0.3` and a straight line per bike type (mapping against setting, global aesthetics); labels and a viridis palette, then `ggsave()`; bar charts with `count` and `fill`; histograms of duration (`binwidth = 2`) and of start time (one bar per hour, which shows the rush hours); a boxplot and density curves by member type; `facet_wrap()`. |
+| **3 Data transformation** | 7 | 14 | On every 2025 trip (149,747): `filter()` with commas and `\|`, with the pipe typed by Ctrl+Shift+M; `arrange()` and `desc()`, which puts a 9-day lost bike first; `distinct()`; `mutate()` with `.before`; `select()` with `starts_with()`, `rename()`, `relocate()`; `count(sort = TRUE)`; `summarize()` with `.by`. The last step shows small groups misleading: the routes with the longest mean trip have 3 to 17 trips each, and `slice_max()` among routes with 50 or more gives a believable 26.6 minutes. |
+| **7 Data import** | 6 | 14 | On the twelve monthly exports: a plain read that turns the title line into the only column; `skip`; `na` for `n/a`, `-` and blanks; `col_types` and `problems()`, which finds `2 (est.)` in an integer column; `clean_names()` and `parse_number()` on `2.35 km` and `51%`; all twelve files in one `read_csv()` with `id`; `write_csv()` and `write_rds()`; `tribble()`. |
+| **28 Quarto** | 7 | 15 | A short report on the same week, in `28-quarto.qmd`: `library()` calls in its setup chunk; Render; a heading, a hidden chunk that reads the data and inline code; a chart chunk with `echo` and figure size options; a `gt()` table; author and date in the YAML header, each followed by Render; the visual editor and back; New Quarto Document. |
+
+### What the pilots added
+
+- **A week of complete trips in the world.** `trips-week.csv` holds 2 to 8 June 2025 without the faulty trips (no end dock, or a duration of zero or less), so lesson 1 charts every trip without lost bikes stretching the axes. The generator writes it, and `check.R` checks that it's the week's trips less the faulty ones.
+- **The pipe shortcut.** A statement with `"keys": "Ctrl+Shift+M"` has each `|>` typed with the shortcut in Demonstration and Show me. RStudio types ` |> ` with one space each side; the coach trims the trailing space so the script still matches the reference. In Guided and Solo the statement counts once the learner has also pressed the shortcut since the mode began, and Guided says so when the result is right but the shortcut wasn't used. The coach keeps each shortcut's last press, because its 50-entry log could lose it behind many Ctrl+Enters. Every alternative of such a statement must use `|>` too.
+- **Quarto lessons.** A lesson whose script is a `.qmd` gives the document's starting text (`"starter"`), and a step with code keeps its heading as an R comment inside a chunk. In a Quarto document the toolbar's Run is a menu, so the coach chooses Run › Run Selected Line(s), and a step's block ends at its chunk's closing fence. A new action, `type`, types text into the document after a line (`after`) or at its end, and `editor_match` evidence checks the document against a regular expression. The bake writes each statement under its heading and each typed text into the document, so its renders see what the coach typed. A spike first typed a heading, chunks, chunk options and inline code one key at a time: the text came out exact except for RStudio's indentation inside chunks, which the coach already corrects line by line.
+- **Each version of a file counts once.** Before, once a file had changed, every later task checking it ticked; now each Render task needs its own render.
+- **Show me credits only the task it shows.** Lesson 1's first Guided audit failed because the audit moved on and ran the next step's chart while Show me was still saving the script, and that chart was credited to the coach.
+
+### Things found on the way
+
+- **`problems()` prints the file's full path,** which differs between the bake and RStudio, so lesson 7 checks it with `pattern` evidence rather than a fingerprint.
+- **Air lines up `tribble()` columns** (`~depot      , ~mechanics ,`), so lesson 7 types the table that way and says why.
+- **RStudio renders a Quarto document with `quarto preview`** in a Background Jobs tab, which takes over the Console's place and re-renders whenever the document is saved. A Render task can therefore tick on a save. A failed render shows only in that tab; Guided gives no feedback for it yet.
+- **The audit's learner now types a Quarto lesson's code into the document's chunk.** Typed into the Console, it attached the packages, but the report's own render then failed, as it would for a learner who did the same.
+- **The runtime image and the build cache were deleted** at 21:00 on 20 November by a `docker image prune` on this machine, which also removed other projects' images. The image was rebuilt from the Dockerfile, and every lesson re-baked with results identical to their committed ones.
+
+### Audit results
+
+One run each, with no warnings or page errors:
+
+| Audit | Result | Notes |
+| --- | --- | --- |
+| `lesson_modes.cjs 01-data-visualization` | 5/5 | 14 statements (34 lines) typed; Show me on the first chart; Solo with 12 alternatives. |
+| `lesson_modes.cjs 03-data-transformation` | 5/5 | 14 statements (27 lines); the pipe typed with Ctrl+Shift+M in Demonstration and by the learner; Show me on the `mutate()`; 13 alternatives. |
+| `lesson_modes.cjs 07-data-import` | 5/5 | 14 statements (34 lines), two declared warnings; 8 alternatives. |
+| `lesson_modes.cjs 28-quarto` | 5/5 | 2 statements and 5 texts typed into the document (36 lines), 5 renders, visual and back, New Quarto Document; Show me on the first text. |
+| `lesson_modes.cjs engine-check`, `engine-actions` | 5/5, 5/5 | Rerun after the coach changes. |
+| `lesson_switch.cjs` | 6/6 | Rerun. |
+| `practice_modes.cjs`, `demo_mode.cjs` (article lessons) | 19/19, 12/12 | Rerun. |
+| `coach_in_ide.cjs` (`regional-revenue`) | 21/21 | Rerun, AI-assistant lockout included. |
+
+At the coach's normal pace, with nobody pressing Advance, the Demonstrations took 9.9 minutes (lesson 1), 8.3 (lesson 3), 8.3 (lesson 7) and 6.7 (lesson 28), within the plan's 5 to 10 minutes. Each ran to its last explanation with no page errors.
 
 ## Remote playground (iximiuz Labs)
 
