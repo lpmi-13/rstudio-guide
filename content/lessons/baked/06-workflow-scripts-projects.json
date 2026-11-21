@@ -1,0 +1,259 @@
+{
+ "lesson": "06-workflow-scripts-projects",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "trips",
+     "class": "spec_tbl_df",
+     "code": "trips = read_csv('data/trips.csv', show_col_types = FALSE)",
+     "dim": [
+      149747,
+      10
+     ],
+     "fp": "925ba2a4e6f8a0e568dad6aeb7da9353",
+     "fp_any": "925ba2a4e6f8a0e568dad6aeb7da9353"
+    }
+   ],
+   "assigned": "trips",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    149747,
+    10
+   ],
+   "files": [],
+   "fp": "925ba2a4e6f8a0e568dad6aeb7da9353",
+   "fp_any": "925ba2a4e6f8a0e568dad6aeb7da9353",
+   "index": 1,
+   "messages": [
+    "Rows: 149747 Columns: 10",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): bike_id, member_type, bike_type\ndbl  (5): trip_id, start_station, end_station, distance_km, duration_min\ndttm (2): started_at, ended_at",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "script",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "daily",
+     "class": "tbl_df",
+     "code": "daily = trips |> mutate(date = as_date(started_at)) |> count(date, name = 'trips')",
+     "dim": [
+      365,
+      2
+     ],
+     "fp": "8d4a6cc5d0101492f61baf361330c75b",
+     "fp_any": "8d4a6cc5d0101492f61baf361330c75b"
+    }
+   ],
+   "assigned": "daily",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    365,
+    2
+   ],
+   "files": [],
+   "fp": "8d4a6cc5d0101492f61baf361330c75b",
+   "fp_any": "8d4a6cc5d0101492f61baf361330c75b",
+   "index": 2,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "script",
+   "values": {
+    "n_days": "365"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "daily |> arrange(desc(trips)) |> head(3)",
+     "dim": [
+      3,
+      2
+     ],
+     "fp": "3bb62a76cffa63c22519eee579a5039d",
+     "fp_any": "3bb62a76cffa63c22519eee579a5039d"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    3,
+    2
+   ],
+   "files": [],
+   "fp": "3bb62a76cffa63c22519eee579a5039d",
+   "fp_any": "3bb62a76cffa63c22519eee579a5039d",
+   "index": 3,
+   "messages": [],
+   "output": "# A tibble: 3 × 2\n  date       trips\n  <date>     <int>\n1 2025-07-26   794\n2 2025-07-27   782\n3 2025-08-16   774",
+   "plot": false,
+   "step": "script",
+   "values": {
+    "top_date": "Saturday 26 July",
+    "top_trips": "794"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "character",
+   "dim": 1,
+   "files": [],
+   "fp": "278b23acc33436b12201feadb625bca0",
+   "fp_any": null,
+   "index": 4,
+   "messages": [],
+   "output": "[1] \"/work/project\"",
+   "plot": false,
+   "step": "paths",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    365,
+    2
+   ],
+   "files": [
+    "outputs/daily-trips.csv"
+   ],
+   "fp": "8d4a6cc5d0101492f61baf361330c75b",
+   "fp_any": "8d4a6cc5d0101492f61baf361330c75b",
+   "index": 5,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "paths",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(daily, aes(date, trips)) + geom_line()",
+     "dim": 1,
+     "fp": "bb2acbcc6cead76e1607eab18c3fff4f",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "bb2acbcc6cead76e1607eab18c3fff4f",
+   "fp_any": null,
+   "index": 6,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "chart",
+   "values": {
+    "low_month": "January",
+    "peak_month": "July"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "character",
+   "dim": 1,
+   "files": [
+    "outputs/daily-trips.png"
+   ],
+   "fp": "7866da99ad205161730807661c2162bf",
+   "fp_any": null,
+   "index": 7,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "chart",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "files": [],
+   "index": 8,
+   "step": "source"
+  },
+  {
+   "files": [
+    "outputs/daily-trips.csv",
+    "outputs/daily-trips.png"
+   ],
+   "index": 9,
+   "step": "source"
+  },
+  {
+   "files": [],
+   "index": 10,
+   "step": "project"
+  }
+ ],
+ "stamp": {
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "format": "1",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "831e76b807326105a7dd6af301540ea0f8afa3ec1f4916a59f68c59d11966874",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
+ }
+}

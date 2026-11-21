@@ -1,0 +1,226 @@
+{
+  "id": "10-exploratory-data-analysis",
+  "version": 2,
+  "world": true,
+  "title": "Exploratory data analysis",
+  "modes": [
+    "demonstration",
+    "guided",
+    "solo"
+  ],
+  "script": "10-exploratory-data-analysis.R",
+  "summary": "Explore a year of trip lengths by asking questions of them: find the unusual values and set them aside as missing, see how trip length varies with a category and how two categories vary together, and use a model to show what distance alone doesn't explain.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse), library(broom)",
+      "runs": [
+        {
+          "code": "library(tidyverse)",
+          "evidence": "attached",
+          "purpose": "load the tidyverse",
+          "task": "Load the tidyverse with `library()`."
+        },
+        {
+          "code": "library(broom)",
+          "evidence": "attached",
+          "purpose": "load broom, which turns a model's results into tibbles",
+          "task": "Load broom with `library()`."
+        }
+      ],
+      "explain": "The tidyverse brings ggplot2 and dplyr. broom turns what a model found into a tibble, for the last step."
+    },
+    {
+      "id": "variation",
+      "title": "Variation: how long are trips?",
+      "runs": [
+        {
+          "code": "trips <- read_csv(\"data/trips.csv\")",
+          "evidence": "assign",
+          "alternatives": [
+            "trips = read_csv('data/trips.csv', show_col_types = FALSE)"
+          ],
+          "values": {
+            "n_trips": "format(nrow(trips), big.mark = \",\")"
+          },
+          "purpose": "read every 2025 trip into `trips`",
+          "task": "Read `data/trips.csv` into a variable called `trips`."
+        },
+        {
+          "code": "ggplot(trips, aes(x = duration_min)) +\n  geom_histogram(binwidth = 10)",
+          "evidence": "ggplot",
+          "alternatives": [
+            "ggplot(trips) + geom_histogram(aes(duration_min), binwidth = 10)"
+          ],
+          "values": {
+            "max_min": "format(round(max(trips$duration_min)), big.mark = \",\")"
+          },
+          "purpose": "draw a histogram of trip lengths, in bins of 10 minutes",
+          "task": "Draw a histogram of `duration_min` in `trips`, with `binwidth = 10`."
+        }
+      ],
+      "explain": "Exploring data starts with questions, and each answer suggests the next. The first: how long are trips? Nearly all {n_trips} of them fall in the first few bars, yet the x axis runs to {max_min} minutes. ggplot2 sizes the axis to fit every value, so something is out there, in bars too short to see."
+    },
+    {
+      "id": "unusual",
+      "title": "Unusual values: zoom in",
+      "runs": [
+        {
+          "code": "ggplot(trips, aes(x = duration_min)) +\n  geom_histogram(binwidth = 10) +\n  coord_cartesian(ylim = c(0, 20))",
+          "evidence": "ggplot",
+          "alternatives": [
+            "ggplot(trips, aes(duration_min)) + geom_histogram(binwidth = 10) + coord_cartesian(ylim = c(0, 20))"
+          ],
+          "purpose": "draw the same histogram, zoomed in on the short bars",
+          "task": "Draw the same histogram again, zoomed in to counts from 0 to 20 with `coord_cartesian(ylim = c(0, 20))`."
+        },
+        {
+          "code": "trips |> filter(duration_min <= 0 | duration_min > 24 * 60)",
+          "evidence": "value",
+          "alternatives": [
+            "filter(trips, duration_min <= 0 | duration_min > 1440)"
+          ],
+          "values": {
+            "n_bad": "format(nrow(filter(trips, duration_min <= 0 | duration_min > 24 * 60)))",
+            "n_zero": "format(sum(trips$duration_min <= 0))",
+            "n_day": "format(sum(trips$duration_min > 24 * 60))",
+            "n_day_no_end": "format(sum(trips$duration_min > 24 * 60 & is.na(trips$end_station)))"
+          },
+          "purpose": "list the trips that lasted no time at all or more than a day",
+          "task": "Keep the trips whose `duration_min` is 0 or less, or more than a day (`24 * 60` minutes)."
+        }
+      ],
+      "explain": "`coord_cartesian(ylim = …)` zooms in without changing the data, so the rare bars show: a few trips last days. Zooming with a scale's limits instead would drop the rows outside them. The filter finds {n_bad} trips no one could have made: {n_zero} lasted no time or less than none, which a dock's clock got wrong, and {n_day} lasted more than a day; {n_day_no_end} of those have no end station, which is what a lost bike looks like."
+    },
+    {
+      "id": "na",
+      "title": "Implausible values become NA",
+      "runs": [
+        {
+          "code": "clean <- trips |>\n  mutate(\n    implausible = duration_min <= 0 | duration_min > 24 * 60,\n    duration_min = if_else(implausible, NA, duration_min)\n  )",
+          "evidence": "assign",
+          "alternatives": [
+            "clean = trips |> mutate(implausible = duration_min <= 0 | duration_min > 1440) |> mutate(duration_min = if_else(implausible, NA, duration_min))"
+          ],
+          "values": {
+            "n_na": "format(sum(is.na(clean$duration_min)))"
+          },
+          "purpose": "flag those trips as `implausible` and set their lengths to NA, keeping the trips, as `clean`",
+          "task": "Store in `clean` a copy of `trips` with a new column, `implausible`, that is `TRUE` where `duration_min` is 0 or less or more than a day, and with `duration_min` set to `NA` in those rows with `if_else()`."
+        },
+        {
+          "code": "ggplot(clean, aes(x = duration_min)) +\n  geom_histogram(binwidth = 2)",
+          "evidence": "ggplot",
+          "warning": "Removed \\d+ rows? containing non-finite",
+          "alternatives": [
+            "ggplot(clean) + geom_histogram(aes(duration_min), binwidth = 2)"
+          ],
+          "purpose": "draw the histogram again from `clean`, in bins of 2 minutes",
+          "task": "Draw a histogram of `duration_min` in `clean`, with `binwidth = 2`."
+        }
+      ],
+      "explain": "Rather than drop the trips with impossible lengths, `clean` keeps every trip and marks the problem. `implausible` says which rows had one, and `if_else()` replaces just those lengths with `NA`: the rest of each row, its stations and its bike, stays usable. A later `mutate()` argument can use a column made by an earlier one, as `if_else(implausible, …)` does. {n_na} trips now have no length. The histogram's x axis ends at a day, and ggplot2 warns that it removed {n_na} rows: the missing values aren't hidden, they're counted."
+    },
+    {
+      "id": "category",
+      "title": "A number by a category: frequency polygons",
+      "runs": [
+        {
+          "code": "ggplot(clean, aes(x = duration_min, y = after_stat(density))) +\n  geom_freqpoly(aes(colour = member_type), binwidth = 2) +\n  coord_cartesian(xlim = c(0, 90))",
+          "evidence": "ggplot",
+          "warning": "Removed \\d+ rows? containing non-finite",
+          "alternatives": [
+            "ggplot(clean, aes(duration_min, after_stat(density), colour = member_type)) + geom_freqpoly(binwidth = 2) + coord_cartesian(xlim = c(0, 90))"
+          ],
+          "values": {
+            "med_member": "format(median(clean$duration_min[clean$member_type == \"member\"], na.rm = TRUE))",
+            "med_casual": "format(median(clean$duration_min[clean$member_type == \"casual\"], na.rm = TRUE))"
+          },
+          "purpose": "compare the spread of trip lengths for members and casual riders, as lines",
+          "task": "Draw `duration_min` in `clean` as a frequency polygon with `y = after_stat(density)`: `geom_freqpoly(binwidth = 2)`, coloured by `member_type`. Zoom to 0 to 90 minutes with `coord_cartesian()`."
+        }
+      ],
+      "explain": "Next question: does trip length vary with the kind of rider? A frequency polygon is a histogram drawn as a line, so several fit on one chart. Members make more trips than casual riders, so plain counts would make their line taller whatever its shape; `after_stat(density)` scales each line so its area is 1, and only the shapes are compared. Members' trips peak short and fall away quickly; casual riders' are spread wider. The median member trip is {med_member} minutes, the median casual trip {med_casual}."
+    },
+    {
+      "id": "tiles",
+      "title": "Two categories: geom_tile()",
+      "runs": [
+        {
+          "code": "clean |>\n  count(day = wday(started_at, label = TRUE), hour = hour(started_at)) |>\n  ggplot(aes(x = hour, y = day, fill = n)) +\n  geom_tile()",
+          "evidence": "ggplot",
+          "alternatives": [
+            "clean |> mutate(day = wday(started_at, label = TRUE), hour = hour(started_at)) |> count(day, hour) |> ggplot(aes(hour, day, fill = n)) + geom_tile()"
+          ],
+          "values": {
+            "top_day": "local({c <- count(clean, day = wday(started_at, label = TRUE, abbr = FALSE), hour = hour(started_at)); as.character(c$day[which.max(c$n)])})",
+            "top_hour": "local({c <- count(clean, day = wday(started_at, label = TRUE), hour = hour(started_at)); format(c$hour[which.max(c$n)])})"
+          },
+          "purpose": "count the trips in each hour of each day of the week, and colour a tile by each count",
+          "task": "Count the trips in `clean` by `day` (`wday(started_at, label = TRUE)`) and `hour` (`hour(started_at)`), then pipe the counts into `ggplot()` and draw them with `geom_tile()`: `hour` on x, `day` on y, `fill = n`."
+        }
+      ],
+      "explain": "Two categories vary together when some combinations are more common than they would be by chance. Here, each tile is one hour of one day, coloured by its number of trips over the year. Weekdays light up at the two rush hours; the weekend glows in the middle of the day instead. The busiest tile is {top_day} at {top_hour}:00. The count's result goes straight into `ggplot()` with `|>`, then the chart's layers join with `+`."
+    },
+    {
+      "id": "numbers",
+      "title": "Two numbers: geom_bin_2d()",
+      "runs": [
+        {
+          "code": "ggplot(clean, aes(x = distance_km, y = duration_min)) +\n  geom_bin_2d() +\n  scale_x_log10() +\n  scale_y_log10()",
+          "evidence": "ggplot",
+          "warning": "infinite values|Removed \\d+ rows? containing non-finite",
+          "alternatives": [
+            "ggplot(clean, aes(distance_km, duration_min)) + geom_bin_2d() + scale_x_log10() + scale_y_log10()"
+          ],
+          "purpose": "plot trip length against distance as a grid of counts, on log scales",
+          "task": "Plot `duration_min` against `distance_km` for `clean` with `geom_bin_2d()`, with both axes on a log scale (`scale_x_log10()`, `scale_y_log10()`).",
+          "values": {
+            "n_zero_km": "format(sum(clean$distance_km == 0, na.rm = TRUE))"
+          }
+        }
+      ],
+      "explain": "{n_trips} points would hide each other, so `geom_bin_2d()` divides the chart into rectangles and colours each by how many trips fall in it. On log scales, where each step along an axis multiplies by the same amount, the busiest rectangles form a straight band: longer trips take longer, in proportion. ggplot2 gives two warnings: {n_zero_km} trips have a distance of 0, whose logarithm is minus infinity, and it left out the {n_na} trips with no length, which include those."
+    },
+    {
+      "id": "model",
+      "title": "Patterns from a model: residuals",
+      "runs": [
+        {
+          "code": "model <- lm(log(duration_min) ~ log(distance_km), data = clean)",
+          "evidence": "assign",
+          "alternatives": [
+            "model = lm(log(duration_min) ~ log(distance_km), clean)"
+          ],
+          "purpose": "fit a straight line to log trip length against log distance, as `model`",
+          "task": "Fit a linear model of `log(duration_min)` on `log(distance_km)` with `lm()`, using `clean`, and store it in `model`."
+        },
+        {
+          "code": "residuals <- augment(model, newdata = clean)",
+          "evidence": "assign",
+          "alternatives": [
+            "residuals = broom::augment(model, newdata = clean)"
+          ],
+          "purpose": "add the model's prediction and residual to each trip, as `residuals`",
+          "task": "Add the model's fitted values and residuals to `clean` with `augment(model, newdata = clean)`, and store the result in `residuals`."
+        },
+        {
+          "code": "ggplot(residuals, aes(x = bike_type, y = .resid)) +\n  geom_boxplot()",
+          "evidence": "ggplot",
+          "warning": "Removed \\d+ rows? containing non-finite",
+          "alternatives": [
+            "ggplot(residuals, aes(bike_type, .resid)) + geom_boxplot()"
+          ],
+          "values": {
+            "res_classic": "format(round(median(residuals$.resid[residuals$bike_type == \"classic\"], na.rm = TRUE), 2))",
+            "res_electric": "format(round(median(residuals$.resid[residuals$bike_type == \"electric\"], na.rm = TRUE), 2))",
+            "pct_less": "format(round(100 * (1 - exp(median(residuals$.resid[residuals$bike_type == \"electric\"], na.rm = TRUE) - median(residuals$.resid[residuals$bike_type == \"classic\"], na.rm = TRUE)))))"
+          },
+          "purpose": "compare the residuals of classic bikes and e-bikes",
+          "task": "Draw boxplots of `.resid` for each `bike_type` in `residuals`."
+        }
+      ],
+      "explain": "Distance explains so much of a trip's length that it hides everything else. The model fits the straight band from the last chart, and each trip's residual, `.resid`, is how far its length is from what the model expects for its distance: above 0, longer; below, shorter (on the log scale). With distance accounted for, a pattern shows: the median residual is {res_classic} for classic bikes and {res_electric} for e-bikes, so over the same distance an e-bike trip takes about {pct_less}% less time. A model is another way to look at data: it takes out the pattern you know, so the next one can show."
+    }
+  ]
+}

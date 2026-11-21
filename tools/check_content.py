@@ -30,12 +30,15 @@ ACTIONS = {
     "shortcut": ("keys",),
     "open-file": ("file",),
     "type": ("text",),
+    "source": (),
+    "new-project": ("name",),
 }
 IDE_CHECKS = ("pref", "value", "restarted", "tab", "viewer", "help", "project", "chord", "editor_text", "editor_mode", "editor_match")
 RUN_KEYS = {"code", "action", "menu", "purpose", "task", "evidence", "show", "capture", "values", "alternatives", "order",
             "warning", "error", "pattern", "path", "file", "ide", "control", "pane", "label", "value", "kind", "to", "keys",
-            "text", "after", "where"}
-PLACEHOLDER = re.compile(r"\{(\w+)\}")
+            "text", "after", "where", "name"}
+PLACEHOLDER = re.compile(r"(?<!\{)\{(\w+)\}(?!\})")  # {name}; {{text}} is a literal {text}, as in a regex quantifier
+STATEMENT_KEYS = {"Ctrl+Shift+M": "|>", "Alt+-": "<-"}  # a shortcut a statement can teach, and what it types
 
 
 def check_lesson(folder, collection, problems):
@@ -95,6 +98,10 @@ def check_lesson(folder, collection, problems):
             problem("must start with a Setup step (id \"setup\") whose statements are library() calls")
         if not 5 <= len(steps) - 1 <= 8:
             problem(f"has {len(steps) - 1} steps after Setup; lessons have 5-8")
+    # A new project reloads RStudio into it, so nothing in the lesson can come after it.
+    runs = [run for step in steps for run in step.get("runs", [])]
+    if any(run.get("action") == "new-project" for run in runs[:-1]):
+        problem("a new project must be the lesson's last statement: RStudio reloads into it")
     ids = set()
     values = set()
     for step in steps:
@@ -129,12 +136,13 @@ def check_run(run, where, modes, strict, values, problem):
         return
     if has_code and (not isinstance(run["code"], str) or not run["code"].strip()):
         problem(f"{where}: code must be text")
-    # On a statement, "keys" teaches a shortcut: the coach types each |> with Ctrl+Shift+M, and
-    # Guided and Solo count the statement once the learner has pressed it too.
-    if has_code and "keys" in run and (run["keys"] != "Ctrl+Shift+M" or "|>" not in str(run["code"])):
-        problem(f"{where}: on a statement, keys can only be \"Ctrl+Shift+M\", for code with |>")
-    if has_code and "keys" in run and not all("|>" in str(a) for a in run.get("alternatives", [])):
-        problem(f"{where}: with keys, every alternative must use |> too (the task asks for the shortcut)")
+    # On a statement, "keys" teaches a shortcut: the coach types each |> with Ctrl+Shift+M (or each <-
+    # with Alt+-), and Guided and Solo count the statement once the learner has pressed it too.
+    token = STATEMENT_KEYS.get(run.get("keys"))
+    if has_code and "keys" in run and (not token or token not in str(run["code"])):
+        problem(f"{where}: on a statement, keys can only be " + " or ".join(f'"{k}", for code with {t}' for k, t in STATEMENT_KEYS.items()))
+    if has_code and token and not all(token in str(a) for a in run.get("alternatives", [])):
+        problem(f"{where}: with keys, every alternative must use {token} too (the task asks for the shortcut)")
     if ("guided" in modes or "solo" in modes) and not run.get("task"):
         problem(f"{where}: needs a task (Guided and Solo show it instead of the code)")
     if ("demonstration" in modes or "guided" in modes) and not run.get("purpose"):
@@ -161,6 +169,13 @@ def check_run(run, where, modes, strict, values, problem):
             problem(f"{where}: a type action needs the text to type")
         if "after" in run:
             compiles(run["after"], f"{where}: after", problem)
+    if has_action and run.get("action") == "new-project":
+        if not re.fullmatch(r"[A-Za-z][\w.-]*", str(run.get("name", ""))):
+            problem(f"{where}: a new project's name must be a plain folder name")
+        if not (isinstance(run.get("ide"), dict) and re.search(run["ide"].get("project") or "(?!)", str(run.get("name")))):
+            problem(f"{where}: a new project needs ide evidence whose project pattern matches its name")
+    if isinstance(run.get("ide"), dict) and "project" in run["ide"]:
+        compiles(run["ide"]["project"], f"{where}: project", problem)
     if isinstance(run.get("ide"), dict) and "editor_match" in run["ide"]:
         compiles(run["ide"]["editor_match"], f"{where}: editor_match", problem)
     if evidence == "error":

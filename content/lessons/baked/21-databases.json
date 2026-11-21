@@ -1,0 +1,323 @@
+{
+ "lesson": "21-databases",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [
+    "DBI"
+   ],
+   "class": "character",
+   "dim": 18,
+   "files": [],
+   "fp": "a2d6f52a868fc3c71706414e7c381281",
+   "fp_any": null,
+   "index": 1,
+   "library": "DBI",
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [
+    "duckdb"
+   ],
+   "class": "character",
+   "dim": 19,
+   "files": [],
+   "fp": "addde9945f36d192cc9cece6e4e70e38",
+   "fp_any": null,
+   "index": 2,
+   "library": "duckdb",
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "con",
+     "class": "duckdb_connection",
+     "code": "con = DBI::dbConnect(duckdb::duckdb(), dbdir = 'data/larkhaven.duckdb', read_only = TRUE)",
+     "dim": 1,
+     "fp": "c5ee1525b4891166618ed6e1a61bf8fd",
+     "fp_any": null
+    }
+   ],
+   "assigned": "con",
+   "attached": [],
+   "class": "duckdb_connection",
+   "dim": 1,
+   "files": [],
+   "fp": "c5ee1525b4891166618ed6e1a61bf8fd",
+   "fp_any": null,
+   "index": 3,
+   "messages": [
+    "duckdb is storing downloaded extensions and secrets under ~/.duckdb:\nℹ /tmp/.duckdb\nThis persists across sessions and is shared with the DuckDB CLI and other clients.\nℹ Run duckdb(shared_home = FALSE) to use a temporary directory instead.\nℹ See ?duckdb_storage for details and alternatives."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "connect",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "character",
+   "dim": 4,
+   "files": [],
+   "fp": "d2b7a7936cc1f58a8ea936fb881312d1",
+   "fp_any": null,
+   "index": 4,
+   "messages": [],
+   "output": "[1] \"bikes\"    \"fares\"    \"stations\" \"trips\"   ",
+   "plot": false,
+   "step": "connect",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "data.frame",
+     "code": "dbGetQuery(con, 'SELECT member_type, count(*) AS trips FROM trips GROUP BY member_type')",
+     "dim": [
+      2,
+      2
+     ],
+     "fp": "cb346617e44dfd38eb5a17d655ac0c18",
+     "fp_any": "cb346617e44dfd38eb5a17d655ac0c18"
+    }
+   ],
+   "attached": [],
+   "class": "data.frame",
+   "dim": [
+    2,
+    2
+   ],
+   "files": [],
+   "fp": "cb346617e44dfd38eb5a17d655ac0c18",
+   "fp_any": "cb346617e44dfd38eb5a17d655ac0c18",
+   "index": 5,
+   "messages": [],
+   "output": "  member_type trips\n1      casual 51620\n2      member 98127",
+   "plot": false,
+   "step": "sql",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "trips_db",
+     "class": "tbl_duckdb_connection",
+     "code": "trips_db = dplyr::tbl(con, 'trips')",
+     "dim": [
+      "NA",
+      10
+     ],
+     "fp": "daa0ef761638467068ec270a38f83b36",
+     "fp_any": null
+    }
+   ],
+   "assigned": "trips_db",
+   "attached": [],
+   "class": "tbl_duckdb_connection",
+   "dim": [
+    "NA",
+    10
+   ],
+   "files": [],
+   "fp": "daa0ef761638467068ec270a38f83b36",
+   "fp_any": null,
+   "index": 6,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "dbplyr",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "casual_starts",
+     "class": "tbl_duckdb_connection",
+     "code": "casual_starts = trips_db |> filter(member_type == 'casual') |> count(start_station, sort = TRUE)",
+     "dim": [
+      "NA",
+      2
+     ],
+     "fp": "e4121c8bce264cb0adb1c32d6b5ddb12",
+     "fp_any": null
+    }
+   ],
+   "assigned": "casual_starts",
+   "attached": [],
+   "class": "tbl_duckdb_connection",
+   "dim": [
+    "NA",
+    2
+   ],
+   "files": [],
+   "fp": "e4121c8bce264cb0adb1c32d6b5ddb12",
+   "fp_any": null,
+   "index": 7,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "dbplyr",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "tbl_duckdb_connection",
+   "dim": [
+    "NA",
+    2
+   ],
+   "files": [],
+   "fp": "e4121c8bce264cb0adb1c32d6b5ddb12",
+   "fp_any": null,
+   "index": 8,
+   "messages": [],
+   "output": "<SQL>\nSELECT start_station, COUNT(*) AS n\nFROM trips\nWHERE (member_type = 'casual')\nGROUP BY start_station\nORDER BY n DESC",
+   "plot": false,
+   "step": "show",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "tbl_duckdb_connection",
+   "dim": [
+    "NA",
+    2
+   ],
+   "files": [],
+   "fp": "e4121c8bce264cb0adb1c32d6b5ddb12",
+   "fp_any": null,
+   "index": 9,
+   "messages": [],
+   "output": "# A query:    ?? x 2\n# Database:   DuckDB 2.0.0 [unknown@Linux 6.8.0-138-generic:R 4.6.2//opt/lab/world/larkhaven.duckdb]\n# Ordered by: desc(n)\n   start_station     n\n           <dbl> <dbl>\n 1           105  1708\n 2           117  1658\n 3           173  1623\n 4           114  1570\n 5           130  1528\n 6           174  1500\n 7           116  1438\n 8           113  1421\n 9           132  1335\n10           101  1334\n# ℹ more rows",
+   "plot": false,
+   "step": "show",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "collect(casual_starts)",
+     "dim": [
+      78,
+      2
+     ],
+     "fp": "ba0bf732aac7f8332a6f2e6e3694cfec",
+     "fp_any": "c394a5c8a521c43992f0b708068ba283"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    78,
+    2
+   ],
+   "files": [],
+   "fp": "02e4b7537dad7bca34b7d734f9105197",
+   "fp_any": "c394a5c8a521c43992f0b708068ba283",
+   "index": 10,
+   "messages": [],
+   "output": "# A tibble: 78 × 2\n   start_station     n\n           <dbl> <dbl>\n 1           105  1708\n 2           117  1658\n 3           173  1623\n 4           114  1570\n 5           130  1528\n 6           174  1500\n 7           116  1438\n 8           113  1421\n 9           132  1335\n10           101  1334\n# ℹ 68 more rows",
+   "plot": false,
+   "step": "collect",
+   "values": {
+    "n_rows": "78",
+    "top_station": "105"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "logical",
+   "dim": 1,
+   "files": [],
+   "fp": "39511e8b61750e87b110070d6f0adb6c",
+   "fp_any": null,
+   "index": 11,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "collect",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  }
+ ],
+ "stamp": {
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "format": "1",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "4f523568805a472f0c22f5a3432610054d186ebaa6ff060a12777e8a0b972534",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
+ }
+}

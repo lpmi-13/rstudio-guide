@@ -1,0 +1,154 @@
+{
+  "id": "26-iteration",
+  "version": 2,
+  "world": true,
+  "title": "Iteration",
+  "modes": [
+    "demonstration",
+    "guided",
+    "solo"
+  ],
+  "script": "26-iteration.R",
+  "summary": "Do the same thing many times without copying code: apply functions to many columns with across(), keep rows by many columns at once, read twelve files into one table with map(), and write a file for each neighbourhood with walk2().",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse)",
+      "runs": [
+        {
+          "code": "library(tidyverse)",
+          "evidence": "attached",
+          "purpose": "load the tidyverse, which includes purrr",
+          "task": "Load the tidyverse with `library()`."
+        }
+      ],
+      "explain": "dplyr's `across()` repeats work over columns, and purrr's `map()` and `walk()` repeat it over anything else: files, sheets, groups."
+    },
+    {
+      "id": "across",
+      "title": "Many columns at once: across()",
+      "runs": [
+        {
+          "code": "weather <- read_csv(\"data/weather.csv\") |>\n  mutate(across(c(temp_c, wind_kmh), \\(x) na_if(x, -99)))",
+          "evidence": "assign",
+          "alternatives": [
+            "weather = read_csv('data/weather.csv', show_col_types = FALSE) |> mutate(temp_c = na_if(temp_c, -99), wind_kmh = na_if(wind_kmh, -99))"
+          ],
+          "purpose": "read the weather, replacing the sensor's -99 with NA in two columns at once, as `weather`",
+          "task": "Read `data/weather.csv`, then in `mutate()` replace -99 with `NA` in both `temp_c` and `wind_kmh` with `across()` and `\\(x) na_if(x, -99)`. Store the result in `weather`."
+        },
+        {
+          "code": "weather |> summarize(across(where(is.numeric), \\(x) mean(x, na.rm = TRUE)))",
+          "evidence": "value",
+          "alternatives": [
+            "weather |> summarize(across(c(temp_c, rain_mm, wind_kmh), \\(x) mean(x, na.rm = TRUE)))"
+          ],
+          "values": {
+            "mean_temp": "format(round(mean(weather$temp_c, na.rm = TRUE), 1))"
+          },
+          "purpose": "find the mean of every numeric column",
+          "task": "Find the mean of every numeric column of `weather`, leaving out missing values, with `across(where(is.numeric), …)` in `summarize()`."
+        }
+      ],
+      "explain": "`across()` applies a function to each of several columns. Its first argument picks the columns, by name as in `c(temp_c, wind_kmh)` or by a test such as `where(is.numeric)`; its second is the function, here written `\\(x) …`, a short way of writing `function(x) …`. Lesson 18 fixed the -99 readings one column at a time; with `across()`, one line fixes both, and would fix ten. The year's mean temperature was {mean_temp} °C."
+    },
+    {
+      "id": "names",
+      "title": "Several functions, and their names",
+      "runs": [
+        {
+          "code": "weather |>\n  summarize(across(\n    c(temp_c, wind_kmh),\n    list(low = \\(x) min(x, na.rm = TRUE), high = \\(x) max(x, na.rm = TRUE)),\n    .names = \"{.col}_{.fn}\"\n  ))",
+          "evidence": "value",
+          "alternatives": [
+            "weather |> summarize(across(c(temp_c, wind_kmh), list(low = \\(x) min(x, na.rm = TRUE), high = \\(x) max(x, na.rm = TRUE))))"
+          ],
+          "purpose": "find the lowest and highest temperature and wind speed, naming each result",
+          "task": "Find the lowest and highest `temp_c` and `wind_kmh`: give `across()` a named list of two functions, `low` and `high`, and name the results with `.names = \"{.col}_{.fn}\"`."
+        }
+      ],
+      "explain": "Given a named list of functions, `across()` applies each one to each column: two columns and two functions make four results. `.names` says how to name them, `{.col}` standing for the column's name and `{.fn}` for the function's, so the columns read `temp_c_low`, `temp_c_high` and so on. Without `.names`, `across()` names them the same way."
+    },
+    {
+      "id": "if-any",
+      "title": "Rows by many columns: if_any()",
+      "runs": [
+        {
+          "code": "weather |> filter(if_any(c(temp_c, rain_mm, wind_kmh), is.na))",
+          "evidence": "value",
+          "alternatives": [
+            "weather |> filter(is.na(temp_c) | is.na(rain_mm) | is.na(wind_kmh))"
+          ],
+          "values": {
+            "n_any_na": "format(nrow(filter(weather, if_any(c(temp_c, rain_mm, wind_kmh), is.na))))"
+          },
+          "purpose": "keep the hours with any reading missing",
+          "task": "Keep the rows of `weather` where any of `temp_c`, `rain_mm` and `wind_kmh` is missing, with `if_any()` and `is.na`."
+        }
+      ],
+      "explain": "`filter()` needs one `TRUE` or `FALSE` per row, while a test applied across columns gives one per column. `if_any()` combines them with or: a row is kept if the test holds in any of the columns. `if_all()` combines them with and. {n_any_na} hours have a reading missing, all of them from the -99 codes; the sensor gaps have no rows at all."
+    },
+    {
+      "id": "map",
+      "title": "Many files: map() and list_rbind()",
+      "runs": [
+        {
+          "code": "paths <- fs::dir_ls(\"data/exports\", glob = \"*.csv\")",
+          "evidence": "assign",
+          "alternatives": [
+            "paths = fs::dir_ls('data/exports', glob = '*.csv')"
+          ],
+          "values": {
+            "n_paths": "format(length(paths))"
+          },
+          "purpose": "list the monthly export files, as `paths`",
+          "task": "List the `.csv` files in `data/exports` with `fs::dir_ls()` and `glob = \"*.csv\"`, and store them in `paths`."
+        },
+        {
+          "code": "exports <- paths |>\n  map(\\(path) {\n    read_csv(path, skip = 1, na = c(\"\", \"n/a\", \"-\"), show_col_types = FALSE)\n  }) |>\n  list_rbind(names_to = \"file\")",
+          "evidence": "assign",
+          "alternatives": [
+            "exports = paths |> map(function(path) read_csv(path, skip = 1, na = c('', 'n/a', '-'), show_col_types = FALSE)) |> list_rbind(names_to = 'file')"
+          ],
+          "values": {
+            "n_exports": "format(nrow(exports))"
+          },
+          "purpose": "read each file the same way and stack them, with a column naming the file each row came from, as `exports`",
+          "task": "Read every file in `paths` with `map()` and `\\(path) read_csv(path, skip = 1, na = c(\"\", \"n/a\", \"-\"), show_col_types = FALSE)`, then stack the results with `list_rbind(names_to = \"file\")`. Store the result in `exports`."
+        }
+      ],
+      "explain": "`map()` calls a function once for each element of a vector and returns a list of the results: here, {n_paths} tibbles, one per month. `list_rbind()` stacks them into one, {n_exports} rows, and `names_to` keeps each element's name, the file's path, in a column. `show_col_types = FALSE` stops `read_csv()` reporting the columns of all twelve files. Lesson 7 read these files with one `read_csv()` call, which takes many files itself; `map()` works for any function that reads one thing at a time, such as `read_excel()` in lesson 20."
+    },
+    {
+      "id": "walk",
+      "title": "Many outputs: walk2()",
+      "runs": [
+        {
+          "code": "by_area <- read_csv(\"data/stations.csv\") |>\n  nest(.by = neighbourhood) |>\n  mutate(path = str_c(\"neighbourhoods/\", neighbourhood, \".csv\"))",
+          "evidence": "assign",
+          "alternatives": [
+            "by_area = read_csv('data/stations.csv', show_col_types = FALSE) |> nest(.by = neighbourhood) |> mutate(path = paste0('neighbourhoods/', neighbourhood, '.csv'))"
+          ],
+          "values": {
+            "n_areas": "format(nrow(by_area))"
+          },
+          "purpose": "split the stations into one table per neighbourhood, each with a file name, as `by_area`",
+          "task": "Read `data/stations.csv`, nest it by `neighbourhood` with `nest(.by = neighbourhood)`, and add `path`, \"neighbourhoods/\" + the neighbourhood + \".csv\", with `str_c()`. Store the result in `by_area`."
+        },
+        {
+          "code": "fs::dir_create(\"neighbourhoods\")",
+          "evidence": "value",
+          "purpose": "make the folder the files go in",
+          "task": "Make a folder called `neighbourhoods` with `fs::dir_create()`."
+        },
+        {
+          "code": "walk2(by_area$data, by_area$path, write_csv)",
+          "evidence": "file",
+          "path": "neighbourhoods/Market Square.csv",
+          "purpose": "write each neighbourhood's stations to its own CSV file",
+          "task": "Write each table in `by_area$data` to its file in `by_area$path`, with `walk2()` and `write_csv`."
+        }
+      ],
+      "explain": "`nest()` puts each neighbourhood's stations in a list-column, `data`, one table per row. `walk2()` walks along two vectors side by side, the tables and their paths, calling `write_csv()` with each pair. A `walk` function is a `map` for functions you call for what they do, here writing a file, rather than for what they return. The Files pane shows {n_areas} files in `neighbourhoods`."
+    }
+  ]
+}

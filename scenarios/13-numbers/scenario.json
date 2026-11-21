@@ -1,0 +1,146 @@
+{
+  "id": "13-numbers",
+  "version": 2,
+  "world": true,
+  "title": "Numbers",
+  "modes": ["demonstration", "guided", "solo"],
+  "script": "13-numbers.R",
+  "summary": "Work with the numbers in a year of trips: parse and count, split the day into 15-minute slots, round and cut lengths into bands, keep running totals and day-to-day changes, rank stations, and summarise a distribution's centre and spread.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse)",
+      "runs": [
+        {"code": "library(tidyverse)", "evidence": "attached",
+         "purpose": "load the tidyverse",
+         "task": "Load the tidyverse with `library()`."}
+      ],
+      "explain": "`library(tidyverse)` attaches readr, dplyr and lubridate, whose number functions this lesson uses."
+    },
+    {
+      "id": "counts",
+      "title": "Numbers from text, and counts",
+      "runs": [
+        {"code": "parse_number(c(\"2.35 km\", \"1,234 trips\", \"38%\"))", "evidence": "value",
+         "purpose": "pull the numbers out of three bits of text",
+         "task": "Pull the numbers out of `c(\"2.35 km\", \"1,234 trips\", \"38%\")` with `parse_number()`."},
+        {"code": "trips <- read_csv(\"data/trips.csv\")", "evidence": "assign",
+         "alternatives": ["trips = read_csv('data/trips.csv', show_col_types = FALSE)"],
+         "purpose": "read every 2025 trip into `trips`",
+         "task": "Read `data/trips.csv` into a variable called `trips`."},
+        {"code": "trips |> count(start_station, sort = TRUE)", "evidence": "value",
+         "alternatives": ["trips |> count(start_station) |> arrange(desc(n))"],
+         "values": {
+           "top_station": "format(count(trips, start_station, sort = TRUE)$start_station[1])",
+           "top_n": "format(count(trips, start_station, sort = TRUE)$n[1], big.mark = \",\")"
+         },
+         "purpose": "count the trips from each station, busiest first",
+         "task": "Count the trips from each `start_station`, the busiest first."}
+      ],
+      "explain": "`parse_number()` drops whatever surrounds the first number in a string, commas used as thousands separators included, so `\"1,234 trips\"` becomes 1234. Counting is the most common thing done with numbers in data: `count()` gives each station's trips, and station {top_station} is the busiest, with {top_n}."
+    },
+    {
+      "id": "division",
+      "title": "Slots of 15 minutes: %/% and %%",
+      "runs": [
+        {"code": "trips |>\n  mutate(minute_of_day = hour(started_at) * 60 + minute(started_at)) |>\n  count(slot = minute_of_day %/% 15 * 15, sort = TRUE)", "evidence": "value",
+         "alternatives": ["trips |> count(slot = (hour(started_at) * 60 + minute(started_at)) %/% 15 * 15, sort = TRUE)"],
+         "values": {
+           "top_slot": "local({s <- count(mutate(trips, m = hour(started_at) * 60 + minute(started_at)), slot = m %/% 15 * 15, sort = TRUE)$slot[1]; format(s)})",
+           "top_slot_n": "local({s <- count(mutate(trips, m = hour(started_at) * 60 + minute(started_at)), slot = m %/% 15 * 15, sort = TRUE)$n[1]; format(s, big.mark = \",\")})",
+           "top_slot_time": "local({s <- count(mutate(trips, m = hour(started_at) * 60 + minute(started_at)), slot = m %/% 15 * 15, sort = TRUE)$slot[1]; sprintf(\"%d:%02d\", s %/% 60, s %% 60)})"
+         },
+         "purpose": "count the trips that started in each 15-minute slot of the day, busiest first",
+         "task": "Add `minute_of_day`, the minutes since midnight (`hour(started_at) * 60 + minute(started_at)`), then count the trips by `slot = minute_of_day %/% 15 * 15`, the busiest first."},
+        {"code": "c(1020 %/% 60, 1020 %% 60)", "evidence": "value",
+         "purpose": "turn minute 1020 of the day back into hours and minutes",
+         "task": "Turn 1020 minutes into whole hours with `%/%` and the minutes left over with `%%`, in one vector with `c()`."}
+      ],
+      "explain": "`%/%` divides and drops the remainder, and `%%` gives the remainder. So `minute_of_day %/% 15` numbers each 15-minute slot, and multiplying by 15 turns that back into the minute the slot starts. `* 15` multiplies every value by one number, which R recycles. The busiest slot starts at minute {top_slot}, with {top_slot_n} trips: `1020 %/% 60` is 17 hours and `1020 %% 60` is 0 minutes left over, so {top_slot_time}."
+    },
+    {
+      "id": "cut",
+      "title": "Rounding and cutting into bands",
+      "runs": [
+        {"code": "round(c(0.5, 1.5, 2.5))", "evidence": "value",
+         "purpose": "round three numbers that end in .5",
+         "task": "Round `c(0.5, 1.5, 2.5)` with `round()`."},
+        {"code": "trips |> count(band = cut(duration_min, breaks = c(0, 10, 20, 30, 60, Inf)))", "evidence": "value",
+         "alternatives": ["trips |> mutate(band = cut(duration_min, c(0, 10, 20, 30, 60, Inf))) |> count(band)"],
+         "values": {
+           "n_short": "format(sum(trips$duration_min > 0 & trips$duration_min <= 10), big.mark = \",\")",
+           "n_cut_na": "format(sum(trips$duration_min <= 0))"
+         },
+         "purpose": "put each trip's length in a band, from 10 minutes or less to more than an hour, and count the bands",
+         "task": "Count the trips by `band`, made by cutting `duration_min` with `cut()` at the breaks 0, 10, 20, 30, 60 and `Inf`."}
+      ],
+      "explain": "`round()` rounds a number ending in .5 to the even neighbour, so 0.5 and 2.5 round down and 1.5 up: over many values, the rounding errors cancel out. `floor()` always rounds down, `ceiling()` up, and `round(x, digits = -2)` to the nearest hundred. `cut()` turns numbers into bands: `(0,10]` means above 0 and up to 10, and holds {n_short} trips. The {n_cut_na} trips of 0 minutes or less fall outside every band, so their band is `NA`."
+    },
+    {
+      "id": "cumulative",
+      "title": "Running totals: cumsum()",
+      "runs": [
+        {"code": "daily <- trips |> count(date = as_date(started_at))", "evidence": "assign",
+         "alternatives": ["daily = trips |> mutate(date = as_date(started_at)) |> count(date)"],
+         "purpose": "count the trips on each day of the year, as `daily`",
+         "task": "Count the trips on each `date` (`as_date(started_at)`) and store the result in `daily`."},
+        {"code": "daily |> mutate(running_total = cumsum(n))", "evidence": "value",
+         "alternatives": ["mutate(daily, running_total = cumsum(n))"],
+         "values": {
+           "half_date": "str_squish(format(filter(mutate(daily, running_total = cumsum(n)), running_total >= sum(n) / 2)$date[1], \"%e %B\"))"
+         },
+         "purpose": "add a running total of trips so far",
+         "task": "Add `running_total`, the total number of trips so far, with `cumsum(n)`."}
+      ],
+      "explain": "`cumsum()` adds up as it goes: each day's `running_total` is the trips on that day and every day before it. `cummax()`, `cummin()` and `cummean()` work the same way. The running total passes half the year's trips on {half_date}, well past the middle of the year, because the winter months are quiet."
+    },
+    {
+      "id": "offsets",
+      "title": "The day before: lag()",
+      "runs": [
+        {"code": "daily |>\n  mutate(change = n - lag(n)) |>\n  slice_max(change, n = 3)", "evidence": "value",
+         "alternatives": ["daily |> mutate(change = n - lag(n)) |> arrange(desc(change)) |> head(3)"],
+         "values": {
+           "jump_date": "str_squish(format(slice_max(mutate(daily, change = n - lag(n)), change, n = 1)$date[1], \"%A %e %B\"))",
+           "jump": "format(slice_max(mutate(daily, change = n - lag(n)), change, n = 1)$change[1])"
+         },
+         "purpose": "work out each day's change from the day before, and show the three biggest rises",
+         "task": "Add `change`, each day's `n` minus the day before's (`lag(n)`), then keep the three biggest changes with `slice_max()`."}
+      ],
+      "explain": "`lag()` shifts a column down one row, so each day sits beside the day before; `lead()` shifts it up. The first day has no day before, so its `change` is `NA`, and `slice_max()` leaves it out. The biggest rise was on {jump_date}: {jump} more trips than the day before, after a rainy or cold day."
+    },
+    {
+      "id": "ranks",
+      "title": "Ranks within groups: min_rank()",
+      "runs": [
+        {"code": "trips |>\n  count(start_station, bike_type) |>\n  mutate(rank = min_rank(desc(n)), .by = bike_type) |>\n  filter(rank <= 3)", "evidence": "value", "order": "any",
+         "alternatives": ["trips |> count(start_station, bike_type) |> group_by(bike_type) |> mutate(rank = min_rank(desc(n))) |> ungroup() |> filter(rank <= 3)"],
+         "purpose": "rank the stations by trips for each bike type, and keep the top three of each",
+         "task": "Count the trips by `start_station` and `bike_type`, then rank the stations within each `bike_type` with `min_rank(desc(n))` (`.by` in `mutate()`), and keep ranks 1 to 3."}
+      ],
+      "explain": "`min_rank()` numbers values from smallest to largest; `desc()` turns that round, so the busiest station is 1. Tied values share a rank, and the next rank is skipped, as in a race. With `.by`, `mutate()` ranks within each bike type separately, so each has its own top three. `dense_rank()` doesn't skip ranks after a tie, and `row_number()` breaks ties by position."
+    },
+    {
+      "id": "summaries",
+      "title": "Centre and spread: summaries",
+      "runs": [
+        {"code": "summary(trips$duration_min)", "evidence": "value",
+         "values": {
+           "mean_all": "format(round(mean(trips$duration_min), 1))",
+           "median_all": "format(median(trips$duration_min))"
+         },
+         "purpose": "summarise every trip's length: its minimum, quartiles, mean and maximum",
+         "task": "Summarise `trips$duration_min` with `summary()`."},
+        {"code": "trips |>\n  filter(duration_min > 0, duration_min <= 24 * 60) |>\n  summarize(\n    mean = mean(duration_min),\n    median = median(duration_min),\n    sd = sd(duration_min),\n    q90 = quantile(duration_min, 0.9),\n    .by = member_type\n  )", "evidence": "value", "order": "any",
+         "alternatives": ["trips |> filter(duration_min > 0, duration_min <= 1440) |> group_by(member_type) |> summarize(mean = mean(duration_min), median = median(duration_min), sd = sd(duration_min), q90 = quantile(duration_min, 0.9))"],
+         "values": {
+           "q90_member": "format(quantile(trips$duration_min[trips$member_type == \"member\" & trips$duration_min > 0 & trips$duration_min <= 1440], 0.9))",
+           "q90_casual": "format(quantile(trips$duration_min[trips$member_type == \"casual\" & trips$duration_min > 0 & trips$duration_min <= 1440], 0.9))"
+         },
+         "purpose": "summarise plausible trip lengths for each rider type: mean, median, standard deviation and 90th percentile",
+         "task": "Keep the trips longer than 0 and no longer than a day, then find for each `member_type`: the `mean`, `median`, standard deviation (`sd()`) and 90th percentile (`quantile(duration_min, 0.9)`) of `duration_min`."}
+      ],
+      "explain": "`summary()` gives a number's minimum, quartiles, median, mean and maximum in one go. The mean, {mean_all} minutes, is well above the median, {median_all}: a few lost bikes' trips of days pull the mean up, while the median, the middle value, doesn't move. Without the implausible trips, the summaries describe real rides. The mean and median measure the centre; the standard deviation, `sd`, the spread around the mean; and `quantile()` a position: 90% of members' trips last {q90_member} minutes or less, and 90% of casual riders' {q90_casual}."
+    }
+  ]
+}

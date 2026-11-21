@@ -1,0 +1,443 @@
+{
+ "lesson": "15-regular-expressions",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "bikes",
+     "class": "spec_tbl_df",
+     "code": "bikes = read_csv('data/bikes.csv', show_col_types = FALSE)",
+     "dim": [
+      690,
+      4
+     ],
+     "fp": "cca59c39b3e0a2aeafeb5364d13b5a32",
+     "fp_any": "703c87d669608e422d526e85d29b3454"
+    }
+   ],
+   "assigned": "bikes",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    690,
+    4
+   ],
+   "files": [],
+   "fp": "cca59c39b3e0a2aeafeb5364d13b5a32",
+   "fp_any": "703c87d669608e422d526e85d29b3454",
+   "index": 1,
+   "messages": [
+    "Rows: 690 Columns: 4",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): bike_id, bike_type, model\ndate (1): in_service",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "view",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "stringr_view",
+   "dim": 3,
+   "files": [],
+   "fp": "2fd974a2543a40e64caaba2704d77684",
+   "fp_any": null,
+   "index": 2,
+   "messages": [],
+   "output": "[1] │ LB-C-<00001>\n[2] │ LB<00003>\n[3] │ LB-E-<00512>",
+   "plot": false,
+   "step": "view",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "spec_tbl_df",
+     "code": "filter(bikes, str_starts(bike_id, 'LB-E-'))",
+     "dim": [
+      270,
+      4
+     ],
+     "fp": "69e71427645d22c6b57d2ff609857517",
+     "fp_any": "69e71427645d22c6b57d2ff609857517"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    270,
+    4
+   ],
+   "files": [],
+   "fp": "69e71427645d22c6b57d2ff609857517",
+   "fp_any": "69e71427645d22c6b57d2ff609857517",
+   "index": 3,
+   "messages": [],
+   "output": "# A tibble: 270 × 4\n   bike_id    bike_type model    in_service\n   <chr>      <chr>     <chr>    <date>    \n 1 LB-E-00001 electric  Swift E1 2021-04-01\n 2 LB-E-00002 electric  Swift E1 2021-04-01\n 3 LB-E-00003 electric  Swift E1 2021-04-01\n 4 LB-E-00004 electric  Swift E1 2021-04-01\n 5 LB-E-00005 electric  Swift E1 2021-04-01\n 6 LB-E-00006 electric  Swift E1 2021-04-01\n 7 LB-E-00007 electric  Swift E1 2021-04-01\n 8 LB-E-00008 electric  Swift E1 2021-04-01\n 9 LB-E-00009 electric  Swift E1 2021-04-01\n10 LB-E-00010 electric  Swift E1 2021-04-01\n# ℹ 260 more rows",
+   "plot": false,
+   "step": "detect",
+   "values": {
+    "n_e": "270"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "bikes |> mutate(old_format = str_detect(bike_id, '^LB[0-9]{5}$')) |> count(old_format)",
+     "dim": [
+      2,
+      2
+     ],
+     "fp": "2f57b037b61444ec9009e759d806020f",
+     "fp_any": "2f57b037b61444ec9009e759d806020f"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    2,
+    2
+   ],
+   "files": [],
+   "fp": "2f57b037b61444ec9009e759d806020f",
+   "fp_any": "2f57b037b61444ec9009e759d806020f",
+   "index": 4,
+   "messages": [],
+   "output": "# A tibble: 2 × 2\n  old_format     n\n  <lgl>      <int>\n1 FALSE        678\n2 TRUE          12",
+   "plot": false,
+   "step": "detect",
+   "values": {
+    "n_old": "12"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "bikes |> separate_wider_regex(cols = bike_id, patterns = c('LB-?', type = '[CE]?', '-?', number = '[0-9]+'))",
+     "dim": [
+      690,
+      5
+     ],
+     "fp": "1fcedb1f7d4d081f4547a90060c14ea0",
+     "fp_any": "c9df18c1ef9c45ca74fafce8cc6634c8"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    690,
+    5
+   ],
+   "files": [],
+   "fp": "1fcedb1f7d4d081f4547a90060c14ea0",
+   "fp_any": "c9df18c1ef9c45ca74fafce8cc6634c8",
+   "index": 5,
+   "messages": [],
+   "output": "# A tibble: 690 × 5\n   type  number bike_type model     in_service\n   <chr> <chr>  <chr>     <chr>     <date>    \n 1 \"C\"   00001  classic   Kestrel 1 2021-04-01\n 2 \"C\"   00002  classic   Kestrel 1 2021-04-01\n 3 \"\"    00003  classic   Kestrel 1 2021-04-01\n 4 \"C\"   00004  classic   Kestrel 1 2021-04-01\n 5 \"C\"   00005  classic   Kestrel 1 2021-04-01\n 6 \"C\"   00006  classic   Kestrel 1 2021-04-01\n 7 \"C\"   00007  classic   Kestrel 1 2021-04-01\n 8 \"C\"   00008  classic   Kestrel 1 2021-04-01\n 9 \"C\"   00009  classic   Kestrel 1 2021-04-01\n10 \"C\"   00010  classic   Kestrel 1 2021-04-01\n# ℹ 680 more rows",
+   "plot": false,
+   "step": "extract",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "stations",
+     "class": "spec_tbl_df",
+     "code": "stations = read_csv('data/stations.csv', show_col_types = FALSE)",
+     "dim": [
+      81,
+      8
+     ],
+     "fp": "6d66718310fccdef241ea5ff39a0ec50",
+     "fp_any": "6d66718310fccdef241ea5ff39a0ec50"
+    }
+   ],
+   "assigned": "stations",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    81,
+    8
+   ],
+   "files": [],
+   "fp": "6d66718310fccdef241ea5ff39a0ec50",
+   "fp_any": "6d66718310fccdef241ea5ff39a0ec50",
+   "index": 6,
+   "messages": [
+    "Rows: 81 Columns: 8",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): name, neighbourhood, former_name\ndbl  (4): station_id, lat, lon, docks\ndate (1): opened",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "replace",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "stations |> mutate(clean = name |> str_replace_all('\\\\s+', ' ') |> str_replace_all('’', \"'\") |> str_replace_all(' & ', ' and ') |> str_replace_all('^St\\\\. ', 'St '), .keep = 'used') |> filter(clean != name)",
+     "dim": [
+      4,
+      2
+     ],
+     "fp": "17b9e4ae5a587b29050da4701b230dd9",
+     "fp_any": "c905df5ef0325d4c58eb8011ce1c879f"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    4,
+    2
+   ],
+   "files": [],
+   "fp": "17b9e4ae5a587b29050da4701b230dd9",
+   "fp_any": "c905df5ef0325d4c58eb8011ce1c879f",
+   "index": 7,
+   "messages": [],
+   "output": "# A tibble: 4 × 2\n  name                 clean                 \n  <chr>                <chr>                 \n1 Bridge St & Water St Bridge St and Water St\n2 St. Agnes Square     St Agnes Square       \n3 Cooper’s Wharf       Cooper's Wharf        \n4 Castle  Gate         Castle Gate           ",
+   "plot": false,
+   "step": "replace",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "spec_tbl_df",
+     "code": "filter(stations, str_detect(name, '.'))",
+     "dim": [
+      81,
+      8
+     ],
+     "fp": "6d66718310fccdef241ea5ff39a0ec50",
+     "fp_any": "6d66718310fccdef241ea5ff39a0ec50"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    81,
+    8
+   ],
+   "files": [],
+   "fp": "6d66718310fccdef241ea5ff39a0ec50",
+   "fp_any": "6d66718310fccdef241ea5ff39a0ec50",
+   "index": 8,
+   "messages": [],
+   "output": "# A tibble: 81 × 8\n   station_id name                      neighbourhood   lat   lon docks opened     former_name\n        <dbl> <chr>                     <chr>         <dbl> <dbl> <dbl> <date>     <chr>      \n 1        101 Market Square             Market Square  44.7 -79.9    24 2021-04-15 <NA>       \n 2        102 MARKET SQUARE NORTH       Market Square  44.7 -79.9    23 2021-04-15 <NA>       \n 3        103 Town Hall                 Market Square  44.7 -79.9    34 2021-04-15 <NA>       \n 4        104 Bridge St & Water St      Market Square  44.7 -79.9    28 2021-04-15 <NA>       \n 5        105 Larkhaven Central Station Market Square  44.7 -79.9    25 2021-04-15 <NA>       \n 6        106 Corn Exchange             Market Square  44.7 -79.9    22 2021-04-15 <NA>       \n 7        107 Library Plaza             Market Square  44.7 -79.9    27 2021-04-15 <NA>       \n 8        108 Bellfounders Row          Market Square  44.7 -79.9    27 2021-04-15 <NA>       \n 9        109 St. Agnes Square          Market Square  44.7 -79.9    23 2021-04-15 <NA>       \n10        110 Guildhall Lane            Market Square  44.7 -79.9    28 2021-04-15 <NA>       \n# ℹ 71 more rows",
+   "plot": false,
+   "step": "fixed",
+   "values": {
+    "n_any": "81"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "spec_tbl_df",
+     "code": "filter(stations, str_detect(name, '\\\\.'))",
+     "dim": [
+      1,
+      8
+     ],
+     "fp": "f911d8dfc9ca32f9b94fae235d976cd9",
+     "fp_any": "f911d8dfc9ca32f9b94fae235d976cd9"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    1,
+    8
+   ],
+   "files": [],
+   "fp": "f911d8dfc9ca32f9b94fae235d976cd9",
+   "fp_any": "f911d8dfc9ca32f9b94fae235d976cd9",
+   "index": 9,
+   "messages": [],
+   "output": "# A tibble: 1 × 8\n  station_id name             neighbourhood   lat   lon docks opened     former_name\n       <dbl> <chr>            <chr>         <dbl> <dbl> <dbl> <date>     <chr>      \n1        109 St. Agnes Square Market Square  44.7 -79.9    23 2021-04-15 <NA>       ",
+   "plot": false,
+   "step": "fixed",
+   "values": {
+    "n_dot": "1"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "survey",
+     "class": "spec_tbl_df",
+     "code": "survey = read_csv('data/survey.csv', show_col_types = FALSE)",
+     "dim": [
+      1500,
+      16
+     ],
+     "fp": "2f3fafd247d2f4efd212c218f9a1a0af",
+     "fp_any": "2f3fafd247d2f4efd212c218f9a1a0af"
+    }
+   ],
+   "assigned": "survey",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    1500,
+    16
+   ],
+   "files": [],
+   "fp": "2f3fafd247d2f4efd212c218f9a1a0af",
+   "fp_any": "2f3fafd247d2f4efd212c218f9a1a0af",
+   "index": 10,
+   "messages": [
+    "Rows: 1500 Columns: 16",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (13): member_type, age_band, home_neighbourhood, satisfaction, agree_ebikes_worth_price, agree_feel_safe, agree_enough_docks, use_commuting, use_errands, use_leisure, use_exercise, use_visiti...\ndbl   (2): response_id, rides_per_week\ndttm  (1): submitted",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "codes",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "survey |> mutate(code = str_match(comment, 'code ([A-Z0-9-]+)')[, 2]) |> count(code, sort = TRUE)",
+     "dim": [
+      6,
+      2
+     ],
+     "fp": "77f8f40735194b10cfbf2afaae07c7f5",
+     "fp_any": "da20b6aa6435cfe1c0fdec6d651e3edc"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    6,
+    2
+   ],
+   "files": [],
+   "fp": "77f8f40735194b10cfbf2afaae07c7f5",
+   "fp_any": "da20b6aa6435cfe1c0fdec6d651e3edc",
+   "index": 11,
+   "messages": [],
+   "output": "# A tibble: 6 × 2\n  code                 n\n  <chr>            <int>\n1 <NA>              1446\n2 LARK-FRIEND-0417    12\n3 LARK-SPRING25       11\n4 LARK-SUMMER25       11\n5 WELCOME10           11\n6 STUDENT25            9",
+   "plot": false,
+   "step": "codes",
+   "values": {
+    "n_codes": "54"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "survey |> mutate(code = str_to_upper(str_extract(comment, regex('code ([a-z0-9-]+)', ignore_case = TRUE), group = 1))) |> count(code, sort = TRUE)",
+     "dim": [
+      6,
+      2
+     ],
+     "fp": "b731151d90ea331d7e493deffa2a54b8",
+     "fp_any": "af783b81f49fe6714431cf956ca23c92"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    6,
+    2
+   ],
+   "files": [],
+   "fp": "b731151d90ea331d7e493deffa2a54b8",
+   "fp_any": "af783b81f49fe6714431cf956ca23c92",
+   "index": 12,
+   "messages": [],
+   "output": "# A tibble: 6 × 2\n  code                 n\n  <chr>            <int>\n1 <NA>              1440\n2 WELCOME10           13\n3 LARK-FRIEND-0417    12\n4 LARK-SPRING25       12\n5 LARK-SUMMER25       12\n6 STUDENT25           11",
+   "plot": false,
+   "step": "codes",
+   "values": {
+    "n_codes_any": "60"
+   },
+   "visible": true,
+   "warnings": []
+  }
+ ],
+ "stamp": {
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "format": "1",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "af98c01cdf9f883869c6c4022bdf7495b5c0f29a742cf95fc21e60bfeaca3208",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
+ }
+}

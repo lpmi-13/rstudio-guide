@@ -1,0 +1,186 @@
+{
+  "id": "16-factors",
+  "version": 2,
+  "world": true,
+  "title": "Factors",
+  "modes": [
+    "demonstration",
+    "guided",
+    "solo"
+  ],
+  "script": "16-factors.R",
+  "summary": "Give the rider survey's answers an order that means something: make satisfaction a factor with its levels in order, sort bars by how often or how much, combine and lump levels, and compare answers with an ordered factor.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse)",
+      "runs": [
+        {
+          "code": "library(tidyverse)",
+          "evidence": "attached",
+          "purpose": "load the tidyverse, which includes forcats",
+          "task": "Load the tidyverse with `library()`."
+        }
+      ],
+      "explain": "`library(tidyverse)` attaches forcats, whose functions for factors all start with `fct_`."
+    },
+    {
+      "id": "text",
+      "title": "Text sorts alphabetically",
+      "runs": [
+        {
+          "code": "survey <- read_csv(\"data/survey.csv\")",
+          "evidence": "assign",
+          "alternatives": [
+            "survey = read_csv('data/survey.csv', show_col_types = FALSE)"
+          ],
+          "purpose": "read the rider survey into `survey`",
+          "task": "Read `data/survey.csv` into a variable called `survey`."
+        },
+        {
+          "code": "survey |> count(satisfaction)",
+          "evidence": "value",
+          "alternatives": [
+            "count(survey, satisfaction)"
+          ],
+          "purpose": "count the answers to the satisfaction question",
+          "task": "Count `survey` by `satisfaction`."
+        }
+      ],
+      "explain": "`satisfaction` is text, so `count()` sorts it alphabetically: Dissatisfied, Neutral, Satisfied, then the two \"Very\" answers at the end. The answers have an order, from very dissatisfied to very satisfied, but text has no way to know it."
+    },
+    {
+      "id": "levels",
+      "title": "Levels set the order: fct()",
+      "runs": [
+        {
+          "code": "satisfaction_levels <- c(\n  \"Very dissatisfied\",\n  \"Dissatisfied\",\n  \"Neutral\",\n  \"Satisfied\",\n  \"Very satisfied\"\n)",
+          "evidence": "assign",
+          "alternatives": [
+            "satisfaction_levels = c(\"Very dissatisfied\", \"Dissatisfied\", \"Neutral\", \"Satisfied\", \"Very satisfied\")"
+          ],
+          "purpose": "list the five answers in their natural order, as `satisfaction_levels`",
+          "task": "Store the five answers in order, from \"Very dissatisfied\" to \"Very satisfied\", in a vector called `satisfaction_levels`."
+        },
+        {
+          "code": "survey <- survey |>\n  mutate(satisfaction = fct(satisfaction, levels = satisfaction_levels))",
+          "evidence": "assign",
+          "alternatives": [
+            "survey = survey |> mutate(satisfaction = factor(satisfaction, levels = satisfaction_levels))"
+          ],
+          "purpose": "turn `satisfaction` into a factor with those levels",
+          "task": "Make `satisfaction` a factor with `fct()` and `levels = satisfaction_levels`, and store the result back in `survey`."
+        },
+        {
+          "code": "survey |> count(satisfaction)",
+          "evidence": "value",
+          "alternatives": [
+            "count(survey, satisfaction)"
+          ],
+          "values": {
+            "n_satisfied": "format(sum(survey$satisfaction %in% c(\"Satisfied\", \"Very satisfied\")), big.mark = \",\")"
+          },
+          "purpose": "count the answers again",
+          "task": "Count `survey` by `satisfaction` again."
+        }
+      ],
+      "explain": "A factor is a variable with a fixed set of possible values, its levels, in an order you choose. `fct()` makes one, and stops with an error if a value isn't among the levels, so a typo can't quietly become `NA`. Now `count()` follows the levels, from very dissatisfied to very satisfied, and the counts read as a scale: {n_satisfied} of the riders are satisfied or very satisfied. The tibble shows the column as `<fct>`."
+    },
+    {
+      "id": "charts",
+      "title": "Bars in order: levels and fct_infreq()",
+      "runs": [
+        {
+          "code": "ggplot(survey, aes(x = satisfaction)) +\n  geom_bar()",
+          "evidence": "ggplot",
+          "alternatives": [
+            "ggplot(survey) + geom_bar(aes(satisfaction))"
+          ],
+          "purpose": "draw a bar for each answer, in the levels' order",
+          "task": "Draw a bar chart of `satisfaction` with `geom_bar()`."
+        },
+        {
+          "code": "ggplot(survey, aes(y = fct_infreq(home_neighbourhood))) +\n  geom_bar()",
+          "evidence": "ggplot",
+          "alternatives": [
+            "ggplot(survey) + geom_bar(aes(y = fct_infreq(home_neighbourhood)))"
+          ],
+          "values": {
+            "top_home": "as.character(fct_infreq(survey$home_neighbourhood)[1] |> levels() |> head(1))"
+          },
+          "purpose": "draw a bar for each rider's home neighbourhood, ordered by how many riders live there",
+          "task": "Draw a bar chart with `home_neighbourhood` on the y axis, ordered by frequency with `fct_infreq()`."
+        }
+      ],
+      "explain": "ggplot2 draws a factor's bars in the order of its levels, so the satisfaction scale reads left to right. `home_neighbourhood` has no natural order, so the clearest one is by size: `fct_infreq()` puts the most common level first, {top_home}, which ggplot2 draws at the bottom of the y axis. Wrapping it in `fct_rev()` would turn it round. The neighbourhood names on the y axis can be read without turning your head."
+    },
+    {
+      "id": "reorder",
+      "title": "Order by a value: fct_reorder()",
+      "runs": [
+        {
+          "code": "survey |>\n  summarize(\n    rides = mean(rides_per_week, na.rm = TRUE),\n    .by = home_neighbourhood\n  ) |>\n  ggplot(aes(x = rides, y = fct_reorder(home_neighbourhood, rides))) +\n  geom_point()",
+          "evidence": "ggplot",
+          "alternatives": [
+            "survey |> group_by(home_neighbourhood) |> summarize(rides = mean(rides_per_week, na.rm = TRUE)) |> ggplot(aes(rides, fct_reorder(home_neighbourhood, rides))) + geom_point()"
+          ],
+          "values": {
+            "most_home": "local({s <- summarize(survey, rides = mean(rides_per_week, na.rm = TRUE), .by = home_neighbourhood); s$home_neighbourhood[which.max(s$rides)]})",
+            "most_rides": "local({s <- summarize(survey, rides = mean(rides_per_week, na.rm = TRUE), .by = home_neighbourhood); format(round(max(s$rides), 1))})"
+          },
+          "purpose": "plot the mean rides per week for each home neighbourhood, ordered by that mean",
+          "task": "Find the mean `rides_per_week` (`na.rm = TRUE`) for each `home_neighbourhood`, then plot it as points, with the neighbourhoods on the y axis ordered by it: `fct_reorder(home_neighbourhood, rides)`."
+        }
+      ],
+      "explain": "`fct_reorder()` orders a factor's levels by another variable, so the points form a line from fewest rides to most and the eye can compare neighbours. In alphabetical order, the same points would zigzag. Riders from {most_home} ride most, {most_rides} times a week on average. With several values per level, `fct_reorder()` orders by their median, or by the function given as `.fun`."
+    },
+    {
+      "id": "change",
+      "title": "Fewer levels: fct_collapse() and fct_lump_n()",
+      "runs": [
+        {
+          "code": "survey |>\n  mutate(\n    feel_safe = fct_collapse(\n      agree_feel_safe,\n      agree = c(\"Strongly agree\", \"Agree\"),\n      disagree = c(\"Disagree\", \"Strongly disagree\")\n    )\n  ) |>\n  count(feel_safe)",
+          "evidence": "value",
+          "alternatives": [
+            "survey |> mutate(feel_safe = fct_collapse(agree_feel_safe, agree = c('Agree', 'Strongly agree'), disagree = c('Strongly disagree', 'Disagree'))) |> count(feel_safe)"
+          ],
+          "values": {
+            "n_agree": "format(sum(survey$agree_feel_safe %in% c(\"Strongly agree\", \"Agree\")))",
+            "n_disagree": "format(sum(survey$agree_feel_safe %in% c(\"Disagree\", \"Strongly disagree\")))"
+          },
+          "purpose": "combine the agreement answers into agree and disagree, and count them",
+          "task": "Add `feel_safe`: `agree_feel_safe` with \"Strongly agree\" and \"Agree\" collapsed into `agree`, and \"Disagree\" and \"Strongly disagree\" into `disagree`, using `fct_collapse()`. Then count it."
+        },
+        {
+          "code": "survey |> count(home = fct_lump_n(home_neighbourhood, n = 6))",
+          "evidence": "value",
+          "alternatives": [
+            "survey |> mutate(home = fct_lump_n(home_neighbourhood, 6)) |> count(home)"
+          ],
+          "values": {
+            "n_other": "format(sum(fct_lump_n(survey$home_neighbourhood, n = 6) == \"Other\"))"
+          },
+          "purpose": "keep the six most common home neighbourhoods and lump the rest together",
+          "task": "Count `survey` by `home`: `home_neighbourhood` with all but the 6 most common lumped into \"Other\", using `fct_lump_n()`."
+        }
+      ],
+      "explain": "`fct_collapse()` gives several levels one new name: {n_agree} riders agree that they feel safe, {n_disagree} disagree. Levels not mentioned, such as \"Don't know\", stay as they are, and missing answers stay `NA`. `fct_recode()` renames single levels the same way. `fct_lump_n()` keeps the most common levels and puts the rest in \"Other\": here {n_other} riders from the six smaller neighbourhoods. A chart with a few bars and \"Other\" is easier to read than one with a dozen."
+    },
+    {
+      "id": "ordered",
+      "title": "Answers that compare: ordered factors",
+      "runs": [
+        {
+          "code": "survey |>\n  mutate(satisfaction = ordered(satisfaction, levels = satisfaction_levels)) |>\n  count(content = satisfaction >= \"Satisfied\")",
+          "evidence": "value",
+          "alternatives": [
+            "survey |> mutate(satisfaction = factor(satisfaction, levels = satisfaction_levels, ordered = TRUE)) |> count(content = satisfaction >= 'Satisfied')"
+          ],
+          "purpose": "make satisfaction an ordered factor, and count the riders at Satisfied or above",
+          "task": "Make `satisfaction` an ordered factor with `ordered()` and `levels = satisfaction_levels`, then count the riders by `content = satisfaction >= \"Satisfied\"`."
+        }
+      ],
+      "explain": "An ordered factor's levels are ranked, so `>=` means \"this answer or a better one\": the count splits the riders into those at Satisfied or above and the rest, {n_satisfied} as before. With an ordinary factor, R would warn that `>=` isn't meaningful and give `NA`. Use an ordered factor when the order is part of what the answers mean, as on a scale; tibbles show it as `<ord>`."
+    }
+  ]
+}

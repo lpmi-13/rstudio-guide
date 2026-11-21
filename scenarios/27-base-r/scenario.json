@@ -1,0 +1,157 @@
+{
+  "id": "27-base-r",
+  "version": 2,
+  "world": true,
+  "title": "A field guide to base R",
+  "modes": [
+    "demonstration",
+    "guided",
+    "solo"
+  ],
+  "script": "27-base-r.R",
+  "summary": "Read and write the base R you will meet in other people's code: subset vectors and data frames with [, take columns with $ and [[, apply a function to every column, loop with for, and draw quick charts with plot(), hist() and barplot().",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse)",
+      "runs": [
+        {
+          "code": "library(tidyverse)",
+          "evidence": "attached",
+          "purpose": "load the tidyverse, to read the data",
+          "task": "Load the tidyverse with `library()`."
+        }
+      ],
+      "explain": "This lesson reads the data with readr and does everything else with base R, the functions that come with R itself. Much of the R code you'll find online is written this way."
+    },
+    {
+      "id": "vectors",
+      "title": "Subsetting vectors: [",
+      "runs": [
+        {
+          "code": "week <- read_csv(\"data/trips-week.csv\")",
+          "evidence": "assign",
+          "alternatives": [
+            "week = read_csv('data/trips-week.csv', show_col_types = FALSE)"
+          ],
+          "purpose": "read one week of trips into `week`",
+          "task": "Read `data/trips-week.csv` into `week`."
+        },
+        {
+          "code": "minutes <- week$duration_min",
+          "evidence": "assign",
+          "alternatives": [
+            "minutes = week[['duration_min']]"
+          ],
+          "purpose": "take the trips' lengths as a vector, `minutes`",
+          "task": "Store the `duration_min` column of `week` as a vector called `minutes`, with `$`."
+        },
+        {
+          "code": "minutes[minutes > 60]",
+          "evidence": "value",
+          "alternatives": [
+            "minutes[which(minutes > 60)]"
+          ],
+          "values": {
+            "n_long": "format(sum(minutes > 60))"
+          },
+          "purpose": "keep the lengths over an hour",
+          "task": "Keep the elements of `minutes` greater than 60, with `[` and a condition."
+        }
+      ],
+      "explain": "`[` picks elements of a vector: by position, `minutes[1:5]`; leaving some out, `minutes[-1]`; or with a logical vector of the same length, keeping the `TRUE`s, as `minutes[minutes > 60]` does. That is the base R way to filter: {n_long} trips that week lasted over an hour. `filter()` does the same for the rows of a data frame."
+    },
+    {
+      "id": "frames",
+      "title": "Data frames: df[rows, columns]",
+      "runs": [
+        {
+          "code": "week[\n  week$member_type == \"casual\" & week$duration_min > 60,\n  c(\"start_station\", \"end_station\", \"duration_min\")\n]",
+          "evidence": "value",
+          "alternatives": [
+            "week |> filter(member_type == 'casual', duration_min > 60) |> select(start_station, end_station, duration_min)"
+          ],
+          "purpose": "keep casual riders' trips of over an hour, and three of their columns",
+          "task": "With `week[rows, columns]`, keep the rows where `member_type` is \"casual\" and `duration_min` is over 60, and the columns `start_station`, `end_station` and `duration_min`."
+        }
+      ],
+      "explain": "A data frame takes two subscripts, `[rows, columns]`. Rows here are picked by a condition, and columns by name. Inside `[`, columns must be written as `week$member_type`, since base R doesn't look names up in the data the way dplyr does. Leave a subscript empty to keep everything: `week[, \"bike_type\"]` keeps all rows. The same result in dplyr is `filter()` then `select()`, and this step's check accepts either."
+    },
+    {
+      "id": "columns",
+      "title": "One column: $ and [[",
+      "runs": [
+        {
+          "code": "table(week[[\"bike_type\"]])",
+          "evidence": "value",
+          "alternatives": [
+            "table(week$bike_type)"
+          ],
+          "purpose": "count the trips on each kind of bike, taking the column with [[",
+          "task": "Count the values of the `bike_type` column with `table()`, taking the column with `week[[\"bike_type\"]]`."
+        },
+        {
+          "code": "for (column in c(\"distance_km\", \"duration_min\")) {\n  cat(column, \":\", mean(week[[column]]), \"\\n\")\n}",
+          "evidence": "pattern",
+          "pattern": "^distance_km : [0-9.]+ \\n?\\s*duration_min : [0-9.]+",
+          "purpose": "print the mean of two columns, naming each column in a variable",
+          "task": "Loop over `c(\"distance_km\", \"duration_min\")` with `for`, and for each `column` print its name and `mean(week[[column]])` with `cat()`, ending with `\"\\n\"`."
+        }
+      ],
+      "explain": "`$` and `[[` both take one column out of a data frame as a vector. `$` needs the name written out, `week$bike_type`; `[[` takes a string, so the name can be in a variable, which is what the loop needs. A `for` loop runs its body once for each element: `column` is \"distance_km\", then \"duration_min\". `cat()` prints without quotes or `[1]`, and `\"\\n\"` starts a new line. In the tidyverse, `across()` usually does the same job without a loop."
+    },
+    {
+      "id": "apply",
+      "title": "A function for every column: vapply() and lapply()",
+      "runs": [
+        {
+          "code": "vapply(week, is.numeric, logical(1))",
+          "evidence": "value",
+          "alternatives": [
+            "sapply(week, is.numeric)"
+          ],
+          "values": {
+            "n_numeric": "format(sum(vapply(week, is.numeric, logical(1))))"
+          },
+          "purpose": "ask of every column whether it holds numbers",
+          "task": "Ask whether each column of `week` is numeric, with `vapply(week, is.numeric, logical(1))`."
+        },
+        {
+          "code": "lapply(split(week$duration_min, week$member_type), median)",
+          "evidence": "value",
+          "alternatives": [
+            "lapply(split(week$duration_min, week$member_type), \\(x) median(x))"
+          ],
+          "purpose": "split the lengths by rider type and find each group's median",
+          "task": "Split `week$duration_min` by `week$member_type` with `split()`, then find each part's median with `lapply()`."
+        }
+      ],
+      "explain": "A data frame is a list of columns, so `vapply()` can call a function on each column: {n_numeric} of them are numeric. `logical(1)` promises one `TRUE` or `FALSE` from each, and `vapply()` stops if that's broken. `lapply()` returns a list, with no promise to keep. `split()` cuts a vector into a list of groups, so `lapply()` on it summarises each group: base R's `summarize(.by = )`. `map()` from purrr is the tidyverse's `lapply()`."
+    },
+    {
+      "id": "plots",
+      "title": "Quick charts: hist(), plot() and barplot()",
+      "runs": [
+        {
+          "code": "hist(week$duration_min, breaks = 40)",
+          "evidence": "plot",
+          "purpose": "draw a histogram of trip lengths",
+          "task": "Draw a histogram of `week$duration_min` with `hist()` and `breaks = 40`."
+        },
+        {
+          "code": "plot(week$distance_km, week$duration_min)",
+          "evidence": "plot",
+          "purpose": "plot each trip's length against its distance",
+          "task": "Plot `week$duration_min` against `week$distance_km` with `plot()`, distance first."
+        },
+        {
+          "code": "barplot(table(week$bike_type))",
+          "evidence": "plot",
+          "purpose": "draw a bar for each kind of bike",
+          "task": "Draw a bar chart of the counts in `table(week$bike_type)` with `barplot()`."
+        }
+      ],
+      "explain": "Base R's charts take vectors rather than a data frame and mappings, and draw straight away. `hist()` cuts the lengths into bins, about 40 of them here; `plot()` of two numeric vectors draws a scatter plot, x first; `barplot()` draws the counts from `table()`. They are quick for a first look, and you'll see them in older code and help pages, but ggplot2's layers, legends and facets take far less work for a finished chart."
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+---
+title: "Larkhaven Bikes: a week in June"
+author: "Larkhaven Bikes"
+date: 2025-06-09
+format:
+  html:
+    toc: true
+    code-fold: true
+  docx: default
+  typst: default
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(tidyverse)
+week <- read_csv("data/trips-week.csv", show_col_types = FALSE)
+```
+
+## Trips by day
+
+From Monday 2 to Sunday 8 June 2025, riders made `r format(nrow(week), big.mark = ",")` complete trips.
+
+```{r}
+#| label: fig-days
+#| fig-cap: "Trips started on each day."
+week |>
+  count(day = wday(started_at, label = TRUE, week_start = 1)) |>
+  ggplot(aes(x = day, y = n)) +
+  geom_col() +
+  labs(x = NULL, y = "Trips")
+```
+
+## Members and casual riders
+
+```{r}
+#| label: tbl-riders
+week |>
+  summarize(trips = n(), median_minutes = median(duration_min), .by = member_type) |>
+  knitr::kable(col.names = c("Rider", "Trips", "Median minutes"))
+```

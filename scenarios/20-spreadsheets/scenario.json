@@ -1,0 +1,177 @@
+{
+  "id": "20-spreadsheets",
+  "version": 2,
+  "world": true,
+  "title": "Spreadsheets",
+  "modes": [
+    "demonstration",
+    "guided",
+    "solo"
+  ],
+  "script": "20-spreadsheets.R",
+  "summary": "Read the depots' repair logs from an Excel workbook: list its sheets, find the table below the titles, say which cells are missing and what type each column is, turn Excel's day numbers into dates, read every depot's sheet into one table, and write a workbook of your own.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse), library(readxl), library(writexl)",
+      "runs": [
+        {
+          "code": "library(tidyverse)",
+          "evidence": "attached",
+          "purpose": "load the tidyverse",
+          "task": "Load the tidyverse with `library()`."
+        },
+        {
+          "code": "library(readxl)",
+          "evidence": "attached",
+          "purpose": "load readxl, which reads Excel workbooks",
+          "task": "Load readxl with `library()`."
+        },
+        {
+          "code": "library(writexl)",
+          "evidence": "attached",
+          "purpose": "load writexl, which writes them",
+          "task": "Load writexl with `library()`."
+        }
+      ],
+      "explain": "readxl reads `.xlsx` and `.xls` files without Excel being installed, and writexl writes `.xlsx` files."
+    },
+    {
+      "id": "sheets",
+      "title": "A workbook's sheets: excel_sheets()",
+      "runs": [
+        {
+          "code": "excel_sheets(\"data/maintenance.xlsx\")",
+          "evidence": "value",
+          "purpose": "list the sheets in the maintenance workbook",
+          "task": "List the sheets in `data/maintenance.xlsx` with `excel_sheets()`."
+        }
+      ],
+      "explain": "A workbook can hold many tables, one per sheet. This one has a summary sheet, which lesson 18 filled down, and one repair log for each of the three depots. `read_excel()` reads the first sheet unless told otherwise."
+    },
+    {
+      "id": "skip",
+      "title": "Find the table: skip",
+      "runs": [
+        {
+          "code": "read_excel(\"data/maintenance.xlsx\", sheet = \"Northgate\")",
+          "evidence": "value",
+          "purpose": "read the Northgate depot's sheet as it is",
+          "task": "Read the \"Northgate\" sheet with `read_excel()` and `sheet =`."
+        },
+        {
+          "code": "read_excel(\"data/maintenance.xlsx\", sheet = \"Northgate\", skip = 3)",
+          "evidence": "value",
+          "values": {
+            "n_rows": "format(nrow(read_excel(\"data/maintenance.xlsx\", sheet = \"Northgate\", skip = 3)))"
+          },
+          "purpose": "read it again, skipping the three rows above the table",
+          "task": "Read the same sheet, skipping its first 3 rows with `skip = 3`."
+        }
+      ],
+      "explain": "Read as it is, the sheet's title becomes the first column's name, and the real column names end up in a row of data. People put titles and notes above a table in a spreadsheet; `skip = 3` passes over the title, its subtitle and a blank row, so the header row is read as the header. Every column is still text, `<chr>`: the Date column holds numbers like 45659, and its last row says Total. {n_rows} rows came in."
+    },
+    {
+      "id": "types",
+      "title": "Missing values and column types",
+      "runs": [
+        {
+          "code": "columns <- c(\"numeric\", \"text\", \"text\", \"text\", \"numeric\", \"numeric\", \"text\")",
+          "evidence": "assign",
+          "alternatives": [
+            "columns = c(\"numeric\", \"text\", \"text\", \"text\", \"numeric\", \"numeric\", \"text\")"
+          ],
+          "purpose": "list a type for each of the sheet's seven columns, as `columns`",
+          "task": "Store the seven columns' types in a vector called `columns`: `c(\"numeric\", \"text\", \"text\", \"text\", \"numeric\", \"numeric\", \"text\")`."
+        },
+        {
+          "code": "northgate <- read_excel(\n  \"data/maintenance.xlsx\",\n  sheet = \"Northgate\",\n  skip = 3,\n  na = c(\"\", \"N/A\", \"-\"),\n  col_types = columns\n)",
+          "evidence": "assign",
+          "warning": "Expecting numeric",
+          "alternatives": [
+            "northgate = read_excel('data/maintenance.xlsx', 'Northgate', skip = 3, na = c('', 'N/A', '-'), col_types = columns)"
+          ],
+          "values": {
+            "n_minutes_na": "format(sum(is.na(northgate$Minutes)))"
+          },
+          "purpose": "read the sheet with blanks, N/A and - as missing, and with those column types, as `northgate`",
+          "task": "Read the \"Northgate\" sheet again with `skip = 3`, `na = c(\"\", \"N/A\", \"-\")` and `col_types = columns`, and store it in `northgate`."
+        },
+        {
+          "code": "northgate |> filter(is.na(Minutes))",
+          "evidence": "value",
+          "alternatives": [
+            "filter(northgate, is.na(Minutes))"
+          ],
+          "purpose": "show the repairs whose minutes didn't read as a number",
+          "task": "Keep the rows of `northgate` whose `Minutes` is missing."
+        }
+      ],
+      "explain": "`na` lists what counts as missing: blank cells, and the N/A and - that mechanics typed in Parts (CAD). `col_types` gives each column a type instead of letting readxl guess. A cell that doesn't fit its type becomes `NA`, with a warning naming the cell: the Total in the Date column, and {n_minutes_na} entries in Minutes typed as notes, such as `45?` and `approx 40`. The warnings are worth reading, since they say exactly which cells were lost."
+    },
+    {
+      "id": "dates",
+      "title": "Dates stored as numbers",
+      "runs": [
+        {
+          "code": "northgate |>\n  filter(!is.na(Date)) |>\n  mutate(Date = as_date(Date, origin = \"1899-12-30\"))",
+          "evidence": "value",
+          "alternatives": [
+            "northgate |> filter(!is.na(Date)) |> mutate(Date = as.Date(Date, origin = '1899-12-30'))"
+          ],
+          "values": {
+            "first_serial": "format(northgate$Date[1])",
+            "first_date": "str_squish(format(as_date(northgate$Date[1], origin = \"1899-12-30\"), \"%e %B %Y\"))"
+          },
+          "purpose": "drop the total row, then turn Excel's day numbers into dates",
+          "task": "Drop the rows with no `Date` (the total row), then convert `Date` with `as_date(Date, origin = \"1899-12-30\")`."
+        }
+      ],
+      "explain": "Excel stores a date as a count of days. The cells in this column weren't formatted as dates, so the numbers are what readxl sees: the first is {first_serial}. Counted from Excel's day 0, which for any date after February 1900 works out as 30 December 1899, it is {first_date}. Dropping the rows with no `Date` also drops the Total row, which isn't a repair; a total belongs in a summary, not in the data."
+    },
+    {
+      "id": "combine",
+      "title": "Every depot: map() and list_rbind()",
+      "runs": [
+        {
+          "code": "repairs <- c(\"Northgate\", \"Harbour\", \"Eastfield\") |>\n  set_names() |>\n  map(\\(sheet) {\n    read_excel(\n      \"data/maintenance.xlsx\",\n      sheet = sheet,\n      skip = 3,\n      na = c(\"\", \"N/A\", \"-\"),\n      col_types = columns\n    )\n  }) |>\n  list_rbind(names_to = \"depot\") |>\n  filter(!is.na(Date)) |>\n  mutate(Date = as_date(Date, origin = \"1899-12-30\"))",
+          "evidence": "assign",
+          "warning": "Expecting numeric",
+          "alternatives": [
+            "repairs = c('Northgate', 'Harbour', 'Eastfield') |> set_names() |> map(function(sheet) read_excel('data/maintenance.xlsx', sheet = sheet, skip = 3, na = c('', 'N/A', '-'), col_types = columns)) |> list_rbind(names_to = 'depot') |> filter(!is.na(Date)) |> mutate(Date = as_date(Date, origin = '1899-12-30'))"
+          ],
+          "values": {
+            "n_repairs": "format(nrow(repairs))"
+          },
+          "purpose": "read the three depots' sheets the same way and stack them, with a column saying which depot each repair came from, as `repairs`",
+          "task": "Read the sheets \"Northgate\", \"Harbour\" and \"Eastfield\" in the same way with `set_names()`, `map()` and `\\(sheet) read_excel(…)`, stack them with `list_rbind(names_to = \"depot\")`, drop the total rows and convert the dates. Store the result in `repairs`."
+        },
+        {
+          "code": "repairs |>\n  summarize(repairs = n(), hours = sum(Minutes, na.rm = TRUE) / 60, .by = depot)",
+          "evidence": "value",
+          "order": "any",
+          "alternatives": [
+            "repairs |> group_by(depot) |> summarize(repairs = n(), hours = sum(Minutes, na.rm = TRUE) / 60)"
+          ],
+          "purpose": "count each depot's repairs and the hours they took",
+          "task": "For each `depot`, count the repairs and add up their `Minutes` in hours (`sum(Minutes, na.rm = TRUE) / 60`)."
+        }
+      ],
+      "explain": "The three depot sheets have the same layout, so one recipe reads them all. `map()` applies a function to each sheet name and returns a list of tables; `\\(sheet) read_excel(…)` is a short way of writing a function of `sheet`. `set_names()` names the list's items after the sheets, and `list_rbind(names_to = \"depot\")` stacks the tables, keeping each name in a `depot` column. `repairs` has {n_repairs} repairs. Lesson 26 does more with `map()`."
+    },
+    {
+      "id": "write",
+      "title": "Write a workbook: write_xlsx()",
+      "runs": [
+        {
+          "code": "write_xlsx(\n  list(repairs = repairs, faults = count(repairs, depot, Fault)),\n  \"repairs.xlsx\"\n)",
+          "evidence": "file",
+          "path": "repairs.xlsx",
+          "purpose": "write a workbook with two sheets: every repair, and the faults counted by depot",
+          "task": "Write `repairs.xlsx` with `write_xlsx()`, from a list of two tables: `repairs = repairs` and `faults = count(repairs, depot, Fault)`."
+        }
+      ],
+      "explain": "`write_xlsx()` writes each table in a named list to its own sheet, named after it, so `repairs.xlsx` has a repairs sheet and a faults sheet, with each column's type kept: the dates are real dates in Excel. It writes no formatting, titles or totals, which keeps the file easy to read back in. To share results with someone who works in Excel, a clean workbook like this beats a CSV, whose dates and numbers Excel may reinterpret."
+    }
+  ]
+}

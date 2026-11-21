@@ -1,0 +1,135 @@
+{
+  "id": "09-layers",
+  "version": 2,
+  "world": true,
+  "title": "Layers",
+  "modes": ["demonstration", "guided", "solo"],
+  "script": "09-layers.R",
+  "summary": "Build charts layer by layer with ggplot2: map the stations with size and colour, give each day its own line, split a chart into a grid of panels, chart a share computed by a stat, stack, fill and dodge bars, and spread out overlapping points.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse)",
+      "runs": [
+        {"code": "library(tidyverse)", "evidence": "attached",
+         "purpose": "load the tidyverse, which includes ggplot2",
+         "task": "Load the tidyverse with `library()`."}
+      ],
+      "explain": "`library(tidyverse)` attaches ggplot2, whose layers this lesson builds, along with readr, dplyr and lubridate."
+    },
+    {
+      "id": "map",
+      "title": "A map: aesthetics and coord_quickmap()",
+      "runs": [
+        {"code": "stations <- read_csv(\"data/stations.csv\")", "evidence": "assign",
+         "alternatives": ["stations = read_csv('data/stations.csv', show_col_types = FALSE)"],
+         "values": {"n_stations": "format(nrow(stations))", "n_hoods": "format(n_distinct(stations$neighbourhood))"},
+         "purpose": "read the station registry into `stations`",
+         "task": "Read `data/stations.csv` into a variable called `stations`."},
+        {"code": "ggplot(stations, aes(x = lon, y = lat, size = docks, colour = neighbourhood)) +\n  geom_point()", "evidence": "ggplot",
+         "alternatives": ["ggplot(stations) + geom_point(aes(lon, lat, size = docks, colour = neighbourhood))"],
+         "values": {"min_docks": "format(min(stations$docks))", "max_docks": "format(max(stations$docks))"},
+         "purpose": "plot each station at its longitude and latitude, sized by its docks and coloured by its neighbourhood",
+         "task": "Plot `stations` as points with `lon` on x and `lat` on y, mapping `size` to `docks` and `colour` to `neighbourhood`."},
+        {"code": "ggplot(stations, aes(x = lon, y = lat, size = docks, colour = neighbourhood)) +\n  geom_point() +\n  coord_quickmap()", "evidence": "ggplot",
+         "alternatives": ["ggplot(stations, aes(lon, lat, size = docks, colour = neighbourhood)) + geom_point() + coord_quickmap()"],
+         "purpose": "draw the same map with a coordinate system for maps",
+         "task": "Draw the same chart again, adding `coord_quickmap()`."}
+      ],
+      "explain": "An aesthetic is anything about a point that can show a variable: position, size, colour, shape, transparency (`alpha`). Inside `aes()`, `size = docks` maps the number of docks to the point's size, from {min_docks} to {max_docks}, and `colour = neighbourhood` gives each of the {n_hoods} neighbourhoods its own colour; ggplot2 adds a legend for each. Shape works the same way for a variable with a few values: there are six shapes to go round. The first map is stretched, because a degree of longitude is shorter than a degree of latitude this far north. `coord_quickmap()` changes the coordinate system to correct that, so the city has its true shape."
+    },
+    {
+      "id": "hourly",
+      "title": "A week, hour by hour: geom_line()",
+      "runs": [
+        {"code": "week <- read_csv(\"data/trips-week.csv\")", "evidence": "assign",
+         "alternatives": ["week = read_csv('data/trips-week.csv', show_col_types = FALSE)"],
+         "values": {"n_week": "format(nrow(week), big.mark = \",\")"},
+         "purpose": "read one week of trips into `week`",
+         "task": "Read `data/trips-week.csv` into a variable called `week`."},
+        {"code": "hourly <- week |>\n  count(day = wday(started_at, label = TRUE), hour = hour(started_at))", "evidence": "assign",
+         "alternatives": ["hourly = week |> mutate(day = wday(started_at, label = TRUE), hour = hour(started_at)) |> count(day, hour)"],
+         "values": {"n_hourly": "format(nrow(hourly))"},
+         "purpose": "count the trips in each hour of each day, as `hourly`",
+         "task": "Count the trips in `week` by `day`, made with `wday(started_at, label = TRUE)`, and `hour`, made with `hour(started_at)`, and store the result in `hourly`."},
+        {"code": "ggplot(hourly, aes(x = hour, y = n)) +\n  geom_line()", "evidence": "ggplot",
+         "alternatives": ["ggplot(hourly, aes(hour, n)) + geom_line()"],
+         "purpose": "draw the trips per hour as a line",
+         "task": "Draw `n` against `hour` for `hourly` with `geom_line()`."}
+      ],
+      "explain": "`hourly` has a row for each day and hour that had trips: {n_hourly}, out of the {n_week} trips. Its line is a mess: `geom_line()` joins every point from left to right, so at each hour it jumps up and down between the seven days. ggplot2 has no way to know the points belong to seven separate days until a mapping says so."
+    },
+    {
+      "id": "groups",
+      "title": "One line per day: group and colour",
+      "runs": [
+        {"code": "ggplot(hourly, aes(x = hour, y = n, group = day)) +\n  geom_line()", "evidence": "ggplot",
+         "alternatives": ["ggplot(hourly, aes(hour, n, group = day)) + geom_line()"],
+         "purpose": "draw one line for each day",
+         "task": "Draw the same line again, adding `group = day` inside `aes()`."},
+        {"code": "ggplot(hourly, aes(x = hour, y = n, colour = day)) +\n  geom_line()", "evidence": "ggplot",
+         "alternatives": ["ggplot(hourly, aes(hour, n, colour = day)) + geom_line()"],
+         "purpose": "colour each day's line differently",
+         "task": "Draw it once more, with `colour = day` instead of `group = day`."}
+      ],
+      "explain": "`group = day` splits the data into one group per day, and `geom_line()` draws each group as its own line. The lines are all the same colour, though, so you can't tell which is which. Mapping `colour = day` groups the data in the same way, and also tells the days apart, with a legend. Weekdays have two peaks, the rush hours; the weekend lines have one broad hump around the middle of the day."
+    },
+    {
+      "id": "facets",
+      "title": "A grid of panels: facet_grid()",
+      "runs": [
+        {"code": "ggplot(week, aes(x = duration_min)) +\n  geom_histogram(binwidth = 2) +\n  facet_grid(member_type ~ bike_type)", "evidence": "ggplot",
+         "alternatives": ["ggplot(week, aes(duration_min)) + geom_histogram(binwidth = 2) + facet_grid(rows = vars(member_type), cols = vars(bike_type))"],
+         "values": {
+           "med_casual_classic": "format(median(week$duration_min[week$member_type == \"casual\" & week$bike_type == \"classic\"]))",
+           "med_member_electric": "format(median(week$duration_min[week$member_type == \"member\" & week$bike_type == \"electric\"]))"
+         },
+         "purpose": "draw a histogram of trip lengths for each combination of member type and bike type",
+         "task": "Draw a histogram of `duration_min` with `binwidth = 2`, split into a grid with `facet_grid()`: a row for each `member_type` and a column for each `bike_type`."}
+      ],
+      "explain": "`facet_grid(member_type ~ bike_type)` draws one panel for each combination: the variable before `~` makes the rows, the one after makes the columns. Every panel shares the same axes, so they compare at a glance: the members' trips, in the bottom row, bunch up at the short end, and e-bike trips are shorter than classic ones. The median trip is {med_casual_classic} minutes for a casual rider on a classic bike, and {med_member_electric} for a member on an e-bike. `facet_wrap()`, from lesson 1, lays out panels for a single variable instead."
+    },
+    {
+      "id": "stats",
+      "title": "Stats: after_stat()",
+      "runs": [
+        {"code": "ggplot(week, aes(x = member_type, y = after_stat(prop), group = 1)) +\n  geom_bar()", "evidence": "ggplot",
+         "alternatives": ["ggplot(week) + geom_bar(aes(member_type, after_stat(prop), group = 1))"],
+         "values": {"member_share": "format(round(100 * mean(week$member_type == \"member\")))"},
+         "purpose": "draw each member type's share of the week's trips",
+         "task": "Draw a bar chart of `member_type` whose bars show each type's share of trips: map `y` to `after_stat(prop)` and `group` to 1."}
+      ],
+      "explain": "A bar chart counts before it draws: `geom_bar()` uses a stat, `stat_count()`, which turns the rows into a count for each bar, and also works out `prop`, each bar's share. `after_stat(prop)` maps y to that share instead of the count. `group = 1` puts all the bars in one group, so that each share is of the whole week; without it, each bar would be its own group, and 100% of itself. Members made {member_share}% of the trips."
+    },
+    {
+      "id": "positions",
+      "title": "Positions: stack, fill and dodge",
+      "runs": [
+        {"code": "ggplot(week, aes(x = hour(started_at), fill = bike_type)) +\n  geom_bar()", "evidence": "ggplot",
+         "alternatives": ["ggplot(week, aes(hour(started_at), fill = bike_type)) + geom_bar(position = 'stack')"],
+         "purpose": "count the trips in each hour, with the bars split by bike type",
+         "task": "Draw a bar chart of `hour(started_at)` with `fill = bike_type`."},
+        {"code": "ggplot(week, aes(x = hour(started_at), fill = bike_type)) +\n  geom_bar(position = \"fill\")", "evidence": "ggplot",
+         "alternatives": ["ggplot(week, aes(hour(started_at), fill = bike_type)) + geom_bar(position = position_fill())"],
+         "purpose": "show each bike type's share of the trips in each hour",
+         "task": "Draw it again with `position = \"fill\"` in `geom_bar()`."},
+        {"code": "ggplot(week, aes(x = hour(started_at), fill = bike_type)) +\n  geom_bar(position = \"dodge\")", "evidence": "ggplot",
+         "alternatives": ["ggplot(week, aes(hour(started_at), fill = bike_type)) + geom_bar(position = position_dodge())"],
+         "purpose": "put the two bike types' bars side by side",
+         "task": "Draw it again with `position = \"dodge\"`."}
+      ],
+      "explain": "A position adjusts bars that would sit in the same place. By default they stack: each bar's height is the hour's trips, split into its bike types. `position = \"fill\"` stretches every stack to the same height, so the bars show shares instead of counts: e-bikes' share of each hour. `position = \"dodge\"` puts the bike types side by side, which makes their counts easy to compare within an hour but harder to total."
+    },
+    {
+      "id": "jitter",
+      "title": "Overlapping points: jitter",
+      "runs": [
+        {"code": "ggplot(week, aes(x = member_type, y = duration_min)) +\n  geom_point(\n    position = position_jitter(width = 0.3, height = 0, seed = 1),\n    alpha = 0.2\n  )", "evidence": "ggplot",
+         "alternatives": ["ggplot(week, aes(member_type, duration_min)) + geom_point(alpha = 0.2, position = position_jitter(0.3, 0, seed = 1))"],
+         "purpose": "plot every trip's length by member type, with the points spread sideways so they don't hide each other",
+         "task": "Plot `duration_min` against `member_type` as points, spread sideways with `position = position_jitter(width = 0.3, height = 0, seed = 1)`, and set `alpha = 0.2`."}
+      ],
+      "explain": "With plain points, all of a member type's trips would sit in one vertical line, thousands on top of each other. `position_jitter()` moves each point sideways by a small random amount (`height = 0` leaves the lengths as they are), so the crowd shows: where the points are thickest is where most trips are. `alpha = 0.2` makes each point faint, so overlaps look darker. `seed = 1` fixes the random moves, so the chart is the same every time. Together, the layers a chart is built from are its data, mappings, geoms, stats, positions, facets and coordinate system; each has a default you can change."
+    }
+  ]
+}

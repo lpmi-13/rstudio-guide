@@ -112,7 +112,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(week, aes(distance_km, duration_min)) + geom_point()",
      "dim": 1,
-     "fp": "cd772e7b83b49bb7c98d0068fd3ad829",
+     "fp": "f464458146e0dec64aecc62b98f565c3",
      "fp_any": null
     },
     {
@@ -120,7 +120,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(week) + geom_point(aes(x = distance_km, y = duration_min))",
      "dim": 1,
-     "fp": "cd772e7b83b49bb7c98d0068fd3ad829",
+     "fp": "f464458146e0dec64aecc62b98f565c3",
      "fp_any": null
     }
    ],
@@ -128,7 +128,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "cd772e7b83b49bb7c98d0068fd3ad829",
+   "fp": "f464458146e0dec64aecc62b98f565c3",
    "fp_any": null,
    "index": 3,
    "messages": [],
@@ -148,7 +148,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(week, aes(distance_km, duration_min, color = bike_type)) + geom_point(alpha = 0.3) + geom_smooth(method = lm)",
      "dim": 1,
-     "fp": "8aaa284647c1c20bc0a1d6aa4a51ac9e",
+     "fp": "ae074835dfdc3037b46ddcfe7074e736",
      "fp_any": null
     },
     {
@@ -156,7 +156,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(week, aes(distance_km, duration_min)) + geom_point(aes(colour = bike_type), alpha = 0.3) + geom_smooth(aes(colour = bike_type), method = \"lm\")",
      "dim": 1,
-     "fp": "8aaa284647c1c20bc0a1d6aa4a51ac9e",
+     "fp": "ae074835dfdc3037b46ddcfe7074e736",
      "fp_any": null
     }
    ],
@@ -164,7 +164,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "8aaa284647c1c20bc0a1d6aa4a51ac9e",
+   "fp": "ae074835dfdc3037b46ddcfe7074e736",
    "fp_any": null,
    "index": 4,
    "messages": [
@@ -187,7 +187,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(week, aes(distance_km, duration_min, color = bike_type)) + geom_point(alpha = 0.3) + geom_smooth(method = 'lm') + labs(title = 'E-bikes cover the same distance faster', x = 'Distance (km)', y = 'Duration (minutes)', color = 'Bike type') + scale_color_viridis_d(end = 0.8)",
      "dim": 1,
-     "fp": "ec849da9f6508b917b2cd4ed265fbcfb",
+     "fp": "ce12fd30624ac3bef7beca641a3ee5de",
      "fp_any": null
     }
    ],
@@ -195,7 +195,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "ec849da9f6508b917b2cd4ed265fbcfb",
+   "fp": "ce12fd30624ac3bef7beca641a3ee5de",
    "fp_any": null,
    "index": 5,
    "messages": [
@@ -273,7 +273,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(week, aes(member_type, fill = bike_type)) + geom_bar()",
      "dim": 1,
-     "fp": "6f4ad8078425884cba7b62286d3f9ce5",
+     "fp": "b4763228f4b7aadddcc7e78c6c500c40",
      "fp_any": null
     }
    ],
@@ -281,7 +281,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "6f4ad8078425884cba7b62286d3f9ce5",
+   "fp": "b4763228f4b7aadddcc7e78c6c500c40",
    "fp_any": null,
    "index": 8,
    "messages": [],
@@ -299,7 +299,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(week, aes(duration_min)) + geom_histogram(binwidth = 2)",
      "dim": 1,
-     "fp": "aa5b2ccc53e143136af30d8ded885282",
+     "fp": "661cd56b61f2a9b622ed06ca4505a41d",
      "fp_any": null
     }
    ],
@@ -307,7 +307,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "aa5b2ccc53e143136af30d8ded885282",
+   "fp": "661cd56b61f2a9b622ed06ca4505a41d",
    "fp_any": null,
    "index": 9,
    "messages": [],
@@ -328,7 +328,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(week, aes(started_at)) + geom_histogram(binwidth = 60 * 60)",
      "dim": 1,
-     "fp": "eb32042fae5bbabfb24601e136b5fda2",
+     "fp": "c0193babddd1ae4c38d1be5e9b457022",
      "fp_any": null
     }
    ],
@@ -336,7 +336,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "eb32042fae5bbabfb24601e136b5fda2",
+   "fp": "c0193babddd1ae4c38d1be5e9b457022",
    "fp_any": null,
    "index": 10,
    "messages": [],
@@ -383,7 +383,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(week, aes(duration_min, color = member_type)) + geom_density()",
      "dim": 1,
-     "fp": "0dba2c207a6f49515a56f11091444dd6",
+     "fp": "f5949010a9e1e0ed4fb544ed660ffe23",
      "fp_any": null
     }
    ],
@@ -391,7 +391,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "0dba2c207a6f49515a56f11091444dd6",
+   "fp": "f5949010a9e1e0ed4fb544ed660ffe23",
    "fp_any": null,
    "index": 12,
    "messages": [],
@@ -409,7 +409,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(week, aes(distance_km, duration_min, color = bike_type)) + geom_point(alpha = 0.3) + facet_wrap(vars(member_type))",
      "dim": 1,
-     "fp": "8a4a67ef01912bdef95c0fbdcae8c56f",
+     "fp": "2851daa6bd277dcfc28369b0eabb62ea",
      "fp_any": null
     }
    ],
@@ -417,7 +417,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "8a4a67ef01912bdef95c0fbdcae8c56f",
+   "fp": "2851daa6bd277dcfc28369b0eabb62ea",
    "fp_any": null,
    "index": 13,
    "messages": [],
@@ -433,12 +433,12 @@
   }
  ],
  "stamp": {
-  "evidence": "6975ac8d7ad699c3a66635638064a328ac1710406b714d34220eb9bced7dbb8c",
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
   "format": "1",
-  "image": "3c0b182f40fef71d474a0cb37e54efd6011616ae218ee460ff82417f952dd665",
-  "lesson": "55b6ec876534e8d7422e264460226da8ead6608fa5f71ff6e9e42b9abd9c6b42",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "2364577e84817c02b429fc167dc5d78c1def11585a4bafd390b6cf55815d6d24",
   "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
-  "runner": "9472982345c75b9e0a26c182169d195b09e2d6cf627aebf393bc826f06f28b58",
-  "world": "b5da1a346392e6f2105f0c5c907fee44ee37abd0549a94593dda88cdf46a47a1"
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
  }
 }

@@ -1,0 +1,322 @@
+{
+ "lesson": "27-base-r",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "week",
+     "class": "spec_tbl_df",
+     "code": "week = read_csv('data/trips-week.csv', show_col_types = FALSE)",
+     "dim": [
+      4540,
+      10
+     ],
+     "fp": "850d6021e84462d03174ed63cad2f913",
+     "fp_any": "850d6021e84462d03174ed63cad2f913"
+    }
+   ],
+   "assigned": "week",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    4540,
+    10
+   ],
+   "files": [],
+   "fp": "850d6021e84462d03174ed63cad2f913",
+   "fp_any": "850d6021e84462d03174ed63cad2f913",
+   "index": 1,
+   "messages": [
+    "Rows: 4540 Columns: 10",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): bike_id, member_type, bike_type\ndbl  (5): trip_id, start_station, end_station, distance_km, duration_min\ndttm (2): started_at, ended_at",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "vectors",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "minutes",
+     "class": "numeric",
+     "code": "minutes = week[['duration_min']]",
+     "dim": 4540,
+     "fp": "de1cadb2f2587985b1a4acdb31da342b",
+     "fp_any": null
+    }
+   ],
+   "assigned": "minutes",
+   "attached": [],
+   "class": "numeric",
+   "dim": 4540,
+   "files": [],
+   "fp": "de1cadb2f2587985b1a4acdb31da342b",
+   "fp_any": null,
+   "index": 2,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "vectors",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "numeric",
+     "code": "minutes[which(minutes > 60)]",
+     "dim": 29,
+     "fp": "ccdb1a0b686f7e67e476eb9c2c7e2bc2",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "numeric",
+   "dim": 29,
+   "files": [],
+   "fp": "ccdb1a0b686f7e67e476eb9c2c7e2bc2",
+   "fp_any": null,
+   "index": 3,
+   "messages": [],
+   "output": " [1]  93.5  62.3  60.8  60.3  68.8  99.5  60.7  72.6  85.0  91.5  71.3  79.1  77.8  70.6  64.7  74.7  91.8  94.3  66.2  71.3  68.4 104.5  71.7  66.0  69.6 103.9  69.3  67.7  61.2",
+   "plot": false,
+   "step": "vectors",
+   "values": {
+    "n_long": "29"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "week |> filter(member_type == 'casual', duration_min > 60) |> select(start_station, end_station, duration_min)",
+     "dim": [
+      27,
+      3
+     ],
+     "fp": "c1528f48407cf8c6a2e77ed401ea8d97",
+     "fp_any": "af95614dc1de933a2b4e62a7e6c3e244"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    27,
+    3
+   ],
+   "files": [],
+   "fp": "c1528f48407cf8c6a2e77ed401ea8d97",
+   "fp_any": "af95614dc1de933a2b4e62a7e6c3e244",
+   "index": 4,
+   "messages": [],
+   "output": "# A tibble: 27 × 3\n   start_station end_station duration_min\n           <dbl>       <dbl>        <dbl>\n 1           171         167         93.5\n 2           146         146         62.3\n 3           106         136         60.8\n 4           114         132         60.3\n 5           105         176         68.8\n 6           176         169         99.5\n 7           117         154         60.7\n 8           176         120         72.6\n 9           174         176         85  \n10           113         113         91.5\n# ℹ 17 more rows",
+   "plot": false,
+   "step": "frames",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "table",
+     "code": "table(week$bike_type)",
+     "dim": 2,
+     "fp": "cd603d6d06fce00f59f5d4ee4ad2b5da",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "table",
+   "dim": 2,
+   "files": [],
+   "fp": "cd603d6d06fce00f59f5d4ee4ad2b5da",
+   "fp_any": null,
+   "index": 5,
+   "messages": [],
+   "output": "\n classic electric \n    2677     1863 ",
+   "plot": false,
+   "step": "columns",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "NULL",
+   "dim": 0,
+   "files": [],
+   "fp": "2c0a8a99dc147d5445c3b49d035665b2",
+   "fp_any": null,
+   "index": 6,
+   "messages": [],
+   "output": "distance_km : 3.137022 \nduration_min : 15.73811 ",
+   "plot": false,
+   "step": "columns",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "logical",
+     "code": "sapply(week, is.numeric)",
+     "dim": 10,
+     "fp": "9f32aa9240d478a46ed870ceb8df1a38",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "logical",
+   "dim": 10,
+   "files": [],
+   "fp": "9f32aa9240d478a46ed870ceb8df1a38",
+   "fp_any": null,
+   "index": 7,
+   "messages": [],
+   "output": "      trip_id       bike_id    started_at      ended_at start_station   end_station   member_type     bike_type   distance_km  duration_min \n         TRUE         FALSE         FALSE         FALSE          TRUE          TRUE         FALSE         FALSE          TRUE          TRUE ",
+   "plot": false,
+   "step": "apply",
+   "values": {
+    "n_numeric": "5"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "list",
+     "code": "lapply(split(week$duration_min, week$member_type), \\(x) median(x))",
+     "dim": 2,
+     "fp": "efcfa55cbf257f091b2e55fe662dbaa6",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "list",
+   "dim": 2,
+   "files": [],
+   "fp": "efcfa55cbf257f091b2e55fe662dbaa6",
+   "fp_any": null,
+   "index": 8,
+   "messages": [],
+   "output": "$casual\n[1] 16.2\n\n$member\n[1] 12.1\n",
+   "plot": false,
+   "step": "apply",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "histogram",
+   "dim": 6,
+   "files": [],
+   "fp": "e986e10e2eb973c197aae897c79552a5",
+   "fp_any": null,
+   "index": 9,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "plots",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "NULL",
+   "dim": 0,
+   "files": [],
+   "fp": "2c0a8a99dc147d5445c3b49d035665b2",
+   "fp_any": null,
+   "index": 10,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "plots",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "matrix",
+   "dim": [
+    2,
+    1
+   ],
+   "files": [],
+   "fp": "30e835a1c0a3ffc757049a9aa9582630",
+   "fp_any": null,
+   "index": 11,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "plots",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  }
+ ],
+ "stamp": {
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "format": "1",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "65f9586128a57e10c63238a8154c2fee87e321246834eed7bc85bc836f349b9e",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
+ }
+}

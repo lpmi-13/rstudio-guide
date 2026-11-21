@@ -1,0 +1,455 @@
+{
+ "lesson": "09-layers",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "stations",
+     "class": "spec_tbl_df",
+     "code": "stations = read_csv('data/stations.csv', show_col_types = FALSE)",
+     "dim": [
+      81,
+      8
+     ],
+     "fp": "6d66718310fccdef241ea5ff39a0ec50",
+     "fp_any": "6d66718310fccdef241ea5ff39a0ec50"
+    }
+   ],
+   "assigned": "stations",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    81,
+    8
+   ],
+   "files": [],
+   "fp": "6d66718310fccdef241ea5ff39a0ec50",
+   "fp_any": "6d66718310fccdef241ea5ff39a0ec50",
+   "index": 1,
+   "messages": [
+    "Rows: 81 Columns: 8",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): name, neighbourhood, former_name\ndbl  (4): station_id, lat, lon, docks\ndate (1): opened",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "map",
+   "values": {
+    "n_hoods": "11",
+    "n_stations": "81"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(stations) + geom_point(aes(lon, lat, size = docks, colour = neighbourhood))",
+     "dim": 1,
+     "fp": "2639fc201e89b39d1a969cc82c9b99ac",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "2639fc201e89b39d1a969cc82c9b99ac",
+   "fp_any": null,
+   "index": 2,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "map",
+   "values": {
+    "max_docks": "34",
+    "min_docks": "11"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(stations, aes(lon, lat, size = docks, colour = neighbourhood)) + geom_point() + coord_quickmap()",
+     "dim": 1,
+     "fp": "2639fc201e89b39d1a969cc82c9b99ac",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "2639fc201e89b39d1a969cc82c9b99ac",
+   "fp_any": null,
+   "index": 3,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "map",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "week",
+     "class": "spec_tbl_df",
+     "code": "week = read_csv('data/trips-week.csv', show_col_types = FALSE)",
+     "dim": [
+      4540,
+      10
+     ],
+     "fp": "850d6021e84462d03174ed63cad2f913",
+     "fp_any": "850d6021e84462d03174ed63cad2f913"
+    }
+   ],
+   "assigned": "week",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    4540,
+    10
+   ],
+   "files": [],
+   "fp": "850d6021e84462d03174ed63cad2f913",
+   "fp_any": "850d6021e84462d03174ed63cad2f913",
+   "index": 4,
+   "messages": [
+    "Rows: 4540 Columns: 10",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): bike_id, member_type, bike_type\ndbl  (5): trip_id, start_station, end_station, distance_km, duration_min\ndttm (2): started_at, ended_at",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "hourly",
+   "values": {
+    "n_week": "4,540"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "hourly",
+     "class": "tbl_df",
+     "code": "hourly = week |> mutate(day = wday(started_at, label = TRUE), hour = hour(started_at)) |> count(day, hour)",
+     "dim": [
+      155,
+      3
+     ],
+     "fp": "33f6bd5ff8b36eab88c522c41ea68e8b",
+     "fp_any": "7de8c400f4e4db659db40be315027246"
+    }
+   ],
+   "assigned": "hourly",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    155,
+    3
+   ],
+   "files": [],
+   "fp": "33f6bd5ff8b36eab88c522c41ea68e8b",
+   "fp_any": "7de8c400f4e4db659db40be315027246",
+   "index": 5,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "hourly",
+   "values": {
+    "n_hourly": "155"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(hourly, aes(hour, n)) + geom_line()",
+     "dim": 1,
+     "fp": "27f0e9cb06d006264e1fdcf54f4faf83",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "27f0e9cb06d006264e1fdcf54f4faf83",
+   "fp_any": null,
+   "index": 6,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "hourly",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(hourly, aes(hour, n, group = day)) + geom_line()",
+     "dim": 1,
+     "fp": "06810d2fd0b049d666b1d27973e46855",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "06810d2fd0b049d666b1d27973e46855",
+   "fp_any": null,
+   "index": 7,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "groups",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(hourly, aes(hour, n, colour = day)) + geom_line()",
+     "dim": 1,
+     "fp": "6ac6be7654ee32644d906fc675fc5671",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "6ac6be7654ee32644d906fc675fc5671",
+   "fp_any": null,
+   "index": 8,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "groups",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week, aes(duration_min)) + geom_histogram(binwidth = 2) + facet_grid(rows = vars(member_type), cols = vars(bike_type))",
+     "dim": 1,
+     "fp": "751ee493c43b44fd857fb8b207fa90d6",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "751ee493c43b44fd857fb8b207fa90d6",
+   "fp_any": null,
+   "index": 9,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "facets",
+   "values": {
+    "med_casual_classic": "18.4",
+    "med_member_electric": "10.5"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week) + geom_bar(aes(member_type, after_stat(prop), group = 1))",
+     "dim": 1,
+     "fp": "b0396c8076b007454228a615d323edb8",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "b0396c8076b007454228a615d323edb8",
+   "fp_any": null,
+   "index": 10,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "stats",
+   "values": {
+    "member_share": "61"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week, aes(hour(started_at), fill = bike_type)) + geom_bar(position = 'stack')",
+     "dim": 1,
+     "fp": "50f90d5b2f4da56d0f2c62250d561f97",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "50f90d5b2f4da56d0f2c62250d561f97",
+   "fp_any": null,
+   "index": 11,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "positions",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week, aes(hour(started_at), fill = bike_type)) + geom_bar(position = position_fill())",
+     "dim": 1,
+     "fp": "99ef82604d70a5d521860da07119bb8a",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "99ef82604d70a5d521860da07119bb8a",
+   "fp_any": null,
+   "index": 12,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "positions",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week, aes(hour(started_at), fill = bike_type)) + geom_bar(position = position_dodge())",
+     "dim": 1,
+     "fp": "49c729ae702840a4cec5684ecc25b4e0",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "49c729ae702840a4cec5684ecc25b4e0",
+   "fp_any": null,
+   "index": 13,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "positions",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(week, aes(member_type, duration_min)) + geom_point(alpha = 0.2, position = position_jitter(0.3, 0, seed = 1))",
+     "dim": 1,
+     "fp": "ef7b3490dc190502c4c63720aaca539d",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "ef7b3490dc190502c4c63720aaca539d",
+   "fp_any": null,
+   "index": 14,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "jitter",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  }
+ ],
+ "stamp": {
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "format": "1",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "4c056d63ea16efde502b6eac2d9d218afb81ee56d3f4678b50f497ecca42b434",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
+ }
+}

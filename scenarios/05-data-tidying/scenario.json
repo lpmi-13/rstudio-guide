@@ -1,0 +1,156 @@
+{
+  "id": "05-data-tidying",
+  "version": 2,
+  "world": true,
+  "title": "Data tidying",
+  "modes": ["demonstration", "guided", "solo"],
+  "script": "05-data-tidying.R",
+  "summary": "Reshape Larkhaven Bikes' summary tables and survey into tidy data with tidyr: make tables longer, split column names that hold two variables, keep part of a name as a column name with `.value`, and widen a summary into a report.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse)",
+      "runs": [
+        {"code": "library(tidyverse)", "evidence": "attached",
+         "purpose": "load the tidyverse, which includes tidyr",
+         "task": "Load the tidyverse with `library()`."}
+      ],
+      "explain": "`library(tidyverse)` attaches tidyr, whose `pivot_longer()` and `pivot_wider()` this lesson uses, along with readr and dplyr."
+    },
+    {
+      "id": "tidy",
+      "title": "Tidy data, and a table that isn't",
+      "runs": [
+        {"code": "months <- read_csv(\"data/station-months.csv\")", "evidence": "assign",
+         "alternatives": ["months = read_csv('data/station-months.csv', show_col_types = FALSE)"],
+         "values": {"n_stations": "format(nrow(months))"},
+         "purpose": "read the trips started at each station in each month of 2025 into `months`",
+         "task": "Read `data/station-months.csv` into a variable called `months` with `read_csv()`."},
+        {"code": "months", "evidence": "value",
+         "purpose": "print `months`",
+         "task": "Print `months`."}
+      ],
+      "explain": "Data is tidy when each variable is a column, each observation is a row, and each value is a cell. `months` is laid out for people to read instead: one row for each of {n_stations} stations, with the month, a variable, spread over twelve column names from `jan` to `dec`. The number of trips, a single variable, fills twelve columns. To total each month, or to chart the year, the month needs to be a column of its own."
+    },
+    {
+      "id": "longer",
+      "title": "Lengthen: pivot_longer()",
+      "runs": [
+        {"code": "months |>\n  pivot_longer(\n    cols = jan:dec,\n    names_to = \"month\",\n    values_to = \"trips\"\n  )", "evidence": "value",
+         "alternatives": ["months |> pivot_longer(cols = !c(station_id, name), names_to = 'month', values_to = 'trips')"],
+         "values": {
+           "n_long": "format(nrow(pivot_longer(months, jan:dec, names_to = \"month\")))",
+           "n_na": "format(sum(is.na(pivot_longer(months, jan:dec, names_to = \"month\")$value)))"
+         },
+         "purpose": "turn the twelve month columns into rows: one column for the month, one for the trips",
+         "task": "Make `months` longer with `pivot_longer()`: stack the columns `jan` to `dec`, putting their names in a column called `month` and their values in one called `trips`."},
+        {"code": "monthly <- months |>\n  pivot_longer(\n    cols = jan:dec,\n    names_to = \"month\",\n    values_to = \"trips\",\n    values_drop_na = TRUE\n  )", "evidence": "assign",
+         "alternatives": ["monthly = months |> pivot_longer(jan:dec, names_to = 'month', values_to = 'trips') |> filter(!is.na(trips))"],
+         "values": {"n_monthly": "format(nrow(monthly))"},
+         "purpose": "do the same without the empty cells, and keep it as `monthly`",
+         "task": "Do the same again, adding `values_drop_na = TRUE`, and store the result in `monthly`."}
+      ],
+      "explain": "`pivot_longer()` makes a table longer. `cols` picks the columns to stack, `names_to` names the new column their names go into, and `values_to` the one their values go into. Each station now has a row per month: {n_long} rows of station, month and trips. {n_na} of them have no count: all twelve months of the two Saltings stations, where no trip started in 2025. `values_drop_na = TRUE` leaves those cells out, so `monthly` has {n_monthly} rows."
+    },
+    {
+      "id": "use",
+      "title": "Long data is easy to work with",
+      "runs": [
+        {"code": "monthly |> summarize(trips = sum(trips), .by = month)", "evidence": "value",
+         "alternatives": ["monthly |> group_by(month) |> summarize(trips = sum(trips))"], "order": "any",
+         "values": {
+           "peak_month": "local({s <- summarize(monthly, trips = sum(trips), .by = month); s$month[which.max(s$trips)]})",
+           "peak_trips": "format(max(summarize(monthly, trips = sum(trips), .by = month)$trips), big.mark = \",\")",
+           "low_month": "local({s <- summarize(monthly, trips = sum(trips), .by = month); s$month[which.min(s$trips)]})",
+           "low_trips": "format(min(summarize(monthly, trips = sum(trips), .by = month)$trips), big.mark = \",\")"
+         },
+         "purpose": "total the trips in each month, across all stations",
+         "task": "Total the `trips` for each `month` in `monthly`, with `summarize()` and `.by`."},
+        {"code": "monthly |> slice_max(trips, by = month)", "evidence": "value", "order": "any",
+         "alternatives": ["monthly |> group_by(month) |> slice_max(trips) |> ungroup()"],
+         "values": {
+           "n_slices": "format(nrow(slice_max(monthly, trips, by = month)))",
+           "peak_top": "local({s <- summarize(monthly, trips = sum(trips), .by = month); slice_max(filter(monthly, month == s$month[which.max(s$trips)]), trips)$name[1]})",
+           "peak_top_trips": "local({s <- summarize(monthly, trips = sum(trips), .by = month); format(max(filter(monthly, month == s$month[which.max(s$trips)])$trips))})"
+         },
+         "purpose": "find the busiest station in each month",
+         "task": "Find the station with the most `trips` in each `month`, with `slice_max()` and its `by` argument."}
+      ],
+      "explain": "With one column of months and one of trips, a question about months is one verb. The busiest month was {peak_month}, with {peak_trips} trips; the quietest was {low_month}, with {low_trips}. `slice_max()` keeps the row with the most trips in each month, {n_slices} rows: in {peak_month} that was {peak_top}, with {peak_top_trips} trips. In the wide table, each of these would need twelve columns named one by one."
+    },
+    {
+      "id": "names-sep",
+      "title": "Two variables in each name: names_sep",
+      "runs": [
+        {"code": "periods <- read_csv(\"data/station-periods.csv\")", "evidence": "assign",
+         "alternatives": ["periods = read_csv('data/station-periods.csv', show_col_types = FALSE)"],
+         "purpose": "read the trips started at each station on weekdays and weekends, before and after noon, into `periods`",
+         "task": "Read `data/station-periods.csv` into a variable called `periods`."},
+        {"code": "periods |>\n  pivot_longer(\n    cols = !station_id,\n    names_to = c(\"day\", \"half\"),\n    names_sep = \"_\",\n    values_to = \"trips\"\n  )", "evidence": "value",
+         "alternatives": ["periods |> pivot_longer(weekday_am:weekend_pm, names_to = c('day', 'half'), names_sep = '_', values_to = 'trips')"],
+         "values": {"first_am": "format(periods$weekday_am[1])", "first_pm": "format(periods$weekday_pm[1], big.mark = \",\")"},
+         "purpose": "stack the four count columns, splitting each name into the kind of day and the half of the day",
+         "task": "Make `periods` longer: stack every column except `station_id`, split each name at `_` into two columns, `day` and `half`, with `names_to` and `names_sep`, and call the values `trips`."}
+      ],
+      "explain": "Each name in `periods`, such as `weekday_am`, holds two variables: the kind of day, and whether the trip started before noon (`am`) or after (`pm`). Given two names in `names_to`, `pivot_longer()` splits each column name at `names_sep` and puts the parts in `day` and `half`. `cols = !station_id` picks every column except `station_id`. Station 101 had {first_am} weekday trips before noon and {first_pm} after, now in two rows instead of two columns."
+    },
+    {
+      "id": "value",
+      "title": "Part of a name is a column: .value",
+      "runs": [
+        {"code": "riders <- read_csv(\"data/station-riders.csv\")", "evidence": "assign",
+         "alternatives": ["riders = read_csv('data/station-riders.csv', show_col_types = FALSE)"],
+         "purpose": "read each station's trips and median trip length for members and casual riders into `riders`",
+         "task": "Read `data/station-riders.csv` into a variable called `riders`."},
+        {"code": "riders |>\n  pivot_longer(\n    cols = !station_id,\n    names_to = c(\".value\", \"member_type\"),\n    names_sep = \"_\"\n  )", "evidence": "value",
+         "alternatives": ["riders |> pivot_longer(trips_member:minutes_casual, names_to = c('.value', 'member_type'), names_sep = '_')"],
+         "values": {
+           "n_riders": "format(nrow(pivot_longer(riders, !station_id, names_to = c(\".value\", \"member_type\"), names_sep = \"_\")))",
+           "m_trips": "format(riders$trips_member[1], big.mark = \",\")", "m_min": "format(riders$minutes_member[1])",
+           "c_trips": "format(riders$trips_casual[1], big.mark = \",\")", "c_min": "format(riders$minutes_casual[1])"
+         },
+         "purpose": "make one row per station and rider type, with a column for trips and one for minutes",
+         "task": "Make `riders` longer: split each name at `_`, keep its first part as a column name with `.value`, and put its second part in a column called `member_type`."}
+      ],
+      "explain": "`riders` has two measurements, `trips` and `minutes` (the median trip length), each for two rider types: `trips_member`, `minutes_casual` and so on. The first part of each name is a variable's name, not a value. `.value` in `names_to` tells `pivot_longer()` to make that part a column, so the result has `trips` and `minutes` side by side, and `member_type` from the second part: {n_riders} rows, two per station. At station 101, members made {m_trips} trips with a median of {m_min} minutes; casual riders made {c_trips}, with a median of {c_min}."
+    },
+    {
+      "id": "answers",
+      "title": "One row per answer: names_prefix",
+      "runs": [
+        {"code": "survey <- read_csv(\"data/survey.csv\")", "evidence": "assign",
+         "alternatives": ["survey = read_csv('data/survey.csv', show_col_types = FALSE)"],
+         "values": {"n_survey": "format(nrow(survey), big.mark = \",\")"},
+         "purpose": "read the rider survey into `survey`",
+         "task": "Read `data/survey.csv` into a variable called `survey`."},
+        {"code": "uses <- survey |>\n  pivot_longer(\n    cols = starts_with(\"use_\"),\n    names_to = \"use\",\n    names_prefix = \"use_\",\n    values_drop_na = TRUE\n  )", "evidence": "assign",
+         "alternatives": ["uses = survey |> pivot_longer(starts_with('use_'), names_to = 'use', names_prefix = 'use_') |> filter(!is.na(value))"],
+         "values": {"n_uses": "format(nrow(uses), big.mark = \",\")"},
+         "purpose": "make one row for each use a rider ticked, and keep it as `uses`",
+         "task": "Make `survey` longer: stack the columns that start with `use_`, putting their names, without the `use_`, in a column called `use` (`names_prefix`), and leave out the empty cells. Store the result in `uses`."},
+        {"code": "uses |> count(use, sort = TRUE)", "evidence": "value",
+         "alternatives": ["uses |> count(use) |> arrange(desc(n))"],
+         "values": {"top_use": "count(uses, use, sort = TRUE)$use[1]", "top_n": "format(count(uses, use, sort = TRUE)$n[1])"},
+         "purpose": "count how many riders ticked each use",
+         "task": "Count the rows for each `use`, most first."}
+      ],
+      "explain": "The survey asked what riders use the bikes for, and they could tick any of five answers. Each answer has its own column, `use_commuting` to `use_visiting`, holding Yes or nothing. Longer, `uses` has one row for each ticked answer: {n_uses} rows from {n_survey} responses. `names_prefix` takes `use_` off each name, and `values_drop_na = TRUE` leaves out the answers not ticked. Counting is now one step: {top_use} was ticked most, {top_n} times."
+    },
+    {
+      "id": "wider",
+      "title": "Widen for a report: pivot_wider()",
+      "runs": [
+        {"code": "uses |>\n  count(use, member_type) |>\n  pivot_wider(names_from = member_type, values_from = n)", "evidence": "value",
+         "alternatives": ["uses |> count(use, member_type) |> pivot_wider(names_from = 'member_type', values_from = 'n')"],
+         "values": {
+           "m_commute": "format(nrow(filter(uses, use == \"commuting\", member_type == \"member\")))",
+           "c_commute": "format(nrow(filter(uses, use == \"commuting\", member_type == \"casual\")))",
+           "c_leisure": "format(nrow(filter(uses, use == \"leisure\", member_type == \"casual\")))"
+         },
+         "purpose": "count each use for members and casual riders, then give each rider type its own column",
+         "task": "Count `uses` by `use` and `member_type`, then make the counts wider with `pivot_wider()`: a column for each `member_type`, filled from `n`."}
+      ],
+      "explain": "`pivot_wider()` does the opposite of `pivot_longer()`: `names_from` is the column whose values become column names, and `values_from` is the one that fills them. The result is a report with one row for each use and a column for each rider type: members ticked commuting {m_commute} times, casual riders {c_commute}, while casual riders ticked leisure {c_leisure} times. Wide tables suit people reading them; long, tidy ones suit R working on them."
+    }
+  ]
+}

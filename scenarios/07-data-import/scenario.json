@@ -5,7 +5,7 @@
   "title": "Data import",
   "modes": ["demonstration", "guided", "solo"],
   "script": "07-data-import.R",
-  "summary": "Read the Larkhaven Bikes monthly station exports, which were written for people rather than R: skip a title line, declare missing-value codes and column types, find parsing problems, clean the names and numbers, read twelve files at once, save the result, and type a small table by hand.",
+  "summary": "Read the Larkhaven Bikes monthly station exports, which were written for people rather than R: skip a title line, declare missing-value codes and column types, find parsing problems, clean the names and numbers, read twelve files at once, see which column types a CSV file keeps and which an RDS file keeps, and type a small table by hand.",
   "steps": [
     {
       "id": "setup",
@@ -79,7 +79,7 @@
         {"code": "files <- list.files(\"data/exports\", full.names = TRUE)", "evidence": "assign",
          "alternatives": ["files = list.files(path = 'data/exports', full.names = TRUE)"],
          "purpose": "list the monthly export files in `files`",
-         "task": "Store the paths of the files in `data/exports` in `files`, with `list.files()` and `full.names = TRUE`."},
+         "task": "List the files in `data/exports` and store their paths in `files`, with `list.files()` and `full.names = TRUE`."},
         {"code": "activity <- read_csv(files, skip = 1, na = c(\"\", \"n/a\", \"-\"), id = \"file\") |>\n  clean_names()", "evidence": "assign",
          "alternatives": ["activity = clean_names(read_csv(files, skip = 1, na = c('', 'n/a', '-'), id = 'file'))"],
          "values": {"n_activity": "format(nrow(activity))"},
@@ -97,17 +97,32 @@
       "explain": "`list.files()` found the 12 monthly exports. Given all their paths, `read_csv()` read them into one data frame of {n_activity} rows, which works because they share the same columns. `id = \"file\"` added a column saying which file each row came from, so the months stay apart: the stations started {january} trips in January and {july} in July."
     },
     {
-      "id": "save",
-      "title": "Saving data: write_csv() and write_rds()",
+      "id": "csv",
+      "title": "Saving as CSV: write_csv()",
       "runs": [
-        {"code": "write_csv(activity, \"activity.csv\")", "evidence": "file", "path": "activity.csv",
-         "purpose": "save `activity` as a CSV file",
-         "task": "Save `activity` as `activity.csv` with `write_csv()`."},
-        {"code": "write_rds(activity, \"activity.rds\")", "evidence": "file", "path": "activity.rds",
-         "purpose": "save `activity` as an RDS file",
-         "task": "Save `activity` as `activity.rds` with `write_rds()`."}
+        {"code": "write_csv(jan, \"jan.csv\")", "evidence": "file", "path": "jan.csv",
+         "purpose": "save `jan` as a CSV file",
+         "task": "Save `jan` as `jan.csv` with `write_csv()`."},
+        {"code": "read_csv(\"jan.csv\")", "evidence": "value",
+         "alternatives": ["read_csv('jan.csv', show_col_types = FALSE)"],
+         "purpose": "read the CSV file back, and look at the type of `Dock Faults`",
+         "task": "Read `jan.csv` back with `read_csv()`."}
       ],
-      "explain": "Both files are in the Files pane. A CSV file is plain text that any program can open, but it doesn't record column types: reading it back means `read_csv()` guesses them again, so any types you set by hand need setting again. An RDS file stores the R object exactly, types and all, but only R reads it. Parquet, in lesson 22, keeps the types and can be read by many tools."
+      "explain": "`write_csv()` saved `jan` as `jan.csv`, which is in the Files pane. A CSV file is plain text that any program can open, but it doesn't record column types. In `jan`, `Dock Faults` holds whole numbers (`<int>`), because you chose `col_integer()`. Read back, `read_csv()` guessed the types again, and its message lists `Dock Faults` under `dbl`: your choice is lost."
+    },
+    {
+      "id": "rds",
+      "title": "Saving as RDS: write_rds()",
+      "runs": [
+        {"code": "write_rds(jan, \"jan.rds\")", "evidence": "file", "path": "jan.rds",
+         "purpose": "save `jan` as an RDS file",
+         "task": "Save `jan` as `jan.rds` with `write_rds()`."},
+        {"code": "read_rds(\"jan.rds\")", "evidence": "value",
+         "alternatives": ["readRDS('jan.rds')"],
+         "purpose": "read the RDS file back, and look at the type of `Dock Faults` again",
+         "task": "Read `jan.rds` back with `read_rds()`."}
+      ],
+      "explain": "An RDS file stores an R object exactly, so `read_rds()` gave `jan` back as it was, with `Dock Faults` still `<int>`. Only R reads RDS files, though. Parquet, in lesson 22, keeps the types and can be read by many tools."
     },
     {
       "id": "by-hand",

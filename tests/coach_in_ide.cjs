@@ -438,6 +438,37 @@ const coachEl = (page, sel) => page.locator('#rs-coach-host').locator(sel); // P
     return ui;
   });
 
+  // R's record of the learner's work (runtime/evidence.R) is served only to a browser signed in to
+  // RStudio, and no other site's page can read it. R also lists the working directory's files every
+  // second for it; before that walk was bounded, setwd("/") froze R for minutes.
+  await probe('evidence: served only when signed in, never across sites; setwd("/") leaves R responsive', async () => {
+    const mine = await page.evaluate(() => fetch('/coach/api/evidence', {cache: 'no-store'})
+      .then(async r => ({status: r.status, type: r.headers.get('content-type'), nosniff: r.headers.get('x-content-type-options'), session: r.ok ? (await r.json()).session : null})));
+    assert(mine.status === 200 && /^application\/json/.test(mine.type) && mine.nosniff === 'nosniff' && mine.session, JSON.stringify(mine));
+    const anonymous = await browser.newContext();
+    const statuses = {};
+    for (const p of ['/coach/api/evidence', '/coach//api/evidence', '/coach/api/%65vidence', '/coach/__signed_in', '/coach/api/evidence.json']) {
+      statuses[p] = (await anonymous.request.get(`${GATEWAY}${p}`, {maxRedirects: 0})).status();
+    }
+    await anonymous.close();
+    assert(JSON.stringify(Object.values(statuses)) === '[401,401,401,404,404]', JSON.stringify(statuses));
+    // Asked from another site's page, the browser would send RStudio's cookies; with no CORS header
+    // in the answer, that page still can't read it.
+    const userAgent = await page.evaluate(() => navigator.userAgent); // RStudio turns other user agents away
+    const crossSite = await page.request.get(`${GATEWAY}/coach/api/evidence`, {headers: {Origin: 'https://example.com', 'User-Agent': userAgent}});
+    assert(crossSite.status() === 200 && !('access-control-allow-origin' in crossSite.headers()), JSON.stringify({status: crossSite.status(), headers: crossSite.headers()}));
+    // The Console's output must not be in the code typed, or the echo would match at once.
+    await runInConsole(page, 'lab_wd <- setwd("/"); cat("wd", "moved", sep = "-")', 'wd-moved');
+    await page.waitForTimeout(3000); // three of R's once-a-second listings
+    const asked = Date.now();
+    await runInConsole(page, 'cat("still", "responsive", sep = "-")', 'still-responsive', 10000);
+    const answeredMs = Date.now() - asked;
+    const state = await page.evaluate(() => fetch('/coach/api/evidence', {cache: 'no-store'}).then(r => r.json()).then(d => ({wd: d.state?.wd, files: d.state?.files?.length})));
+    await runInConsole(page, 'setwd(lab_wd); rm(lab_wd); cat("wd", "back", sep = "-")', 'wd-back');
+    assert(state.wd === '/' && state.files <= 500, JSON.stringify(state));
+    return {statuses, answeredMs, filesListedFromRoot: state.files};
+  });
+
   // Viewport fit: where does the panel land, and what does it cover?
   for (const vp of [{width: 1366, height: 768}, {width: 1920, height: 1080}]) {
     await probe(`viewport ${vp.width}x${vp.height}: panel fits and IDE usable`, async () => {

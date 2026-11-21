@@ -2,7 +2,7 @@
 # Playground init task: load the images preloaded in the rootfs (first start only),
 # then start the lab. The terminal banner prints the password once run.sh is ready.
 #
-#   iximiuz/start-lab.sh [scenario...]   (default: both lessons; see run.sh)
+#   iximiuz/start-lab.sh [scenario...]   (default: every lesson written so far; see run.sh)
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 

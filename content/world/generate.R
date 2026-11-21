@@ -11,8 +11,8 @@
 #
 # <out-dir> receives every file. content/world/data/ in the repository holds the small ones,
 # committed so changes can be reviewed. The runtime image runs this script into /opt/lab/world and
-# fails to build if its small files differ from the committed ones. The two big ones, trips.csv and
-# the archive, exist only in the image; each run's project links to them.
+# fails to build if its small files differ from the committed ones. The big ones, trips.csv, the
+# archive and the database, exist only in the image; each run's project links to them.
 #
 # The city keeps local time (America/Toronto), and its systems export local wall-clock times without
 # an offset, as many real ones do. So 2:00-2:59 am never appears on 9 March 2025 and 1:00-1:59 am
@@ -798,5 +798,17 @@ articles <- sprintf('<article class="news">\n  <h2>%s</h2>\n  <time datetime="%s
 writeLines(page("News", paste0("<h1>News</h1>\n", paste(articles, collapse = "\n"))), file.path(out, "site", "news.html"))
 writeLines(c("body { font-family: sans-serif; max-width: 48rem; margin: 2rem auto; }", ".station { border: 1px solid #ccc; padding: .5rem 1rem; margin: .5rem 0; }",
   ".note { color: #a40; }", "table.fares td, table.fares th { padding: .25rem .75rem; text-align: left; }"), file.path(out, "site", "style.css"))
+
+# ---------- The database (lesson 21) ----------
+# Four of the tables above in one DuckDB file, read back from their CSV files so that each column has
+# the type read_csv() gives it. Like trips.csv, it exists only in the image.
+db_path <- file.path(out, "larkhaven.duckdb")
+unlink(db_path)
+con <- DBI::dbConnect(duckdb::duckdb(shared_home = FALSE), dbdir = db_path)
+invisible(DBI::dbExecute(con, "SET threads TO 1"))
+for (table in c("trips", "stations", "bikes", "fares")) {
+  DBI::dbWriteTable(con, table, read_csv(file.path(out, paste0(table, ".csv")), show_col_types = FALSE, progress = FALSE))
+}
+DBI::dbDisconnect(con)
 
 cat(sprintf("Larkhaven Bikes: %d trips since April 2021, %d of them in 2025, at %d stations\n", nrow(trips_out), nrow(trips_2025), n_sites))

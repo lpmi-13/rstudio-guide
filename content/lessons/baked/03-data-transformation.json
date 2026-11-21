@@ -441,6 +441,7 @@
    "plot": false,
    "step": "small",
    "values": {
+    "real_top_trips": "2",
     "top_mean": "2,974",
     "top_trips": "3"
    },
@@ -483,12 +484,12 @@
   }
  ],
  "stamp": {
-  "evidence": "6975ac8d7ad699c3a66635638064a328ac1710406b714d34220eb9bced7dbb8c",
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
   "format": "1",
-  "image": "3c0b182f40fef71d474a0cb37e54efd6011616ae218ee460ff82417f952dd665",
-  "lesson": "4a63882708903034110bb5a9223e0874ec9001c8c7b32909f957634404f38576",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "7ebdf66d1d03614b8f5e1ed032c0cd04c1e6bb1f0873934b91482b722da1e6db",
   "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
-  "runner": "9472982345c75b9e0a26c182169d195b09e2d6cf627aebf393bc826f06f28b58",
-  "world": "b5da1a346392e6f2105f0c5c907fee44ee37abd0549a94593dda88cdf46a47a1"
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
  }
 }

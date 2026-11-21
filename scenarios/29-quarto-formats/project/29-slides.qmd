@@ -1,0 +1,32 @@
+---
+title: "A week of Larkhaven Bikes"
+subtitle: "2 to 8 June 2025"
+format: revealjs
+---
+
+```{r}
+#| include: false
+library(tidyverse)
+week <- read_csv("data/trips-week.csv", show_col_types = FALSE)
+```
+
+## The week in one number
+
+**`r format(nrow(week), big.mark = ",")`** complete trips, from `r n_distinct(week$start_station)` stations.
+
+## When people ride
+
+```{r}
+#| fig-width: 9
+#| fig-height: 4.5
+week |>
+  count(hour = hour(started_at), member_type) |>
+  ggplot(aes(x = hour, y = n, colour = member_type)) +
+  geom_line(linewidth = 1) +
+  labs(x = "Hour of the day", y = "Trips", colour = NULL)
+```
+
+## Who rides
+
+- Members: `r sum(week$member_type == "member")` trips
+- Casual riders: `r sum(week$member_type == "casual")` trips

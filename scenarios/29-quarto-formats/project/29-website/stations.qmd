@@ -1,0 +1,12 @@
+---
+title: "Stations"
+---
+
+```{r}
+#| echo: false
+#| message: false
+library(tidyverse)
+read_csv("../data/stations.csv", show_col_types = FALSE) |>
+  count(neighbourhood, name = "stations", sort = TRUE) |>
+  knitr::kable(col.names = c("Neighbourhood", "Stations"))
+```

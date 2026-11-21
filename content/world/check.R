@@ -50,6 +50,8 @@ check(nrow(spring) >= 1 && all(spring$duration_min < 60), "trips: one across the
 fall <- trips |> filter(as.Date(started_at) == as.Date("2025-11-02"), ended_at < started_at, duration_min > 0)
 check(nrow(fall) >= 1, "trips: one across the fall-back change (clock end before start)")
 check(setequal(setdiff(stations$station_id, trips$start_station), c(179, 180)), "trips: stations 179 and 180 have no trips")
+routes <- trips |> summarize(trips = n(), mean_minutes = mean(duration_min), .by = c(start_station, end_station))
+check(max(slice_max(filter(routes, !is.na(end_station)), mean_minutes, n = 5)$trips) <= 3, "trips: the routes with the longest mean trip, ending at a station, are tiny groups (lesson 3)")
 check(all(stats::na.omit(c(trips$start_station, trips$end_station)) %in% stations$station_id), "trips: every station is in stations.csv")
 
 # One week of complete trips (lesson 1)
@@ -77,6 +79,49 @@ check(sum(weather$temp_c == -99) >= 5 && sum(weather$wind_kmh == -99) >= 3, "wea
 times <- read_lines(path("weather.csv"))[-1]
 check(!any(startsWith(times, "2025-03-09 02:")), "weather: no 2 am on 9 March (spring forward)")
 check(sum(startsWith(times, "2025-11-02 01:00")) == 2, "weather: 1 am twice on 2 November (fall back)")
+
+# Lesson 1's hourly chart of the week: rain empties two weekday hours, and each weekend day has one broad hump
+hourly <- week |> count(day = as.Date(started_at), hour = as.integer(format(started_at, "%H")))
+trips_at <- function(day, h) sum(hourly$n[hourly$day == as.Date(day) & hourly$hour == h])
+rain_at <- function(time) weather$rain_mm[format(weather$time, "%Y-%m-%d %H:%M") == time]
+check(isTRUE(rain_at("2025-06-02 17:00") >= 1) && trips_at("2025-06-02", 17) < trips_at("2025-06-02", 18) / 3, "trips-week: rain empties Monday at 5 pm")
+check(isTRUE(rain_at("2025-06-05 13:00") >= 1) && trips_at("2025-06-05", 13) < trips_at("2025-06-05", 16) / 3, "trips-week: rain empties Thursday around midday")
+weekend <- hourly |> filter(day %in% as.Date(c("2025-06-07", "2025-06-08")))
+hump <- weekend |> summarize(ok = hour[which.max(n)] %in% 11:16 && all(n[hour %in% 11:16] >= 0.75 * max(n)), .by = day)
+check(nrow(hump) == 2 && all(hump$ok), "trips-week: one broad hump from 11:00 to 16:00 on Saturday and Sunday")
+
+# Lesson 6's line of trips per day: each sharp dip (under 70% of the same weekday's trips one and two
+# weeks either side) is a day of daytime rain or of cold
+daily <- trips |> count(date = as.Date(started_at), name = "trips") |> arrange(date)
+daily$usual <- (dplyr::lag(daily$trips, 7) + dplyr::lead(daily$trips, 7) + dplyr::lag(daily$trips, 14) + dplyr::lead(daily$trips, 14)) / 4
+days <- weather |>
+  mutate(date = as.Date(time), hour = as.integer(format(time, "%H")), temp_c = if_else(temp_c == -99, NA, temp_c)) |>
+  summarize(day_rain = sum(rain_mm[hour %in% 7:20], na.rm = TRUE), top_c = max(temp_c, na.rm = TRUE), .by = date)
+dips <- daily |> filter(trips < 0.7 * usual) |> left_join(days, by = "date")
+check(nrow(dips) >= 10 && all(dips$day_rain >= 1 | dips$top_c < -5), sprintf("trips: each of the %d sharp dips in trips per day is a day of rain or below -5 °C (lesson 6)", nrow(dips)))
+rises <- daily |> mutate(change = trips - dplyr::lag(trips)) |> slice_max(change, n = 1)
+check(isTRUE((rises$date - 1) %in% dips$date), "trips: the day before the biggest rise from one day to the next is a sharp dip (lesson 13)")
+slots <- trips |> count(slot = (as.integer(format(started_at, "%H")) * 60 + as.integer(format(started_at, "%M"))) %/% 15 * 15, sort = TRUE)
+check(slots$slot[1] == 17 * 60, "trips: the busiest 15-minute slot starts at 17:00 (lesson 13)")
+
+# Lessons 9 and 10: each weekday of the June week, and the year's weekdays overall, peak at both rush hours
+peaks <- function(d) {
+  by <- table(factor(as.integer(format(d$started_at, "%H")), levels = 0:23))
+  max(by[as.character(7:9)]) > max(by[as.character(11:13)]) && max(by[as.character(16:18)]) > max(by[as.character(11:13)])
+}
+week_days <- split(week, as.Date(week$started_at))
+weekdays_week <- week_days[as.integer(format(as.Date(names(week_days)), "%u")) <= 5]
+check(length(weekdays_week) == 5 && all(vapply(weekdays_week, peaks, logical(1))), "trips-week: every weekday has a morning and an evening peak above midday (lesson 9)")
+check(peaks(trips[as.integer(format(trips$started_at, "%u")) <= 5, ]), "trips: weekdays peak at both rush hours (lesson 10)")
+
+# Lesson 10: a trip with no distance, or a distance of 0, also has an impossible length, so the
+# log-log model never meets log(0) and leaving out the 135 implausible lengths leaves out these too
+bad_length <- trips$duration_min <= 0 | trips$duration_min > 24 * 60
+check(all(bad_length[is.na(trips$distance_km) | trips$distance_km %in% 0]), "trips: every trip with no or zero distance has an implausible length (lesson 10)")
+
+# Lesson 18: June's sensor gap covers all of 24 June
+june_hours <- weather$time[format(weather$time, "%Y-%m") == "2025-06"]
+check(!any(format(june_hours, "%Y-%m-%d") == "2025-06-24") && length(june_hours) < 30 * 24 - 24, "weather: no reading at all on 24 June (lesson 18)")
 
 # Bikes and fares
 bikes <- quiet_csv(path("bikes.csv"))
@@ -145,6 +190,12 @@ cards <- xml2::xml_find_all(page, "//article[@class='station']")
 notes <- xml2::xml_find_all(page, "//article[@class='station']/p[@class='note']")
 check(length(cards) >= 75 && length(notes) >= 1 && length(notes) < length(cards), "site: station cards, some with a note")
 check(length(xml2::xml_find_all(xml2::read_html(path("site", "fares.html")), "//table")) == 1, "site: a fares table")
+
+# The database (lesson 21): the same four tables as the CSV files
+con <- DBI::dbConnect(duckdb::duckdb(shared_home = FALSE), dbdir = path("larkhaven.duckdb"), read_only = TRUE)
+check(setequal(DBI::dbListTables(con), c("bikes", "fares", "stations", "trips")), "database: four tables")
+check(DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM trips")$n == nrow(trips), "database: its trips are trips.csv's")
+DBI::dbDisconnect(con)
 
 if (length(failures)) {
   cat(sprintf("\n%d check(s) failed\n", length(failures)))

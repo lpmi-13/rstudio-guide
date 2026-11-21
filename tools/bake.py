@@ -28,7 +28,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 BAKE_FORMAT = 1  # bump when the baked file's shape changes
 WORLD_IMAGE_PATH = "/opt/lab/world"
-WORLD_LINKS = ("trips.csv", "archive")  # big files that exist only in the image
+WORLD_LINKS = ("trips.csv", "archive", "larkhaven.duckdb")  # big files that exist only in the image
 EVIDENCE = ("console", "plot", "value", "assign", "ggplot", "attached", "pattern", "file", "ide", "error")
 
 
@@ -117,6 +117,15 @@ def differences(a, b, plan):
     for x, y, item in zip(a["runs"], b["runs"], plan):
         for key in COMPARED:
             if item.get("evidence") == "pattern" and key in ("output", "fp", "fp_any", "values", "alternatives"):
+                continue
+            # Row order is allowed to differ where the check ignores it: a database returns the groups
+            # of a GROUP BY, and tied rows, in any order.
+            if item.get("order") == "any" and key in ("output", "fp"):
+                continue
+            if item.get("order") == "any" and key == "alternatives":
+                strip = lambda alts: [{k: v for k, v in alt.items() if k != "fp"} for alt in alts or []]
+                if strip(x.get(key)) != strip(y.get(key)):
+                    found.append(f"step {item['step']}, alternatives differ between two runs")
                 continue
             if x.get(key) != y.get(key):
                 code = (item.get("code") or f"action {item.get('action')}").split("\n")[0][:60]

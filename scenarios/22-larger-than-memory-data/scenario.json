@@ -1,0 +1,173 @@
+{
+  "id": "22-larger-than-memory-data",
+  "version": 2,
+  "world": true,
+  "title": "Larger-than-memory data",
+  "modes": [
+    "demonstration",
+    "guided",
+    "solo"
+  ],
+  "script": "22-larger-than-memory-data.R",
+  "summary": "Query five years of trips without loading them: compare a CSV with columnar Parquet files split by year and month, open the archive with duckplyr, let DuckDB read only the files a question needs, bring home just the answer with collect(), and write partitioned Parquet of your own.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse), library(duckplyr)",
+      "runs": [
+        {
+          "code": "library(tidyverse)",
+          "evidence": "attached",
+          "purpose": "load the tidyverse",
+          "task": "Load the tidyverse with `library()`."
+        },
+        {
+          "code": "library(duckplyr)",
+          "evidence": "attached",
+          "purpose": "load duckplyr, which runs dplyr code in the DuckDB database engine",
+          "task": "Load duckplyr with `library()`."
+        }
+      ],
+      "explain": "duckplyr runs dplyr verbs in DuckDB, a database engine inside R that reads files directly. Attaching it says it is overwriting dplyr's methods: from now on, this R session sends data frame work to DuckDB where it can. A new lesson restarts R, which undoes that."
+    },
+    {
+      "id": "sizes",
+      "title": "Text or columns: CSV and Parquet",
+      "runs": [
+        {
+          "code": "file.size(\"data/trips.csv\") / 1e6",
+          "evidence": "value",
+          "values": {
+            "csv_mb": "format(round(file.size(\"data/trips.csv\") / 1e6, 1))"
+          },
+          "purpose": "find the size of one year of trips as CSV, in megabytes",
+          "task": "Find the size of `data/trips.csv` in megabytes: `file.size()` divided by `1e6`."
+        },
+        {
+          "code": "fs::dir_info(\"data/archive\", recurse = TRUE, glob = \"*.parquet\") |>\n  summarize(files = n(), megabytes = as.numeric(sum(size)) / 1e6)",
+          "evidence": "value",
+          "values": {
+            "n_files": "format(nrow(fs::dir_info(\"data/archive\", recurse = TRUE, glob = \"*.parquet\")))",
+            "parquet_mb": "format(round(as.numeric(sum(fs::dir_info(\"data/archive\", recurse = TRUE, glob = \"*.parquet\")$size)) / 1e6, 1))"
+          },
+          "purpose": "count the archive's Parquet files and add up their size",
+          "task": "List the `.parquet` files in `data/archive` and its folders with `fs::dir_info(recurse = TRUE, glob = \"*.parquet\")`, then count them and add up their `size` in megabytes."
+        }
+      ],
+      "explain": "One year of trips as CSV takes {csv_mb} MB. The archive holds every trip since the scheme opened, five years, in {n_files} Parquet files of {parquet_mb} MB in all. CSV stores text, row after row; Parquet stores each column together, compressed and with its type, so the files are smaller and a program can read just the columns it needs. A dataset can outgrow your computer's memory long before it outgrows its disk."
+    },
+    {
+      "id": "partitions",
+      "title": "A folder per year: partitions",
+      "runs": [
+        {
+          "code": "fs::dir_ls(\"data/archive\")",
+          "evidence": "value",
+          "purpose": "list the archive's top-level folders",
+          "task": "List the folders in `data/archive` with `fs::dir_ls()`."
+        },
+        {
+          "code": "fs::dir_ls(\"data/archive/year=2025\")",
+          "evidence": "value",
+          "purpose": "list the folders inside the 2025 one",
+          "task": "List the folders in `data/archive/year=2025`."
+        }
+      ],
+      "explain": "The archive is partitioned: one folder per year, `year=2021` to `year=2025`, and inside each, one folder per month with its file. The folder names hold values, `year=2025` and `month=7`, so the files don't need those columns. A question about one year only has to open that year's files; this layout is called Hive partitioning, after the system that made it common."
+    },
+    {
+      "id": "open",
+      "title": "Open without reading: read_parquet_duckdb()",
+      "runs": [
+        {
+          "code": "archive <- read_parquet_duckdb(\n  \"data/archive/**/*.parquet\",\n  options = list(hive_partitioning = TRUE)\n)",
+          "evidence": "assign",
+          "alternatives": [
+            "archive = read_parquet_duckdb('data/archive/**/*.parquet', options = list(hive_partitioning = TRUE))"
+          ],
+          "purpose": "open every Parquet file in the archive as one table, `archive`, reading year and month from the folder names",
+          "task": "Open all the archive's files, `\"data/archive/**/*.parquet\"`, with `read_parquet_duckdb()` and `options = list(hive_partitioning = TRUE)`, and store the result in `archive`."
+        },
+        {
+          "code": "archive |> count()",
+          "evidence": "value",
+          "alternatives": [
+            "count(archive)"
+          ],
+          "values": {
+            "n_archive": "format(collect(count(archive))$n, big.mark = \",\")"
+          },
+          "purpose": "count the trips in the archive",
+          "task": "Count the rows of `archive` with `count()`."
+        }
+      ],
+      "explain": "`read_parquet_duckdb()` returned at once, because it read nothing: `archive` is a description of the files, and DuckDB reads from them only when asked for a result. `**` matches folders at any depth, and `hive_partitioning = TRUE` turns the folder names into `year` and `month` columns. The count ran inside DuckDB, which read only what counting needs, and sent back one number: {n_archive} trips."
+    },
+    {
+      "id": "pushdown",
+      "title": "Read only what's needed: filter() and explain()",
+      "runs": [
+        {
+          "code": "archive |> filter(year == 2025) |> count(month)",
+          "evidence": "value",
+          "alternatives": [
+            "archive |> filter(year == 2025) |> count(month, sort = FALSE)"
+          ],
+          "purpose": "count 2025's trips in each month",
+          "task": "Keep 2025's trips and count them by `month`."
+        },
+        {
+          "code": "archive |> filter(year == 2025) |> count(month) |> explain()",
+          "evidence": "pattern",
+          "pattern": "Scanning Files: \\d+/\\d+",
+          "purpose": "show how DuckDB will run that query",
+          "task": "Add `explain()` to the end of the same pipeline, to see DuckDB's plan."
+        }
+      ],
+      "explain": "The pipeline is ordinary dplyr, but DuckDB runs it. `explain()` shows its plan, read from the bottom up: Read Parquet, with the filter on `year` applied to the files themselves (File Filters), so it scans only the 12 files of 2025 out of {n_files}, and reads only the `month` column from them. Then it counts by month. Filtering on a partition column is the quickest filter of all, since whole files are skipped."
+    },
+    {
+      "id": "collect",
+      "title": "Bring home the answer: collect()",
+      "runs": [
+        {
+          "code": "by_year <- archive |>\n  summarize(\n    trips = n(),\n    median_minutes = median(duration_min),\n    .by = c(year, member_type)\n  ) |>\n  arrange(year, member_type) |>\n  collect()",
+          "evidence": "assign",
+          "alternatives": [
+            "by_year = archive |> summarize(trips = n(), median_minutes = median(duration_min), .by = c(year, member_type)) |> arrange(year, member_type) |> as_tibble()"
+          ],
+          "values": {
+            "first_year_trips": "format(sum(by_year$trips[by_year$year == min(by_year$year)]), big.mark = \",\")",
+            "last_year_trips": "format(sum(by_year$trips[by_year$year == max(by_year$year)]), big.mark = \",\")"
+          },
+          "purpose": "summarise each year's trips by rider type in DuckDB, and bring the small result into R as `by_year`",
+          "task": "For each `year` and `member_type`, count the trips and find their median `duration_min`; sort by `year` and `member_type`, then `collect()` the result into a tibble called `by_year`."
+        },
+        {
+          "code": "ggplot(by_year, aes(x = year, y = trips, fill = member_type)) +\n  geom_col()",
+          "evidence": "ggplot",
+          "alternatives": [
+            "ggplot(by_year, aes(year, trips, fill = member_type)) + geom_col()"
+          ],
+          "purpose": "chart the trips per year, by rider type",
+          "task": "Draw `trips` by `year` from `by_year` as stacked bars filled by `member_type`, with `geom_col()`."
+        }
+      ],
+      "explain": "DuckDB summarised half a million trips into ten rows, and `collect()` brought just those into R's memory, as an ordinary tibble that ggplot2 can draw. duckplyr won't quietly pull a large result into memory: asking for every row of `archive` would stop with a message to use `collect()` on purpose. Trips grew from {first_year_trips} in 2021, the scheme's first, part year, to {last_year_trips} in 2025."
+    },
+    {
+      "id": "write",
+      "title": "Write partitioned Parquet: compute_parquet()",
+      "runs": [
+        {
+          "code": "archive |>\n  count(year, month, start_station) |>\n  compute_parquet(\n    \"station-months\",\n    options = list(partition_by = \"year\", overwrite = TRUE)\n  )",
+          "evidence": "file",
+          "path": "station-months/year=2025/data_0.parquet",
+          "purpose": "count each station's trips per month in every year, and write the counts as Parquet, one folder per year",
+          "task": "Count `archive` by `year`, `month` and `start_station`, and write the result with `compute_parquet()` to `station-months`, with `options = list(partition_by = \"year\", overwrite = TRUE)`."
+        }
+      ],
+      "explain": "`compute_parquet()` runs the query in DuckDB and writes the result straight to Parquet, without bringing it into R. `partition_by = \"year\"` makes a `year=` folder for each year, as in the archive, and `overwrite = TRUE` replaces what an earlier run wrote. The Files pane shows `station-months`. Read and write Parquet with duckplyr, or with arrow, which works the same way, whenever data is too big to read comfortably."
+    }
+  ]
+}

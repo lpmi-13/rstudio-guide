@@ -1,0 +1,33 @@
+---
+title: "Larkhaven Bikes: one week in June"
+format: dashboard
+---
+
+```{r}
+#| include: false
+library(tidyverse)
+library(reactable)
+week <- read_csv("data/trips-week.csv", show_col_types = FALSE)
+stations <- read_csv("data/stations.csv", show_col_types = FALSE) |>
+  distinct(station_id, .keep_all = TRUE)
+```
+
+## Row
+
+```{r}
+#| title: Trips by hour
+week |>
+  count(hour = hour(started_at)) |>
+  ggplot(aes(x = hour, y = n)) +
+  geom_col() +
+  labs(x = "Hour of the day", y = "Trips")
+```
+
+```{r}
+#| title: Busiest start stations
+week |>
+  count(start_station, sort = TRUE) |>
+  left_join(stations, join_by(start_station == station_id)) |>
+  select(Station = name, Neighbourhood = neighbourhood, Trips = n) |>
+  reactable(searchable = TRUE, defaultPageSize = 8)
+```

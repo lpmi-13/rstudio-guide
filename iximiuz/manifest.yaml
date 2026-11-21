@@ -2,7 +2,7 @@ kind: playground
 name: rstudio-guide-16afe14e
 base: docker
 title: RStudio coach
-description: RStudio Server with an in-IDE coach and two lessons (graphical and statistical tools in base R), each in Demonstration, Guided or Solo mode.
+description: RStudio Server with an in-IDE coach and lessons modelled on R for Data Science, each in Demonstration, Guided or Solo mode.
 categories:
     - linux
 markdown: |-

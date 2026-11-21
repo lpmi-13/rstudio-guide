@@ -129,7 +129,8 @@
          "alternatives": ["arrange(routes, desc(mean_minutes))"],
          "values": {
            "top_trips": "format(arrange(routes, desc(mean_minutes))$trips[1])",
-           "top_mean": "format(round(max(routes$mean_minutes)), big.mark = \",\")"
+           "top_mean": "format(round(max(routes$mean_minutes)), big.mark = \",\")",
+           "real_top_trips": "format(max(slice_max(filter(routes, !is.na(end_station)), mean_minutes, n = 5)$trips))"
          },
          "purpose": "sort the routes by their mean trip length, longest first",
          "task": "Sort `routes` by `mean_minutes`, longest first."},
@@ -139,7 +140,7 @@
          "purpose": "show the 5 longest routes on average, among those with at least 50 trips",
          "task": "Keep the routes with at least 50 trips, then show the 5 with the highest `mean_minutes`, with `slice_max()`."}
       ],
-      "explain": "`routes` has one row for each pair of stations. Sorted by their mean, the top routes have only a few trips each: the first has {top_trips} and a mean of {top_mean} minutes, because one lost bike pulls a small group's mean a long way. (An `NA` end station groups the trips no dock recorded the end of.) Among the routes with at least 50 trips, `slice_max()` shows the 5 with the longest mean, the first at {big_top_mean} minutes, a believable ride. Before trusting a group's average, check how many rows it has."
+      "explain": "`routes` has one row for each pair of stations. Sorted by their mean, the top routes have only a few trips each: the first has {top_trips} and a mean of {top_mean} minutes, because one lost bike pulls a small group's mean a long way. (An `NA` end station groups the trips no dock recorded the end of.) Leaving out the `NA` ends wouldn't fix this: among the routes that end at a station, the five with the longest mean have at most {real_top_trips} trips each. Among the routes with at least 50 trips, `slice_max()` shows the 5 with the longest mean, the first at {big_top_mean} minutes, a believable ride. Before trusting a group's average, check how many rows it has."
     }
   ]
 }

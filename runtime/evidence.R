@@ -27,12 +27,32 @@ size_cap <- 200e6 # bytes; bigger values are described by class and shape only
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
 # ---------- Fingerprints ----------
+# A duckplyr frame as a tibble, or NULL if it has more than `limit` rows. Counting runs in DuckDB,
+# without reading the data into R.
+collect_small <- function(x, limit = 1e5) {
+  n <- tryCatch(dplyr::pull(dplyr::count(x)), error = function(e) Inf)
+  if (n > limit) return(NULL)
+  dplyr::collect(x)
+}
+
 # A value reduced to what a learner would call "the same result": data frames as their columns
 # (tibble or data.frame, grouped or not, with or without readr's attributes), numbers to 10
 # significant digits (so integer and double agree), and charts as the data their layers draw.
 normalise <- function(x, depth = 0L) {
   if (depth > 30L) return("<deep>")
   if (inherits(x, "ggplot")) return(normalise_plot(x))
+  # Things that point into memory, a database or a file: what they stand for, not their address.
+  if (inherits(x, "DBIConnection")) return(list("DBIConnection", class(x)[[1]]))
+  if (inherits(x, "tbl_lazy")) return(list("tbl_lazy", colnames(x), as.character(dbplyr::sql_render(x))))
+  if (inherits(x, c("xml_document", "xml_node", "xml_nodeset"))) return(list("xml", class(x)[[1]], as.character(x)))
+  # A duckplyr frame runs its query when its columns are read. A small result is fingerprinted as the
+  # tibble it collects to; a big one (an archive opened lazily) only by its columns, so that the
+  # learner's session never reads it all into memory.
+  if (inherits(x, "duckplyr_df")) {
+    small <- collect_small(x)
+    if (is.null(small)) return(list("duckplyr", names(x)))
+    x <- small
+  }
   if (is.data.frame(x)) {
     cols <- lapply(unclass(x), normalise, depth = depth + 1L)
     attributes(cols) <- NULL
@@ -60,11 +80,28 @@ normalise <- function(x, depth = 0L) {
 
 # The layers' built data, with columns in name order: ggplot2 orders them by where an aesthetic
 # was mapped, which is a matter of style. Labels as ggplot2 resolves them.
+# Row order doesn't matter either: group_by() |> summarize() and summarize(.by =) give the same
+# chart. A patchwork (patchwork's `p1 + p2`) is all its plots and its layout; ggplot_build() on it
+# would see only the last plot.
 normalise_plot <- function(p) {
+  if (inherits(p, "patchwork")) {
+    parts <- p$patches
+    return(list("patchwork", lapply(parts$plots, normalise_plot), normalise_one_plot(p),
+                normalise(Filter(Negate(is.null), unclass(parts$layout)))))
+  }
+  normalise_one_plot(p)
+}
+normalise_one_plot <- function(p) {
   built <- suppressMessages(suppressWarnings(ggplot2::ggplot_build(p)))
   layers <- lapply(built$data, function(d) {
     d <- as.data.frame(d)
-    normalise(d[, sort(names(d)), drop = FALSE])
+    d <- d[, sort(names(d)), drop = FALSE]
+    sortable <- !vapply(d, is.list, logical(1))
+    if (nrow(d) > 1L && any(sortable)) {
+      d <- d[do.call(order, c(unname(lapply(d[sortable], function(v) if (is.factor(v)) as.character(v) else v)), list(method = "radix"))), , drop = FALSE]
+      rownames(d) <- NULL
+    }
+    normalise(d)
   })
   labels <- ggplot2::get_labs(p)
   labels <- labels[sort(names(labels))]
@@ -77,6 +114,7 @@ fingerprint <- function(x) rlang::hash(normalise(x))
 # groups in order of first appearance, group_by() |> summarize() sorts them. NULL when the rows
 # can't be sorted (list-columns) or the value isn't a data frame.
 fingerprint_any_order <- function(x) {
+  if (inherits(x, "duckplyr_df")) x <- collect_small(x)
   if (!is.data.frame(x) || inherits(x, "sf")) return(NULL)
   cols <- unclass(x)
   if (!length(cols) || any(vapply(cols, is.list, logical(1)))) return(NULL)
@@ -85,7 +123,9 @@ fingerprint_any_order <- function(x) {
 }
 
 shape <- function(x) {
-  list(class = class(x)[[1]], dim = if (!is.null(dim(x))) as.integer(dim(x)) else length(x))
+  # A lazy table can't always say how many rows it has without running its query.
+  size <- tryCatch(if (!is.null(dim(x))) as.integer(dim(x)) else length(x), error = function(e) NA_integer_)
+  list(class = class(x)[[1]], dim = size)
 }
 
 # ---------- Recording ----------
@@ -114,7 +154,9 @@ assigned_name <- function(expr) {
 }
 
 describe <- function(value) {
-  size <- tryCatch(as.numeric(utils::object.size(value)), error = function(e) Inf)
+  # object.size() reads every column, which would run a lazy table's query.
+  lazy <- inherits(value, c("duckplyr_df", "tbl_lazy"))
+  size <- if (lazy) 0 else tryCatch(as.numeric(utils::object.size(value)), error = function(e) Inf)
   if (size > size_cap) return(c(shape(value), list(fp = NULL, fp_any = NULL)))
   c(shape(value), list(fp = tryCatch(fingerprint(value), error = function(e) NULL),
                        fp_any = tryCatch(fingerprint_any_order(value), error = function(e) NULL)))
@@ -162,10 +204,30 @@ pref_defaults <- function() {
 }
 defaults <- NULL
 
+# The files under the working directory, leaving out data/ and hidden ones, breadth first: at most
+# `limit` files, after looking at no more than about `budget` names. A learner can setwd()
+# anywhere, and this runs every second: list.files("/usr", recursive = TRUE) takes R 1.5 s, and
+# from "/" it ran for minutes and took gigabytes, with the Console frozen meanwhile.
+project_files <- function(wd, limit = 500L, budget = 5000L) {
+  files <- character()
+  dirs <- ""
+  seen <- 0L
+  while (length(dirs) && length(files) < limit && seen < budget) {
+    dir <- dirs[[1]]
+    dirs <- dirs[-1]
+    names <- list.files(file.path(wd, dir), no.. = TRUE) # hidden names, such as .Rproj.user, left out
+    seen <- seen + length(names)
+    paths <- if (nzchar(dir)) file.path(dir, names) else setdiff(names, "data")
+    is_dir <- dir.exists(file.path(wd, paths))
+    dirs <- c(dirs, paths[is_dir])
+    files <- c(files, paths[!is_dir])
+  }
+  utils::head(sort(files), limit)
+}
+
 read_state <- function() {
   wd <- getwd()
-  files <- list.files(wd, recursive = TRUE, all.files = FALSE, no.. = TRUE)
-  files <- utils::head(files[!startsWith(files, ".Rproj.user") & !startsWith(files, "data/")], 500L)
+  files <- project_files(wd)
   info <- file.info(file.path(wd, files), extra_cols = FALSE)
   prefs_file <- path.expand("~/.config/rstudio/rstudio-prefs.json")
   prefs <- if (file.exists(prefs_file)) tryCatch(jsonlite::read_json(prefs_file), error = function(e) list()) else list()

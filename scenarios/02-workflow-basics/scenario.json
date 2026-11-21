@@ -1,0 +1,121 @@
+{
+  "id": "02-workflow-basics",
+  "version": 2,
+  "world": true,
+  "title": "Workflow: basics",
+  "modes": ["demonstration", "guided", "solo"],
+  "script": "02-workflow-basics.R",
+  "summary": "Work out Larkhaven Bikes fares with R: sums, values kept with `<-`, many values at once, comments and names, functions with named arguments, and what R's error messages tell you.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse)",
+      "runs": [
+        {"code": "library(tidyverse)", "evidence": "attached",
+         "purpose": "load the tidyverse",
+         "task": "Load the tidyverse with `library()`."}
+      ],
+      "explain": "`library(tidyverse)` attaches the core tidyverse packages. This lesson is mostly about R itself; its last step reads a file with readr's `read_csv()`."
+    },
+    {
+      "id": "calculator",
+      "title": "R as a calculator",
+      "runs": [
+        {"code": "1.5 + 0.18 * 20", "evidence": "value",
+         "values": {"fare": "format(1.5 + 0.18 * 20)"},
+         "purpose": "work out what a 20-minute ride costs a casual rider: $1.50 to unlock the bike, then 18 cents a minute",
+         "task": "Work out what a 20-minute ride costs a casual rider: 1.5 (the unlock fee) plus 0.18 (the price per minute) times 20."},
+        {"code": "(1.5 + 0.18) * 20", "evidence": "value",
+         "values": {"bracketed": "format((1.5 + 0.18) * 20)"},
+         "purpose": "see what brackets change: add first, then multiply",
+         "task": "Put brackets around `1.5 + 0.18`, then multiply by 20, to see what brackets change."}
+      ],
+      "explain": "R works a sum out in the order maths does, multiplying before adding, so `1.5 + 0.18 * 20` is {fare}: a 20-minute ride at a casual rider's fare on a classic bike. Brackets go first: `(1.5 + 0.18) * 20` is {bracketed}, which charges the unlock fee 20 times. The `[1]` in front of each answer marks its first value; a longer result shows the position of the first value on each line."
+    },
+    {
+      "id": "assign",
+      "title": "Keep values: <- and the Environment",
+      "runs": [
+        {"code": "unlock_fee <- 1.5", "evidence": "assign", "keys": "Alt+-",
+         "purpose": "keep the unlock fee as `unlock_fee`",
+         "task": "Store 1.5 in a variable called `unlock_fee`. Type the arrow, `<-`, with Alt+- (Option+- on a Mac)."},
+        {"code": "per_minute <- 0.18", "evidence": "assign", "keys": "Alt+-",
+         "purpose": "keep the price per minute as `per_minute`",
+         "task": "Store 0.18 in a variable called `per_minute`, again typing `<-` with Alt+-."},
+        {"code": "unlock_fee + per_minute * 20", "evidence": "value",
+         "values": {"fare_again": "format(unlock_fee + per_minute * 20)"},
+         "purpose": "work out the 20-minute fare again, from the two names",
+         "task": "Work out the 20-minute fare again, using `unlock_fee` and `per_minute` instead of the numbers."}
+      ],
+      "explain": "`<-` assigns: it keeps the value on its right under the name on its left. R prints nothing, but both names now appear in the Environment pane, each with its value. Alt+- types the arrow with a space each side. A name stands for its value, so `unlock_fee + per_minute * 20` gives {fare_again}, as before. When the fare changes, you change one line rather than every sum."
+    },
+    {
+      "id": "vectors",
+      "title": "Many values at once: c()",
+      "runs": [
+        {"code": "minutes <- c(12, 25, 8, 41, 17)", "evidence": "assign",
+         "alternatives": ["minutes = c(12, 25, 8, 41, 17)"],
+         "values": {"n_minutes": "format(length(minutes))"},
+         "purpose": "keep the lengths of five trips, in minutes, in one vector, `minutes`",
+         "task": "Store the lengths of five trips, 12, 25, 8, 41 and 17 minutes, in a variable called `minutes`, with `c()`."},
+        {"code": "unlock_fee + per_minute * minutes", "evidence": "value",
+         "values": {
+           "costs": "paste(sprintf(\"%.2f\", unlock_fee + per_minute * minutes), collapse = \", \")",
+           "first_cost": "sprintf(\"%.2f\", unlock_fee + per_minute * minutes[1])"
+         },
+         "purpose": "work out what each of the five trips cost",
+         "task": "Work out what each of the five trips cost, from `unlock_fee`, `per_minute` and `minutes`."}
+      ],
+      "explain": "`c()` combines values into a vector: {n_minutes} numbers under one name. Arithmetic on a vector works on every element. `per_minute * minutes` multiplies each length by 0.18, and the one unlock fee is added to each, so the answer has five costs: {costs}. The first, {first_cost}, is a 12-minute ride. R reuses the single unlock fee for every element; this is called recycling."
+    },
+    {
+      "id": "names",
+      "title": "Comments and names",
+      "runs": [
+        {"code": "trip_cost <- unlock_fee + per_minute * minutes # what each trip cost", "evidence": "assign",
+         "alternatives": ["trip_cost = unlock_fee + per_minute * minutes"],
+         "purpose": "keep the five costs as `trip_cost`, with a comment saying what it holds",
+         "task": "Store the five costs in a variable called `trip_cost`. After the code, add a comment: `#`, then what `trip_cost` holds."},
+        {"code": "Trip_cost", "evidence": "error", "error": "object 'Trip_cost' not found",
+         "purpose": "show `trip_cost`, mistyped with a capital T",
+         "task": "Type `Trip_cost`, with a capital T by mistake, and run it to see R's error."}
+      ],
+      "explain": "R ignores everything on a line after `#`, so a comment is for people: use it to say what code is for, which the code itself can't. A name starts with a letter and holds letters, numbers, `_` and `.`; these lessons use snake_case, lower-case words joined by `_`, as in `trip_cost`. Names are case-sensitive and R doesn't guess what you meant, so it reports: object 'Trip_cost' not found. That message tells you where to look: the spelling and capitals of a name. The Environment pane lists the names that exist, and typing a name's first letters then pressing Tab completes it."
+    },
+    {
+      "id": "functions",
+      "title": "Call functions: arguments by name",
+      "runs": [
+        {"code": "seq(from = 5, to = 60, by = 5)", "evidence": "value",
+         "alternatives": ["seq(5, 60, by = 5)", "seq(5, 60, 5)"],
+         "values": {"n_seq": "format(length(seq(from = 5, to = 60, by = 5)))"},
+         "purpose": "list ride lengths from 5 to 60 minutes, in steps of 5",
+         "task": "List the numbers from 5 to 60 in steps of 5 with `seq()`, naming its arguments `from`, `to` and `by`."},
+        {"code": "round(mean(trip_cost), digits = 2)", "evidence": "value",
+         "alternatives": ["round(mean(trip_cost), 2)"],
+         "values": {"mean_cost": "format(round(mean(trip_cost), digits = 2))", "raw_mean": "format(mean(trip_cost))"},
+         "purpose": "find the five trips' mean cost, rounded to the cent",
+         "task": "Find the mean of `trip_cost` with `mean()`, and round it to 2 decimal places with `round()` and its `digits` argument."}
+      ],
+      "explain": "A function call is the function's name, then its arguments in brackets, separated by commas. `seq(from = 5, to = 60, by = 5)` names each argument and gives {n_seq} numbers. Given in order, arguments need no names: `seq(5, 60, 5)` gives the same, because `from`, `to` and `by` come first in `seq()`. Names make a call easier to read, and let you leave out arguments or give them in any order. One call can go inside another: `mean()` works out {raw_mean}, then `round()` rounds it to {mean_cost}. Typing `seq(` shows its arguments, and `?seq` opens its help page."
+    },
+    {
+      "id": "errors",
+      "title": "Read an error message",
+      "runs": [
+        {"code": "fares <- read_csv(\"data/fare.csv\")", "evidence": "error", "error": "does not exist in current working directory",
+         "purpose": "read the fares table from `data/fare.csv`, with the file name mistyped",
+         "task": "Read `data/fare.csv` into `fares` with `read_csv()`. The real file is `fares.csv`, so read the error R gives."},
+        {"code": "fares <- read_csv(\"data/fares.csv\")", "evidence": "assign",
+         "alternatives": ["fares = read_csv('data/fares.csv', show_col_types = FALSE)"],
+         "values": {"n_fares": "format(nrow(fares))", "n_current": "format(sum(is.na(fares$valid_to)))"},
+         "purpose": "read the fares table into `fares`, with the file name right",
+         "task": "Fix the file name: read `data/fares.csv` into `fares`."},
+        {"code": "fares", "evidence": "value",
+         "purpose": "print the fares table",
+         "task": "Print `fares`."}
+      ],
+      "explain": "An error message says what went wrong, and often where. This one says there is no `data/fare.csv` in the working directory, the project's folder, which it names; the Files pane shows what is there. With the name right, `read_csv()` reads the table's {n_fares} rows into `fares` and reports the type it gave each column. The {n_current} rows whose `valid_to` is `NA` are today's fares, with no end date yet: a casual rider on a classic bike pays the 1.5 and 0.18 used above."
+    }
+  ]
+}

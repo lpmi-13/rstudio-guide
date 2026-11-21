@@ -1,0 +1,378 @@
+{
+ "lesson": "25-functions",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "km_to_miles",
+     "class": "function",
+     "code": "km_to_miles = function(km) km * 0.621371",
+     "dim": 1,
+     "fp": "91d28d663077d487be6d6a1f44b555bd",
+     "fp_any": null
+    },
+    {
+     "assigned": "km_to_miles",
+     "class": "function",
+     "code": "km_to_miles <- \\(km) km * 0.621371",
+     "dim": 1,
+     "fp": "91d28d663077d487be6d6a1f44b555bd",
+     "fp_any": null
+    }
+   ],
+   "assigned": "km_to_miles",
+   "attached": [],
+   "class": "function",
+   "dim": 1,
+   "files": [],
+   "fp": "91d28d663077d487be6d6a1f44b555bd",
+   "fp_any": null,
+   "index": 1,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "first",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "numeric",
+   "dim": 3,
+   "files": [],
+   "fp": "cfcd8f0a7004ff6138bbfbc635bdfebd",
+   "fp_any": null,
+   "index": 2,
+   "messages": [],
+   "output": "[1] 0.621371 1.553427 6.213710",
+   "plot": false,
+   "step": "first",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "trips",
+     "class": "spec_tbl_df",
+     "code": "trips = read_csv('data/trips.csv', show_col_types = FALSE)",
+     "dim": [
+      149747,
+      10
+     ],
+     "fp": "925ba2a4e6f8a0e568dad6aeb7da9353",
+     "fp_any": "925ba2a4e6f8a0e568dad6aeb7da9353"
+    }
+   ],
+   "assigned": "trips",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    149747,
+    10
+   ],
+   "files": [],
+   "fp": "925ba2a4e6f8a0e568dad6aeb7da9353",
+   "fp_any": "925ba2a4e6f8a0e568dad6aeb7da9353",
+   "index": 3,
+   "messages": [
+    "Rows: 149747 Columns: 10",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): bike_id, member_type, bike_type\ndbl  (5): trip_id, start_station, end_station, distance_km, duration_min\ndttm (2): started_at, ended_at",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "vector",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "speed_kmh",
+     "class": "function",
+     "code": "speed_kmh = function(km, minutes) km / minutes * 60",
+     "dim": 1,
+     "fp": "5b5439c327d2055a81b2da6d0d2d6d51",
+     "fp_any": null
+    }
+   ],
+   "assigned": "speed_kmh",
+   "attached": [],
+   "class": "function",
+   "dim": 1,
+   "files": [],
+   "fp": "5b5439c327d2055a81b2da6d0d2d6d51",
+   "fp_any": null,
+   "index": 4,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "vector",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "trips |> transmute(distance_km, duration_min, speed = speed_kmh(km = distance_km, minutes = duration_min))",
+     "dim": [
+      149747,
+      3
+     ],
+     "fp": "528b93ed655d1d454917bbaf28d92877",
+     "fp_any": "ed5b5e5a4fe47d254f67cc92e2958b7e"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    149747,
+    3
+   ],
+   "files": [],
+   "fp": "528b93ed655d1d454917bbaf28d92877",
+   "fp_any": "ed5b5e5a4fe47d254f67cc92e2958b7e",
+   "index": 5,
+   "messages": [],
+   "output": "# A tibble: 149,747 × 3\n   distance_km duration_min speed\n         <dbl>        <dbl> <dbl>\n 1        4.1          18.1 13.6 \n 2        1.28          5.4 14.2 \n 3        2.46         17.1  8.63\n 4        4.96         30.4  9.79\n 5        3.28         11.3 17.4 \n 6        3.45         13.2 15.7 \n 7        0.85          8.1  6.30\n 8        0.93          4.8 11.6 \n 9        4.01         18.5 13.0 \n10        4.75         30.2  9.44\n# ℹ 149,737 more rows",
+   "plot": false,
+   "step": "vector",
+   "values": {
+    "first_speed": "13.6"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "share_of",
+     "class": "function",
+     "code": "share_of = function(x, value) mean(x == value, na.rm = TRUE)",
+     "dim": 1,
+     "fp": "b0c221b0ae485a67939c925a29f314b4",
+     "fp_any": null
+    }
+   ],
+   "assigned": "share_of",
+   "attached": [],
+   "class": "function",
+   "dim": 1,
+   "files": [],
+   "fp": "b0c221b0ae485a67939c925a29f314b4",
+   "fp_any": null,
+   "index": 6,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "summary",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "trips |> group_by(member_type) |> summarize(electric = share_of(bike_type, 'electric'))",
+     "dim": [
+      2,
+      2
+     ],
+     "fp": "8d402fe1143544004367bd105e5118c8",
+     "fp_any": "8d402fe1143544004367bd105e5118c8"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    2,
+    2
+   ],
+   "files": [],
+   "fp": "638062030d09c473b38d62d14f314eab",
+   "fp_any": "8d402fe1143544004367bd105e5118c8",
+   "index": 7,
+   "messages": [],
+   "output": "# A tibble: 2 × 2\n  member_type electric\n  <chr>          <dbl>\n1 member         0.400\n2 casual         0.451",
+   "plot": false,
+   "step": "summary",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "summarize_trips",
+     "class": "function",
+     "code": "summarize_trips = function(df, group) df |> summarize(trips = n(), median_minutes = median(duration_min), .by = {{ group }})",
+     "dim": 1,
+     "fp": "6a85e2aaf28626b88f80319af16abd55",
+     "fp_any": null
+    }
+   ],
+   "assigned": "summarize_trips",
+   "attached": [],
+   "class": "function",
+   "dim": 1,
+   "files": [],
+   "fp": "6a85e2aaf28626b88f80319af16abd55",
+   "fp_any": null,
+   "index": 8,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "dataframe",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    2,
+    3
+   ],
+   "files": [],
+   "fp": "b07453ed82e39ca52be015ab39d1db8c",
+   "fp_any": "1b49f6e257c6d78a25d1356c1c54ce06",
+   "index": 9,
+   "messages": [],
+   "output": "# A tibble: 2 × 3\n  member_type trips median_minutes\n  <chr>       <int>          <dbl>\n1 member      98127           11.7\n2 casual      51620           16  ",
+   "plot": false,
+   "step": "dataframe",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    4,
+    4
+   ],
+   "files": [],
+   "fp": "26f9ae1bada9120afff2737036897563",
+   "fp_any": "27f190930f00a05936b6aa64abcf8cc0",
+   "index": 10,
+   "messages": [],
+   "output": "# A tibble: 4 × 4\n  member_type bike_type trips median_minutes\n  <chr>       <chr>     <int>          <dbl>\n1 member      classic   58866           13.3\n2 member      electric  39261            9.9\n3 casual      classic   28330           18.7\n4 casual      electric  23290           13.5",
+   "plot": false,
+   "step": "dataframe",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "duration_histogram",
+     "class": "function",
+     "code": "duration_histogram = function(df, binwidth = 2) ggplot(df, aes(duration_min)) + geom_histogram(binwidth = binwidth) + labs(title = str_glue('{nrow(df)} trips'))",
+     "dim": 1,
+     "fp": "6275b2fa48f9a194746a2d647075adaa",
+     "fp_any": null
+    }
+   ],
+   "assigned": "duration_histogram",
+   "attached": [],
+   "class": "function",
+   "dim": 1,
+   "files": [],
+   "fp": "6275b2fa48f9a194746a2d647075adaa",
+   "fp_any": null,
+   "index": 11,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "plot",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "duration_histogram(filter(trips, member_type == 'casual', duration_min > 0, duration_min < 120), binwidth = 2)",
+     "dim": 1,
+     "fp": "1b72199b0abbb8374da8ae14611c1fb5",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "1b72199b0abbb8374da8ae14611c1fb5",
+   "fp_any": null,
+   "index": 12,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "plot",
+   "values": {
+    "n_casual": "51565"
+   },
+   "visible": true,
+   "warnings": []
+  }
+ ],
+ "stamp": {
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "format": "1",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "495a3dee9bf78ef37e18f0e1e0ff0bf175103cb22fc0fa74eea7e7563ab19726",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
+ }
+}

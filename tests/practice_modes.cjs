@@ -1,27 +1,29 @@
-// Mode picker, Guided and Solo audit. For each lesson it provisions a fresh run,
-// signs in through the gateway and works as a learner would: it clicks the
-// coach's visible buttons and types into RStudio's Console and Source pane with
-// the keyboard. It reads the coach's state only to know when to look, never to
-// complete a line.
+// Mode picker, Guided and Solo audit, on the lessons modelled on R for Data Science. For each run it
+// provisions it fresh, signs in through the gateway and works as a learner would: it clicks the
+// coach's visible buttons and types into RStudio's Console and Source pane with the keyboard. It
+// reads the coach's state only to know when to look, never to complete a task.
 //
 // It checks that:
 // - a new run opens on Demonstration, Guided and Solo, all in view, and the coach
 //   does nothing in RStudio until one is chosen;
-// - Guided counts a line only once RStudio shows the reference result, from the
-//   Console or the script, however the line is spaced or quoted, and = for <-;
+// - Guided counts a statement only once R has the reference result, from the Console or the
+//   script, however it is written (quotes, = for <-, other arguments that give the same result);
 //   an R error or a different result gets feedback instead;
-// - hints come one at a time, and Show me types and runs the line with the
-//   pointer, is recorded as shown, and reports an R error without counting;
+// - hints come one at a time, and Show me types and runs the statement with the pointer, is
+//   recorded as shown, and reports an R error without counting;
 // - Solo discloses nothing until Check my work, counts hints, and never counts
-//   lines run before Solo was chosen, even after a reload refills the Console;
+//   statements run before Solo was chosen, even after a reload refills the Console;
 // - reload keeps the chosen mode and progress, and Change mode returns to the picker;
 // - choosing a mode starts the lesson afresh, whatever ran before, in any mode or lesson:
 //   the script holds only its step headings (saved, with no undo history), the Console,
 //   Environment and Plots are empty, and progress starts over.
-//   Demonstration then Guided is the case a learner reported: step 1's line was already
+//   Demonstration then Guided is the case a learner reported: step 1's code was already
 //   written. Back on the picker returns to the mode just left, as it was;
-// - the default run holds both lessons: lesson cards sit above the mode cards, all
-//   in view.
+// - the default run holds every lesson written so far (tools/collection.py): the picker shows the
+//   first on one line, with the mode cards in view, and Change lists them by part.
+//
+// Runs: 01 Data visualization (picker, Guided, then Solo), 03 Data transformation at 1366x768
+// (Solo, then Guided with a failing Show me), and the default run at 1366x768.
 //
 //   NODE_PATH=$(npm root -g) node tests/practice_modes.cjs [results-dir]
 const {chromium} = require('@playwright/test');
@@ -35,19 +37,25 @@ const {
 
 const OUT = path.resolve(process.argv[2] || path.join(ROOT, 'results'));
 const {results, probe} = audit(OUT);
+// The default run: every lesson in the collection that has been written, in order (./run.sh up).
+const DEFAULT = require('child_process').execFileSync('python3', ['-I', path.join(ROOT, 'tools/collection.py')], {encoding: 'utf8'}).trim().split('\n');
+const steps = page => page.evaluate(() => fetch('/coach/api/steps').then(r => r.json()));
 
 const pickerView = page => page.evaluate(() => {
   const root = document.getElementById('rs-coach-host').shadowRoot;
   const body = root.querySelector('.body').getBoundingClientRect();
   const cards = [...root.querySelectorAll('.mode-card')];
-  const lessons = [...root.querySelectorAll('.lesson-card')];
   return {
     mode: window.__rsCoach.mode,
     lesson: window.__rsCoach.lesson,
     label: root.querySelector('.mode').textContent,
-    lessons: lessons.map(c => ({id: c.dataset.lesson, checked: c.getAttribute('aria-checked') === 'true', what: c.querySelector('.what').textContent})),
-    cards: cards.map(c => c.querySelector('strong').textContent),
-    inView: [...lessons, ...cards].map(c => {
+    row: root.querySelector('.lesson-row')?.innerText.replace(/\s+/g, ' ').trim() ?? null,
+    listOpen: Boolean(root.querySelector('.lesson-list')) && !root.querySelector('.lesson-list').hidden,
+    // Each part's lessons, read from the markup: only the current lesson's part is expanded.
+    parts: [...root.querySelectorAll('.lesson-list details')].map(d => ({part: d.querySelector('summary').textContent, open: d.open,
+      lessons: [...d.querySelectorAll('.lesson-pick')].map(b => `${b.dataset.lesson}: ${b.querySelector('.what')?.textContent.trim()}`)})),
+    cards: cards.map(c => c.querySelector('strong').innerText.trim()),
+    inView: cards.map(c => {
       const r = c.getBoundingClientRect();
       return r.top >= body.top && r.bottom <= body.bottom && r.bottom <= innerHeight && r.width >= 200;
     }),
@@ -91,14 +99,20 @@ const soloView = page => page.evaluate(() => {
   };
 });
 
-// The learner types a command at the Console prompt and presses Enter.
-async function consoleRun(page, line) {
+// The learner at the Console prompt: the statement goes in as typed (pasted, so RStudio's
+// auto-pairing doesn't add brackets), then Enter runs all its lines. A statement that teaches
+// Ctrl+Shift+M (`keys`) gets each |> from the shortcut, which RStudio types as " |> ".
+async function consoleRun(page, code, keys = null) {
   await page.click('#rstudio_console_input');
-  await page.keyboard.type(line);
+  const parts = keys ? code.split('|>') : [code];
+  for (const [i, part] of parts.entries()) {
+    if (i > 0) await page.keyboard.press(keys.replace('Ctrl', 'Control'));
+    await page.keyboard.insertText(i < parts.length - 1 ? part.trimEnd() : part);
+  }
   await page.keyboard.press('Enter');
 }
-// The learner clicks the step heading in the script, starts a new line below it, types the
-// code and runs it with Ctrl+Enter.
+// The learner clicks a line in the script (a step heading, say), starts a new line below it, types
+// the code and runs it with Ctrl+Enter.
 async function scriptRun(page, after, line) {
   const box = await page.locator('#rstudio_Source_pane .ace_line', {hasText: after}).first().boundingBox();
   await page.mouse.click(box.x + 40, box.y + box.height / 2); // Ace's layers fail Playwright's click checks
@@ -107,24 +121,38 @@ async function scriptRun(page, after, line) {
   await page.keyboard.type(line);
   await page.keyboard.press('Control+Enter');
 }
-const waitGuided = (page, fn, arg, timeout = 20000) => page.waitForFunction(fn, arg, {timeout, polling: 100});
+const waitFor = (page, fn, arg, timeout = 30000) => page.waitForFunction(fn, arg, {timeout, polling: 100});
+const feedbackMatches = (page, source) => waitFor(page, source => new RegExp(source).test(
+  document.getElementById('rs-coach-host').shadowRoot.querySelector('.feedback').textContent), source);
+
+// Guided: the learner runs each statement of step `s` at the Console, as written in the lesson,
+// waiting for each to tick.
+async function guidedStep(page, lesson, s, from = 0) {
+  for (const [r, run] of lesson.steps[s].runs.entries()) {
+    if (r < from) continue;
+    await consoleRun(page, run.code, run.keys);
+    await waitFor(page, k => window.__rsCoach.guided.done[k], `${s}.${r}`);
+  }
+}
 
 (async () => {
   const browser = await chromium.launch();
   const errors = [];
 
-  // ---------------- graphical-tools: picker, Guided, then Solo ----------------
+  // ---------------- 01 Data visualization: picker, Guided, then Solo ----------------
   {
-    const password = provision('graphical-tools');
-    const scriptPath = path.join(ROOT, 'run/project/graphical-tools.R');
+    const LESSON = '01-data-visualization';
+    const password = provision(LESSON);
+    const scriptPath = path.join(ROOT, 'run/project', `${LESSON}.R`);
     const context = await browser.newContext({viewport: {width: 1440, height: 900}});
     const page = await context.newPage();
-    page.on('pageerror', e => errors.push(`graphical: ${e.message}`));
+    page.on('pageerror', e => errors.push(`${LESSON}: ${e.message}`));
     let lesson;
 
     await probe('picker: a new run opens on Demonstration, Guided and Solo, all in view, and the coach waits', async () => {
       await signIn(page, password, null);
-      lesson = await page.evaluate(() => fetch('/coach/api/steps').then(r => r.json()).then(s => s.lessons[0]));
+      lesson = (await steps(page)).lessons[0];
+      assert(lesson.id === LESSON, `the run's lesson is ${lesson.id}`);
       const view = await pickerView(page);
       assert(view.mode === null && view.label === 'Choose a mode' && view.back === null, JSON.stringify(view));
       assert(view.cards.join() === 'Demonstration,Guided,Solo', `cards: ${view.cards}`);
@@ -138,36 +166,43 @@ const waitGuided = (page, fn, arg, timeout = 20000) => page.waitForFunction(fn, 
       return {cards: view.cards, lowestCardBottom: view.cardBottom, viewport: 900};
     });
 
-    await probe('guided: step 1 only; an R error and a different chart get feedback and do not count', async () => {
+    await probe('guided: step 1 only; an R error and a different result get feedback and do not count', async () => {
       await coachEl(page, 'button.mode-card[data-mode="guided"]').click();
-      await waitGuided(page, () => window.__rsCoach.guided);
+      await waitForFreshStart(page, 1);
+      await waitFor(page, () => window.__rsCoach.guided);
       const start = await guidedView(page);
-      assert(start.mode === 'guided' && start.steps.join() === 'active,pending,pending,pending' && start.tasks.join() === 'active', JSON.stringify(start));
-      await consoleRun(page, 'plot(5, q)');
-      await waitGuided(page, () => /R reported: Error/.test(document.getElementById('rs-coach-host').shadowRoot.querySelector('.feedback').textContent));
+      const pending = lesson.steps.slice(1).map(() => 'pending').join();
+      assert(start.mode === 'guided' && start.steps.join() === `active,${pending}` && start.tasks.join() === 'active', JSON.stringify(start));
+      await consoleRun(page, 'library(tidyvers)');
+      await feedbackMatches(page, 'R reported: Error');
       const onError = await guidedView(page);
-      await consoleRun(page, 'plot(4, 4)');
-      await waitGuided(page, () => /ran plot\(4, 4\), but that isn't/.test(document.getElementById('rs-coach-host').shadowRoot.querySelector('.feedback').textContent));
+      await consoleRun(page, 'library(janitor)');
+      await feedbackMatches(page, 'ran library\\(janitor\\), but R\'s result isn\'t');
       const onOther = await guidedView(page);
-      assert(Object.keys(onOther.done).length === 0 && !onOther.explain, `a wrong line counted: ${JSON.stringify(onOther)}`);
+      assert(Object.keys(onOther.done).length === 0 && !onOther.explain, `a wrong statement counted: ${JSON.stringify(onOther)}`);
       return {onError: onError.feedback, onOther: onOther.feedback};
     });
 
-    await probe('guided: plot(5,5) typed in the Console counts as plot(5, 5) once a new chart shows, then explains', async () => {
-      const plotBefore = await plotSrc(page);
-      await consoleRun(page, 'plot(5,5)');
-      await waitGuided(page, () => window.__rsCoach.guided.done['0.0']);
+    await probe('guided: library("tidyverse"), with quotes, counts once R has the tidyverse attached, then explains', async () => {
+      await consoleRun(page, 'library("tidyverse")');
+      await waitFor(page, () => window.__rsCoach.guided.done['0.0']);
       const view = await guidedView(page);
-      const plotAfter = await plotSrc(page);
       assert(view.done['0.0'] === 'learner' && view.tasks.join() === 'done' && view.steps[0] === 'done', JSON.stringify(view));
-      assert(plotAfter && plotAfter !== plotBefore, 'no new chart when the line counted');
-      assert(view.explain.startsWith('plot() drew one point') && view.next === 'Next: step 2' && !view.feedback, JSON.stringify(view));
+      assert(view.explain.startsWith('library(tidyverse) attaches ggplot2') && view.next === 'Next: step 2' && !view.feedback, JSON.stringify(view));
       await page.screenshot({path: path.join(OUT, 'guided-step1.png')});
       return {next: view.next};
     });
 
-    await probe('guided: hints come one at a time; Show me types and runs the line with the pointer and counts it as shown', async () => {
+    await probe('guided: a statement typed below the heading in the script and run with Ctrl+Enter counts (= for <-, single quotes)', async () => {
       await coachEl(page, 'button.next').click();
+      await scriptRun(page, lesson.steps[1].heading, 'week = read_csv(\'data/trips-week.csv\')');
+      await waitFor(page, () => window.__rsCoach.guided.done['1.0']);
+      const view = await guidedView(page);
+      assert(view.done['1.0'] === 'learner' && view.tasks.join() === 'done,active' && !view.explain, JSON.stringify(view));
+      return {lines: (await editorLines(page)).filter(l => /week/.test(l))};
+    });
+
+    await probe('guided: hints come one at a time; Show me types and runs the statement with the pointer and counts it as shown', async () => {
       const hints = [];
       for (let i = 0; i < 3; i += 1) {
         await coachEl(page, 'button.hint').click();
@@ -175,84 +210,95 @@ const waitGuided = (page, fn, arg, timeout = 20000) => page.waitForFunction(fn, 
       }
       const hinted = await guidedView(page);
       assert(hints.join() === '1,2,3', `hints shown after each click: ${hints}`);
-      assert(hinted.hints[0].includes('# Step 2. Lines: type = "l"') && hinted.hints[1].includes('plot(…)') && hinted.hints[2].includes('plot(1:10, type="l")'), JSON.stringify(hinted.hints));
+      assert(hinted.hints[0].includes(lesson.steps[1].heading) && /^It starts like this: glimpse\(/.test(hinted.hints[1]) && hinted.hints[2].includes('glimpse(week)'), JSON.stringify(hinted.hints));
       assert(hinted.hintButton.disabled && hinted.hintButton.text === 'No more hints', JSON.stringify(hinted.hintButton));
       const since = await now(page);
       await coachEl(page, 'button.show').click();
-      await waitGuided(page, () => window.__rsCoach.guided.done['1.0'] && !window.__rsCoach.guided.showing, null, 60000);
+      await waitFor(page, () => window.__rsCoach.guided.done['1.1'] && !window.__rsCoach.guided.showing, null, 60000);
       const until = await now(page);
       const view = await guidedView(page);
-      assert(view.done['1.0'] === 'coach' && view.explain.startsWith('1:10 is the whole numbers'), JSON.stringify(view));
+      assert(view.done['1.1'] === 'coach' && view.explain.startsWith('read_csv() read'), JSON.stringify(view));
       const rec = await record(page);
       const clicks = verifyPointer(rec, since, until);
-      const code = lesson.steps[1].runs[0].code;
+      const code = lesson.steps[1].runs[1].code;
       const typing = verifyTyping(rec, since, until, [code]);
       const spotlit = verifySpotlight(rec, since, until);
       const shade = await overlayState(page);
       assert(!shade.dim && !shade.spot, `RStudio stayed dimmed after Show me: ${JSON.stringify(shade)}`);
       const saved = fs.readFileSync(scriptPath, 'utf8').split('\n');
-      assert(saved[saved.indexOf(lesson.steps[1].heading) + 1] === code, 'Show me did not save the line under step 2\'s heading');
+      const at = saved.indexOf(lesson.steps[1].heading);
+      const end = saved.indexOf(lesson.steps[2].heading);
+      assert(at >= 0 && saved.slice(at + 1, end).includes(code), `Show me did not save ${code} under step 2's heading: ${JSON.stringify(saved.slice(at, end))}`);
       await page.screenshot({path: path.join(OUT, 'guided-show-me.png')});
       return {clicks, ...typing, ...spotlit};
     });
 
-    await probe('guided: lines typed below the heading in the script and run with Ctrl+Enter count (slices = c(...) for <-)', async () => {
+    await probe('guided: a different chart gets feedback and does not count; the same chart written another way does', async () => {
       await coachEl(page, 'button.next').click();
-      await scriptRun(page, '# Step 3. Pie chart: pie()', 'slices = c(50, 20, 30)');
-      await waitGuided(page, () => window.__rsCoach.guided.done['2.0']);
-      const first = await guidedView(page);
-      assert(first.tasks.join() === 'done,active' && !first.explain, `after the first line: ${JSON.stringify(first)}`);
-      await scriptRun(page, 'slices = c(50, 20, 30)', 'pie(slices)');
-      await waitGuided(page, () => window.__rsCoach.guided.done['2.1']);
+      await consoleRun(page, 'ggplot(week, aes(x = distance_km)) + geom_histogram(binwidth = 1)');
+      await feedbackMatches(page, 'but R\'s result isn\'t');
+      const other = await guidedView(page);
+      assert(!other.done['2.0'] && !other.explain, `a different chart counted: ${JSON.stringify(other)}`);
+      const plotBefore = await plotSrc(page);
+      await consoleRun(page, lesson.steps[2].runs[0].alternatives[0]);
+      await waitFor(page, () => window.__rsCoach.guided.done['2.0']);
       const view = await guidedView(page);
-      assert(view.done['2.0'] === 'learner' && view.done['2.1'] === 'learner' && view.explain.startsWith('c() combined'), JSON.stringify(view));
-      return {lines: (await editorLines(page)).filter(l => /slices/.test(l))};
+      assert(view.done['2.0'] === 'learner' && view.explain.startsWith('A ggplot2 chart has three parts') && (await plotSrc(page)) !== plotBefore, JSON.stringify(view));
+      return {feedback: other.feedback, written: lesson.steps[2].runs[0].alternatives[0]};
     });
 
     await probe('guided: reload keeps the mode and progress mid-step', async () => {
       await coachEl(page, 'button.next').click();
-      await consoleRun(page, 'frequencies <- c(3, 6, 9)');
-      await waitGuided(page, () => window.__rsCoach.guided.done['3.0']);
+      await guidedStep(page, lesson, 3);
+      await coachEl(page, 'button.next').click();
+      const first = lesson.steps[4].runs[0]; // step 5: the labelled chart, then ggsave()
+      await consoleRun(page, first.code);
+      await waitFor(page, () => window.__rsCoach.guided.done['4.0']);
       await page.reload();
       await page.waitForSelector('#rstudio_console_input', {timeout: 90000});
       await waitForCoach(page, 'guided');
       const view = await guidedView(page);
-      assert(view.mode === 'guided' && view.step === 3 && view.steps.join() === 'done,done,done,active' && view.tasks.join() === 'done,active,pending', JSON.stringify(view));
+      const want = lesson.steps.map((_s, i) => (i < 4 ? 'done' : i === 4 ? 'active' : 'pending')).join();
+      assert(view.mode === 'guided' && view.step === 4 && view.steps.join() === want && view.tasks.join() === 'done,active', JSON.stringify(view));
       return {steps: view.steps, tasks: view.tasks};
     });
 
-    await probe('guided: finishing step 4 shows the debrief (3 of 4 steps without help, 3 hints, 1 line shown)', async () => {
+    await probe('guided: finishing the lesson shows the debrief (8 of 9 steps without help, 3 hints, 1 task shown)', async () => {
       await page.waitForTimeout(1500); // the coach starts counting once the refilled Console has settled
-      await consoleRun(page, 'label <- c(\'X\', \'Y\', \'Z\')');
-      await consoleRun(page, 'barplot(frequencies, names.arg = label)');
-      await waitGuided(page, () => !document.getElementById('rs-coach-host').shadowRoot.querySelector('.debrief').hidden);
+      await guidedStep(page, lesson, 4, 1);
+      for (let s = 5; s < lesson.steps.length; s += 1) {
+        await coachEl(page, 'button.next').click();
+        await guidedStep(page, lesson, s);
+      }
+      await waitFor(page, () => !document.getElementById('rs-coach-host').shadowRoot.querySelector('.debrief').hidden);
       const view = await guidedView(page);
-      assert(/Steps done without help: 3 of 4/.test(view.debrief) && /Hints read: 3/.test(view.debrief) && /Lines the coach showed you: 1/.test(view.debrief), view.debrief);
+      const n = lesson.steps.length;
+      assert(new RegExp(`Steps done without help: ${n - 1} of ${n}`).test(view.debrief) && /Hints read: 3/.test(view.debrief) && /Tasks the coach showed you: 1/.test(view.debrief), view.debrief);
       assert(view.steps.every(s => s === 'done') && !view.next, JSON.stringify(view));
       await page.screenshot({path: path.join(OUT, 'guided-debrief.png')});
       return {debrief: view.debrief};
     });
 
-    await probe('solo: Change mode returns to the picker; Solo starts afresh (Guided\'s lines, objects and chart are gone), lists every task and discloses nothing until checked', async () => {
+    await probe('solo: Change mode returns to the picker; Solo starts afresh (Guided\'s code, objects and chart are gone), lists every task and discloses nothing until checked', async () => {
       const before = await rstudioState(page);
-      assert(before.chart && /frequencies/.test(before.environment) && /barplot/.test(before.console), `Guided left nothing to reset: ${JSON.stringify(before).slice(0, 300)}`);
+      assert(before.chart && /week/.test(before.environment) && /facet_wrap/.test(before.console), `Guided left nothing to reset: ${JSON.stringify(before).slice(0, 300)}`);
       const fresh = await freshStarts(page);
       await coachEl(page, 'button.switch').click();
       const picker = await pickerView(page);
       assert(picker.mode === null && picker.cards.length === 3 && !picker.started && picker.back === 'Back to Guided', JSON.stringify(picker));
       await coachEl(page, 'button.mode-card[data-mode="solo"]').click();
       const {last} = await waitForFreshStart(page, fresh + 1);
-      await waitGuided(page, () => window.__rsCoach.solo);
+      await waitFor(page, () => window.__rsCoach.solo);
       verifyFresh(await rstudioState(page), lesson, scriptPath);
       const start = await soloView(page);
       const total = lesson.steps.reduce((n, s) => n + s.runs.length, 0);
       assert(Object.keys(start.lines).length === total && Object.values(start.lines).every(c => c === 'pending') && !start.results, JSON.stringify(start));
-      await consoleRun(page, 'plot(5, 5)');
-      await waitGuided(page, () => window.__rsCoach.solo.seen['0.0']);
+      await consoleRun(page, lesson.steps[0].runs[0].code);
+      await waitFor(page, () => window.__rsCoach.solo.seen['0.0']);
       await page.waitForTimeout(500);
       const quiet = await soloView(page);
       assert(Object.values(quiet.lines).every(c => c === 'pending') && !quiet.results, `Solo disclosed a result before Check: ${JSON.stringify(quiet)}`);
-      return {resetMs: last.ms, lines: total, seenButHidden: quiet.seen};
+      return {resetMs: last.ms, tasks: total, seenButHidden: quiet.seen};
     });
 
     await probe('solo: after a reload, Solo keeps what it saw, and nothing run in Guided counts', async () => {
@@ -265,204 +311,232 @@ const waitGuided = (page, fn, arg, timeout = 20000) => page.waitForFunction(fn, 
       return {seen: view.seen};
     });
 
-    await probe('solo: Check discloses 1 of 7; a hint is counted; every line run and checked again shows all 7', async () => {
+    await probe('solo: Check discloses 1 task done; a hint is counted; every statement run and checked again shows all done', async () => {
+      const total = lesson.steps.reduce((n, s) => n + s.runs.length, 0);
+      const lastKey = `${lesson.steps.length - 1}.0`;
       await coachEl(page, 'button.check').click();
       const first = await soloView(page);
-      assert(/^1 of 7 lines done/.test(first.results) && first.lines['0.0'] === 'done' && first.lines['2.1'] === 'missing' && /Hints used: 0/.test(first.results), JSON.stringify(first));
-      await coachEl(page, 'button.hint[data-line="3.2"]').click();
+      assert(new RegExp(`^1 of ${total} tasks done`).test(first.results) && first.lines['0.0'] === 'done' && first.lines[lastKey] === 'missing' && /Hints used: 0/.test(first.results), JSON.stringify(first));
+      await coachEl(page, 'button.hint[data-line="5.0"]').click();
       const hinted = await soloView(page);
-      assert(hinted.hintTexts.join() === 'It starts like this: barplot(…)', JSON.stringify(hinted.hintTexts));
-      for (const line of ['plot(1:10, type="l")', 'slices <- c(50, 20, 30)', 'pie(slices)', 'frequencies <- c(3, 6, 9)', 'label <- c("X", "Y", "Z")', 'barplot(frequencies, names.arg = label)']) {
-        await consoleRun(page, line);
-        await page.waitForTimeout(400);
+      assert(hinted.hintTexts.length === 1 && /^It starts like this: ggplot\(/.test(hinted.hintTexts[0]), JSON.stringify(hinted.hintTexts));
+      for (const [s, step] of lesson.steps.entries()) {
+        for (const [r, run] of step.runs.entries()) {
+          if (s === 0) continue;
+          await consoleRun(page, run.code, run.keys);
+          await waitFor(page, k => window.__rsCoach.solo.seen[k], `${s}.${r}`);
+        }
       }
-      await waitGuided(page, () => Object.keys(window.__rsCoach.solo.seen).length === 7);
       const before = await soloView(page);
-      assert(before.lines['2.1'] === 'missing', 'Solo updated the result before the learner checked again');
+      assert(before.seen.length === total && before.lines[lastKey] === 'missing', 'Solo updated the result before the learner checked again');
       await coachEl(page, 'button.check').click();
       const done = await soloView(page);
-      assert(/^All 7 lines done/.test(done.results) && /Hints used: 1/.test(done.results) && Object.values(done.lines).every(c => c === 'done'), JSON.stringify(done));
+      assert(new RegExp(`^All ${total} tasks done`).test(done.results) && /Hints used: 1/.test(done.results) && Object.values(done.lines).every(c => c === 'done'), JSON.stringify(done));
       await page.screenshot({path: path.join(OUT, 'solo-complete.png')});
-      return {first: first.results.slice(0, 20), last: done.results.slice(0, 60)};
+      return {first: first.results.slice(0, 24), last: done.results.slice(0, 60)};
     });
     await context.close();
   }
 
-  // ---------------- statistical-tools (narrower window): picker, Solo, Show me failure ----------------
+  // ---------------- 03 Data transformation (narrower window): picker, Solo, Show me failure ----------------
   {
-    const password = provision('statistical-tools');
+    const LESSON = '03-data-transformation';
+    const password = provision(LESSON);
+    const scriptPath = path.join(ROOT, 'run/project', `${LESSON}.R`);
     const context = await browser.newContext({viewport: {width: 1366, height: 768}});
     const page = await context.newPage();
-    page.on('pageerror', e => errors.push(`statistical: ${e.message}`));
+    page.on('pageerror', e => errors.push(`${LESSON}: ${e.message}`));
+    let lesson;
 
-    await probe('statistical (1366x768): the three modes fit the docked coach without scrolling', async () => {
+    await probe('lesson 3 (1366x768): the three modes fit the docked coach without scrolling', async () => {
       await signIn(page, password, null);
+      lesson = (await steps(page)).lessons[0];
       const view = await pickerView(page);
       assert(view.inView.every(Boolean), JSON.stringify(view));
       await page.screenshot({path: path.join(OUT, 'mode-picker-1366x768.png')});
       return {lowestCardBottom: view.cardBottom, viewport: 768};
     });
 
-    await probe('statistical solo: printed output counts however the line is written; a wrong answer does not', async () => {
+    await probe('lesson 3 solo: a result counts however the statement is written; a different result does not', async () => {
       await coachEl(page, 'button.mode-card[data-mode="solo"]').click();
-      await waitGuided(page, () => window.__rsCoach.solo);
-      await consoleRun(page, 'max(airquality$Temp)'); // the reference uses sample_data$Temp
-      await consoleRun(page, 'sample_data = airquality');
-      await consoleRun(page, 'mean(sample_data$Temp, trim = 0.1)'); // a different number
+      await waitForFreshStart(page, 1);
+      await waitFor(page, () => window.__rsCoach.solo);
+      const total = lesson.steps.reduce((n, s) => n + s.runs.length, 0);
+      await consoleRun(page, 'library(tidyverse)');
+      await consoleRun(page, 'trips = read_csv(\'data/trips.csv\', show_col_types = FALSE)');
+      await consoleRun(page, 'arrange(trips, desc(duration_min))'); // the reference is trips |> arrange(desc(duration_min))
+      await consoleRun(page, 'arrange(trips, duration_min)'); // shortest first: a different result
+      await waitFor(page, () => window.__rsCoach.solo.seen['3.0']);
       await page.waitForTimeout(2000);
       await coachEl(page, 'button.check').click();
       const view = await soloView(page);
-      assert(view.seen.join() === '0.0,0.1' && /^2 of 8 lines done/.test(view.results), JSON.stringify(view));
+      assert(view.seen.join() === '0.0,1.0,3.0' && new RegExp(`^3 of ${total} tasks done`).test(view.results), JSON.stringify(view));
       return {seen: view.seen};
     });
 
-    await probe('statistical guided: starts afresh after Solo (sample_data is gone); Show me reports an R error without counting, then runs the line already in the script', async () => {
-      const lesson = await page.evaluate(() => fetch('/coach/api/steps').then(r => r.json()).then(s => s.lessons[0]));
+    await probe('lesson 3 guided: starts afresh after Solo (trips is gone); Show me reports an R error without counting, then runs the statement already in the script', async () => {
       const fresh = await freshStarts(page);
       await coachEl(page, 'button.switch').click();
       await coachEl(page, 'button.mode-card[data-mode="guided"]').click();
       await waitForFreshStart(page, fresh + 1);
-      await waitGuided(page, () => window.__rsCoach.guided);
-      verifyFresh(await rstudioState(page), lesson, path.join(ROOT, 'run/project/statistical-tools.R'));
-      await consoleRun(page, 'sample_data <- airquality');
-      await waitGuided(page, () => window.__rsCoach.guided.done['0.0']);
-      await consoleRun(page, 'rm(sample_data)');
+      await waitFor(page, () => window.__rsCoach.guided);
+      verifyFresh(await rstudioState(page), lesson, scriptPath);
+      for (let s = 0; s < 3; s += 1) {
+        if (s > 0) await coachEl(page, 'button.next').click();
+        await guidedStep(page, lesson, s); // step 3's first |> comes from Ctrl+Shift+M
+      }
+      await coachEl(page, 'button.next').click(); // step 4: arrange() and distinct()
+      await consoleRun(page, 'rm(trips)');
       await coachEl(page, 'button.show').click();
-      await waitGuided(page, () => /couldn't show this line/.test(document.getElementById('rs-coach-host').shadowRoot.querySelector('.feedback').textContent), null, 60000);
+      await feedbackMatches(page, 'couldn\'t show this line');
       await page.waitForTimeout(1500); // the message stays while the learner runs nothing new
       const failed = await guidedView(page);
-      assert(/R reported: Error.*sample_data/.test(failed.feedback) && !failed.done['0.1'] && !failed.showing, JSON.stringify(failed));
+      assert(/R reported: Error.*trips/.test(failed.feedback) && !failed.done['3.0'] && !failed.showing, JSON.stringify(failed));
       await page.screenshot({path: path.join(OUT, 'guided-show-me-failed.png')});
-      await consoleRun(page, 'sample_data <- airquality');
-      await page.waitForTimeout(1000);
+      await consoleRun(page, lesson.steps[1].runs[0].code);
+      await page.waitForTimeout(3000);
       const since = await now(page);
       await coachEl(page, 'button.show').click();
-      await waitGuided(page, () => window.__rsCoach.guided.done['0.1'] && !window.__rsCoach.guided.showing, null, 60000);
+      await waitFor(page, () => window.__rsCoach.guided.done['3.0'] && !window.__rsCoach.guided.showing, null, 60000);
       const until = await now(page);
       const rec = await record(page);
-      verifyTyping(rec, since, until, []); // the line from the failed attempt is reused, not typed again
+      verifyTyping(rec, since, until, []); // the statement from the failed attempt is reused, not typed again
       const view = await guidedView(page);
-      assert(view.done['0.1'] === 'coach' && view.tasks.join() === 'done,done,active', JSON.stringify(view));
+      assert(view.done['3.0'] === 'coach' && view.tasks.join() === 'done,active', JSON.stringify(view));
       return {failed: failed.feedback, clicks: verifyPointer(rec, since, until)};
     });
     await context.close();
   }
 
-  // ---------------- the default run: both lessons in one project (1366x768) ----------------
+  // ---------------- the default run: every lesson written so far, in one project (1366x768) ----------------
   {
     const password = provision();
     const context = await browser.newContext({viewport: {width: 1366, height: 768}});
     const page = await context.newPage();
     page.on('pageerror', e => errors.push(`lessons: ${e.message}`));
     const coachText = sel => page.evaluate(sel => document.getElementById('rs-coach-host').shadowRoot.querySelector(sel)?.textContent.trim(), sel);
+    let lessons;
+    let fresh = 0;
 
-    await probe('two lessons (1366x768): lesson cards above the mode cards, all in view; the coach waits', async () => {
+    await probe(`the default run of ${DEFAULT.length} lessons (1366x768): the first on one line, the mode cards in view, the coach waits; Change lists the lessons by part`, async () => {
       await signIn(page, password, null);
+      lessons = (await steps(page)).lessons;
+      assert(lessons.map(l => l.id).join() === DEFAULT.join(), `the default run holds ${lessons.map(l => l.id)}`);
       const view = await pickerView(page);
-      assert(view.mode === null && view.label === 'Choose a lesson and mode', JSON.stringify(view));
-      assert(view.lessons.map(l => `${l.id}:${l.checked}`).join() === 'graphical-tools:true,statistical-tools:false', JSON.stringify(view.lessons));
-      assert(view.lessons[0].what === '4 steps: plot(), type = "l", pie(), barplot()', view.lessons[0].what);
+      assert(view.mode === null && view.label === 'Choose a lesson and mode' && /^Lesson 1 · Whole game Data visualization/.test(view.row) && !view.listOpen, JSON.stringify(view));
       assert(view.cards.join() === 'Demonstration,Guided,Solo' && view.inView.every(Boolean), JSON.stringify(view));
-      const files = ['graphical-tools.R', 'statistical-tools.R', 'lessons.Rproj', 'README.md'].filter(f => fs.existsSync(path.join(ROOT, 'run/project', f)));
-      assert(files.length === 4 && /lessons/.test(await page.title()), `project files ${files}, title ${await page.title()}`);
+      const files = [...DEFAULT.map(id => lessons.find(l => l.id === id).script), 'lessons.Rproj'].filter(f => fs.existsSync(path.join(ROOT, 'run/project', f)));
+      assert(files.length === DEFAULT.length + 1 && /lessons/.test(await page.title()), `project files ${files}, title ${await page.title()}`);
       const rec = await record(page);
       assert(!view.started && rec.clicks.length === 0 && rec.edits.length === 0, 'the coach acted before a mode was chosen');
+      await coachEl(page, 'button.change').click();
+      const open = await pickerView(page);
+      const parts = open.parts.map(p => `${p.part}${p.open ? ' (open)' : ''}: ${p.lessons.join('; ')}`);
+      const entry = l => `${l.id}: ${l.steps.length} steps`;
+      const byPart = [...new Set(lessons.map(l => l.part))].map(part => `${part}${part === lessons[0].part ? ' (open)' : ''}: ${lessons.filter(l => l.part === part).map(entry).join('; ')}`);
+      const want = byPart;
+      assert(open.listOpen && parts.join(' | ') === want.join(' | '), JSON.stringify(parts));
       await page.screenshot({path: path.join(OUT, 'lessons-picker.png')});
-      return {lessons: view.lessons.map(l => l.what), lowestCardBottom: view.cardBottom, viewport: 768};
+      return {row: view.row, parts, lowestCardBottom: view.cardBottom, viewport: 768};
     });
 
-    await probe('two lessons: Statistical, then Solo, opens that lesson and counts its lines', async () => {
-      await coachEl(page, '.lesson-card[data-lesson="statistical-tools"]').click();
-      const picked = await pickerView(page);
-      assert(picked.lessons.map(l => l.checked).join() === 'false,true' && picked.mode === null, JSON.stringify(picked));
+    const transformation = () => lessons.find(l => l.id === '03-data-transformation');
+    await probe('the default run: Data transformation, then Solo, opens that lesson and counts its tasks', async () => {
+      await coachEl(page, '.lesson-pick[data-lesson="03-data-transformation"]').click();
+      const picked = await pickerView(page); // the coach's lesson changes once a mode is chosen
+      assert(/^Lesson 3 · Whole game Data transformation/.test(picked.row) && !picked.listOpen && picked.mode === null, JSON.stringify(picked));
       await coachEl(page, 'button.mode-card[data-mode="solo"]').click();
-      await waitGuided(page, () => window.__rsCoach.solo);
+      await waitForFreshStart(page, ++fresh);
+      await waitFor(page, () => window.__rsCoach.solo);
       const title = await coachText('h2');
-      await consoleRun(page, 'max(airquality$Temp)');
-      await waitGuided(page, () => window.__rsCoach.solo.seen['0.1']);
+      await consoleRun(page, 'library(tidyverse)');
+      await waitFor(page, () => window.__rsCoach.solo.seen['0.0']);
       const view = await soloView(page);
-      assert(title === 'Statistical tools in base R' && Object.keys(view.lines).length === 8, `${title}: ${JSON.stringify(view)}`);
+      assert(title === 'Data transformation' && Object.keys(view.lines).length === transformation().steps.reduce((n, s) => n + s.runs.length, 0), `${title}: ${JSON.stringify(view)}`);
       return {title, seen: view.seen};
     });
 
-    await probe('two lessons: Change lesson or mode, then Graphical in Demonstration opens graphical-tools.R and runs step 1', async () => {
+    await probe('the default run: Change lesson or mode, then Data visualization in Demonstration opens its script and runs step 1', async () => {
       const label = await coachText('button.switch');
       assert(label === 'Change lesson or mode', label);
       await coachEl(page, 'button.switch').click();
       const picker = await pickerView(page);
-      assert(picker.lessons.map(l => l.checked).join() === 'false,true', `the picker forgot the lesson: ${JSON.stringify(picker.lessons)}`);
-      await coachEl(page, '.lesson-card[data-lesson="graphical-tools"]').click();
+      assert(picker.lesson === '03-data-transformation' && /^Lesson 3 · Whole game Data transformation/.test(picker.row), `the picker forgot the lesson: ${JSON.stringify(picker)}`);
+      await coachEl(page, 'button.change').click();
+      await coachEl(page, '.lesson-pick[data-lesson="01-data-visualization"]').click();
       await coachEl(page, 'button.mode-card[data-mode="demonstration"]').click();
-      await waitGuided(page, () => window.__rsCoach.demo);
-      const plotBefore = await plotSrc(page);
+      await waitForFreshStart(page, ++fresh);
+      await waitFor(page, () => window.__rsCoach.demo);
       const since = await now(page);
       await coachEl(page, 'button.go').click();
-      await waitGuided(page, () => window.__rsCoach.demo.completed.includes(0) && window.__rsCoach.demo.state === 'waiting', null, 60000);
+      await waitFor(page, () => window.__rsCoach.demo.completed.includes(0) && window.__rsCoach.demo.state === 'waiting', null, 60000);
       const until = await now(page);
       const tab = await page.evaluate(() => [...document.querySelectorAll('#rstudio_Source_pane [role="tab"]')].find(t => t.getAttribute('aria-selected') === 'true')?.innerText.trim());
       const rec = await record(page);
       const clicks = verifyPointer(rec, since, until);
-      const typing = verifyTyping(rec, since, until, ['plot(5, 5)']);
-      assert(tab === 'graphical-tools.R' && (await plotSrc(page)) !== plotBefore, `active tab ${tab}`);
+      const typing = verifyTyping(rec, since, until, [lessons[0].steps[0].runs[0].code]);
+      assert(tab === lessons[0].script, `active tab ${tab}`);
       await page.screenshot({path: path.join(OUT, 'lessons-demo-step1.png')});
       return {tab, clicks, ...typing};
     });
 
-    await probe('two lessons: reload reopens Graphical Demonstration where it was; Back on the picker returns to it without a reset', async () => {
-      await page.reload();
+    await probe('the default run: reload reopens the Demonstration where it was; Back on the picker returns to it without a reset', async () => {
+      await page.reload(); // within step 1's reading time
       await page.waitForSelector('#rstudio_console_input', {timeout: 90000});
       await waitForCoach(page, 'demonstration');
       const lesson = await page.evaluate(() => window.__rsCoach.lesson);
       const go = await coachText('button.go');
-      assert(lesson === 'graphical-tools' && go === 'Next: step 2', `${lesson}, ${go}`);
+      assert(lesson === '01-data-visualization' && go === 'Next: step 2', `${lesson}, ${go}`);
       await coachEl(page, 'button.switch').click();
       const picker = await pickerView(page);
-      assert(picker.back === 'Back to Demonstration: Graphical tools in base R', JSON.stringify(picker));
+      assert(picker.back === 'Back to Demonstration: Data visualization', JSON.stringify(picker));
       await coachEl(page, 'button.back').click();
-      await waitGuided(page, () => window.__rsCoach.demo);
+      await waitFor(page, () => window.__rsCoach.demo);
       const back = await coachText('button.go');
       const state = await rstudioState(page);
-      const fresh = await freshStarts(page);
-      assert(back === 'Next: step 2' && state.script.includes('\nplot(5, 5)\n') && state.chart && fresh === 0, `after Back: ${back}, ${fresh} fresh starts, ${JSON.stringify(state).slice(0, 300)}`);
-      return {graphical: go, back};
+      const resets = await freshStarts(page);
+      assert(back === 'Next: step 2' && state.script.includes('\nlibrary(tidyverse)\n') && resets === 0, `after Back: ${back}, ${resets} fresh starts, ${JSON.stringify(state).slice(0, 300)}`);
+      fresh = 0; // the count is per page load
+      return {go, back};
     });
 
-    await probe('two lessons: Demonstration then Guided starts afresh: step 1\'s line is gone from the script, and the Console, Environment and Plots are empty', async () => {
-      const [graphical] = await page.evaluate(() => fetch('/coach/api/steps').then(r => r.json()).then(s => s.lessons));
-      const scriptPath = path.join(ROOT, 'run/project/graphical-tools.R');
+    await probe('the default run: Demonstration then Guided starts afresh: step 1\'s code is gone from the script, and the Console, Environment and Plots are empty', async () => {
+      const lesson = lessons[0];
+      const scriptPath = path.join(ROOT, 'run/project', lesson.script);
       const before = await rstudioState(page);
-      assert(before.script.includes('\nplot(5, 5)\n') && before.console.includes('> plot(5, 5)') && before.chart, `the demonstration left nothing to reset: ${JSON.stringify(before).slice(0, 300)}`);
+      assert(before.script.includes('\nlibrary(tidyverse)\n') && before.console.includes('> library(tidyverse)'), `the demonstration left nothing to reset: ${JSON.stringify(before).slice(0, 300)}`);
       await coachEl(page, 'button.switch').click();
       await coachEl(page, 'button.mode-card[data-mode="guided"]').click();
-      const {last} = await waitForFreshStart(page, 1);
-      await waitGuided(page, () => window.__rsCoach.guided);
-      verifyFresh(await rstudioState(page), graphical, scriptPath);
+      const {last} = await waitForFreshStart(page, ++fresh);
+      await waitFor(page, () => window.__rsCoach.guided);
+      verifyFresh(await rstudioState(page), lesson, scriptPath);
       const start = await guidedView(page);
       assert(start.step === 0 && Object.keys(start.done).length === 0 && start.tasks.join() === 'active', JSON.stringify(start));
       await page.screenshot({path: path.join(OUT, 'lessons-guided-after-demo.png')});
-      // The learner writes step 1's line themselves, and it counts as theirs.
-      await scriptRun(page, graphical.steps[0].heading, 'plot(5, 5)');
-      await waitGuided(page, () => window.__rsCoach.guided.done['0.0']);
+      // The learner writes step 1's statement themselves, and it counts as theirs.
+      await scriptRun(page, lesson.steps[0].heading, 'library(tidyverse)');
+      await waitFor(page, () => window.__rsCoach.guided.done['0.0']);
       const view = await guidedView(page);
       assert(view.done['0.0'] === 'learner', JSON.stringify(view));
-      assert(last.charts, 'the coach did not clear the demonstration\'s chart');
       return {resetMs: last.ms, step1: view.done['0.0']};
     });
 
-    await probe('two lessons: Statistical Solo starts afresh too: Graphical\'s chart is gone, and what Solo saw before no longer counts', async () => {
-      const [, statistical] = await page.evaluate(() => fetch('/coach/api/steps').then(r => r.json()).then(s => s.lessons));
+    await probe('the default run: Data transformation Solo starts afresh too, and what Solo saw before no longer counts', async () => {
+      const lesson = transformation();
       await coachEl(page, 'button.switch').click();
       const picker = await pickerView(page);
-      assert(picker.back === 'Back to Guided: Graphical tools in base R', JSON.stringify(picker));
-      await coachEl(page, '.lesson-card[data-lesson="statistical-tools"]').click();
+      assert(picker.back === 'Back to Guided: Data visualization', JSON.stringify(picker));
+      await coachEl(page, 'button.change').click();
+      await coachEl(page, '.lesson-pick[data-lesson="03-data-transformation"]').click();
       await coachEl(page, 'button.mode-card[data-mode="solo"]').click();
-      await waitForFreshStart(page, 2);
-      await waitGuided(page, () => window.__rsCoach.solo);
-      verifyFresh(await rstudioState(page), statistical, path.join(ROOT, 'run/project/statistical-tools.R'));
+      await waitForFreshStart(page, ++fresh);
+      await waitFor(page, () => window.__rsCoach.solo);
+      verifyFresh(await rstudioState(page), lesson, path.join(ROOT, 'run/project', lesson.script));
       await coachEl(page, 'button.check').click();
       const view = await soloView(page);
-      assert(/^0 of 8 lines done/.test(view.results) && view.seen.length === 0, JSON.stringify(view));
-      return {statistical: view.results.slice(0, 18)};
+      const total = lesson.steps.reduce((n, s) => n + s.runs.length, 0);
+      assert(new RegExp(`^0 of ${total} tasks done`).test(view.results) && view.seen.length === 0, JSON.stringify(view));
+      return {results: view.results.slice(0, 24)};
     });
     await context.close();
   }

@@ -1,0 +1,329 @@
+{
+ "lesson": "24-web-scraping",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [
+    "rvest"
+   ],
+   "class": "character",
+   "dim": 18,
+   "files": [],
+   "fp": "e8a99434d06d10c914e9af01a21b0938",
+   "fp_any": null,
+   "index": 1,
+   "library": "rvest",
+   "messages": [
+    "\nAttaching package: ‘rvest’\n",
+    "The following object is masked from ‘package:readr’:\n\n    guess_encoding\n"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "page",
+     "class": "xml_document",
+     "code": "page = rvest::read_html('data/site/stations.html')",
+     "dim": 2,
+     "fp": "0187e658eac99f2d5695516481c76126",
+     "fp_any": null
+    }
+   ],
+   "assigned": "page",
+   "attached": [],
+   "class": "xml_document",
+   "dim": 2,
+   "files": [],
+   "fp": "0187e658eac99f2d5695516481c76126",
+   "fp_any": null,
+   "index": 2,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "read",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "xml_nodeset",
+     "code": "html_elements(page, 'h1')",
+     "dim": 1,
+     "fp": "71862c47937b1f076c0e341a34960da2",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "xml_nodeset",
+   "dim": 1,
+   "files": [],
+   "fp": "71862c47937b1f076c0e341a34960da2",
+   "fp_any": null,
+   "index": 3,
+   "messages": [],
+   "output": "{xml_nodeset (1)}\n[1] <h1>Stations</h1>",
+   "plot": false,
+   "step": "read",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "cards",
+     "class": "xml_nodeset",
+     "code": "cards = html_elements(page, 'article.station')",
+     "dim": 80,
+     "fp": "90b2aeb5031165fa97de17d46f08d30c",
+     "fp_any": null
+    }
+   ],
+   "assigned": "cards",
+   "attached": [],
+   "class": "xml_nodeset",
+   "dim": 80,
+   "files": [],
+   "fp": "90b2aeb5031165fa97de17d46f08d30c",
+   "fp_any": null,
+   "index": 4,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "select",
+   "values": {
+    "n_cards": "80"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "character",
+     "code": "html_text2(html_element(cards, '.name'))",
+     "dim": 80,
+     "fp": "766f133df89f373a73e0e13a27343d0f",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "character",
+   "dim": 80,
+   "files": [],
+   "fp": "766f133df89f373a73e0e13a27343d0f",
+   "fp_any": null,
+   "index": 5,
+   "messages": [],
+   "output": " [1] \"Market Square\"              \"MARKET SQUARE NORTH\"        \"Town Hall\"                  \"Bridge St & Water St\"       \"Larkhaven Central Station\"  \"Corn Exchange\"             \n [7] \"Library Plaza\"              \"Bellfounders Row\"           \"St. Agnes Square\"           \"Guildhall Lane\"             \"Theatre Royal\"              \"Courthouse\"                \n[13] \"Harbour Front\"              \"Ferry Landing\"              \"Cooper’s Wharf\"             \"Harbour Master\"             \"Quay Street (temporary)\"    \"Chandlers Court\"           \n[19] \"Lighthouse Walk\"            \"Boatyard\"                   \"Ropewalk\"                   \"Castle Gate\"                \"Castle Hill Park\"           \"St Agnes Church\"           \n[25] \"Keep Street\"                \"Barbican\"                   \"Mill Rd and Kiln St\"        \"Tanner's Yard\"              \"Gasworks Yard\"              \"university library\"        \n[31] \"Science Park\"               \"Student Union\"              \"University West\"            \"Engineering Quad\"           \"Medical School\"             \"Residences North\"          \n[37] \"Sports Centre\"              \"Observatory Road\"           \"Millbrook Green\"            \"Millbrook Shops\"            \"Weir Lane\"                  \"Ash Grove\"                 \n[43] \"Elm Terrace\"                \"Pinfold Street\"             \"Millbrook School\"           \"Orchard Close\"              \"Northgate Library\"          \"Northgate Junction\"        \n[49] \"Hospital\"                   \"Foundry Road\"               \"Northgate Pool\"             \"Hatter's Lane\"              \"Ridgeway\"                   \"Birch Avenue\"              \n[55] \"Eastfield Shops\"            \"Eastfield Station\"          \"Brickworks\"                 \"Cedar Road\"                 \"Linden Way\"                 \"Eastfield Community Centre\"\n[61] \"Maple Crescent\"             \"Rowan Street\"               \"Riverside Walk\"             \"Boathouse\"                  \"Willow Bank\"                \"Lock Keeper's Cottage\"     \n[67] \"Riverside Market\"           \"Old Tannery\"                \"Canal Basin\"                \"Towpath North\"              \"Fenwick Park Gates\"         \"Lido\"                      \n[73] \"Bandstand\"                  \"Rose Garden\"                \"Westmoor Road\"              \"Westmoor Farm Shop\"         \"Heathfield\"                 \"Westmoor Commons\"          \n[79] \"Saltings Wharf\"             \"Saltings Lane\"             ",
+   "plot": false,
+   "step": "select",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "character",
+     "code": "html_attr(html_element(cards, 'a.details'), 'href')",
+     "dim": 80,
+     "fp": "d8fbe8e1efd34fbe009cfbe7ed1ffaf1",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "character",
+   "dim": 80,
+   "files": [],
+   "fp": "d8fbe8e1efd34fbe009cfbe7ed1ffaf1",
+   "fp_any": null,
+   "index": 6,
+   "messages": [],
+   "output": " [1] \"station.html?id=101\" \"station.html?id=102\" \"station.html?id=103\" \"station.html?id=104\" \"station.html?id=105\" \"station.html?id=106\" \"station.html?id=107\" \"station.html?id=108\"\n [9] \"station.html?id=109\" \"station.html?id=110\" \"station.html?id=111\" \"station.html?id=112\" \"station.html?id=113\" \"station.html?id=114\" \"station.html?id=115\" \"station.html?id=116\"\n[17] \"station.html?id=117\" \"station.html?id=118\" \"station.html?id=119\" \"station.html?id=120\" \"station.html?id=121\" \"station.html?id=122\" \"station.html?id=123\" \"station.html?id=124\"\n[25] \"station.html?id=125\" \"station.html?id=126\" \"station.html?id=127\" \"station.html?id=128\" \"station.html?id=129\" \"station.html?id=130\" \"station.html?id=131\" \"station.html?id=132\"\n[33] \"station.html?id=133\" \"station.html?id=134\" \"station.html?id=135\" \"station.html?id=136\" \"station.html?id=137\" \"station.html?id=138\" \"station.html?id=139\" \"station.html?id=140\"\n[41] \"station.html?id=141\" \"station.html?id=142\" \"station.html?id=143\" \"station.html?id=144\" \"station.html?id=145\" \"station.html?id=146\" \"station.html?id=147\" \"station.html?id=148\"\n[49] \"station.html?id=149\" \"station.html?id=150\" \"station.html?id=151\" \"station.html?id=152\" \"station.html?id=153\" \"station.html?id=154\" \"station.html?id=155\" \"station.html?id=156\"\n[57] \"station.html?id=157\" \"station.html?id=158\" \"station.html?id=159\" \"station.html?id=160\" \"station.html?id=161\" \"station.html?id=162\" \"station.html?id=163\" \"station.html?id=164\"\n[65] \"station.html?id=165\" \"station.html?id=166\" \"station.html?id=167\" \"station.html?id=168\" \"station.html?id=169\" \"station.html?id=170\" \"station.html?id=171\" \"station.html?id=172\"\n[73] \"station.html?id=173\" \"station.html?id=174\" \"station.html?id=175\" \"station.html?id=176\" \"station.html?id=177\" \"station.html?id=178\" \"station.html?id=179\" \"station.html?id=180\"",
+   "plot": false,
+   "step": "attributes",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "character",
+     "code": "html_text2(html_elements(cards, '.note'))",
+     "dim": 3,
+     "fp": "5da4c9b46dd7ebdd9b393a523cd300c6",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "character",
+   "dim": 3,
+   "files": [],
+   "fp": "5da4c9b46dd7ebdd9b393a523cd300c6",
+   "fp_any": null,
+   "index": 7,
+   "messages": [],
+   "output": "[1] \"Temporary location during quay repairs\" \"Opens in March 2026\"                    \"Closed for works\"                      ",
+   "plot": false,
+   "step": "missing",
+   "values": {
+    "n_notes": "3"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "stations",
+     "class": "tbl_df",
+     "code": "stations = tibble(name = html_text2(html_element(cards, '.name')), docks = parse_integer(html_text2(html_element(cards, '.count'))), note = html_text2(html_element(cards, '.note')))",
+     "dim": [
+      80,
+      3
+     ],
+     "fp": "ff8d12d6b203484166857d9a8a1ce2c6",
+     "fp_any": "c1d9c4359093f4a3cdf3b5e1187fef56"
+    }
+   ],
+   "assigned": "stations",
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    80,
+    3
+   ],
+   "files": [],
+   "fp": "ff8d12d6b203484166857d9a8a1ce2c6",
+   "fp_any": "c1d9c4359093f4a3cdf3b5e1187fef56",
+   "index": 8,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "missing",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "filter(stations, !is.na(note))",
+     "dim": [
+      3,
+      3
+     ],
+     "fp": "8bf1ae10285cc6a7bbe8aae803f71244",
+     "fp_any": "93bd9ee655bd146b9d7994df0d7e740f"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    3,
+    3
+   ],
+   "files": [],
+   "fp": "8bf1ae10285cc6a7bbe8aae803f71244",
+   "fp_any": "93bd9ee655bd146b9d7994df0d7e740f",
+   "index": 9,
+   "messages": [],
+   "output": "# A tibble: 3 × 3\n  name                    docks note                                  \n  <chr>                   <int> <chr>                                 \n1 Quay Street (temporary)    27 Temporary location during quay repairs\n2 Saltings Wharf             15 Opens in March 2026                   \n3 Saltings Lane              17 Closed for works                      ",
+   "plot": false,
+   "step": "missing",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "html_table(html_element(read_html('data/site/fares.html'), 'table'))",
+     "dim": [
+      4,
+      4
+     ],
+     "fp": "ac15c03026d108bc1ef56d21913069e5",
+     "fp_any": "ac15c03026d108bc1ef56d21913069e5"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    4,
+    4
+   ],
+   "files": [],
+   "fp": "ac15c03026d108bc1ef56d21913069e5",
+   "fp_any": "ac15c03026d108bc1ef56d21913069e5",
+   "index": 10,
+   "messages": [],
+   "output": "# A tibble: 4 × 4\n  Rider        Bike         Unlock `Per minute`\n  <chr>        <chr>        <chr>  <chr>       \n1 Casual rider Classic bike $1.50  $0.18       \n2 Casual rider E-bike       $1.50  $0.35       \n3 Member       Classic bike $0.00  $0.00       \n4 Member       E-bike       $0.00  $0.18       ",
+   "plot": false,
+   "step": "table",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  }
+ ],
+ "stamp": {
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "format": "1",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "686aa4b304c309a79697f5d1e3dbe925b343abb1891a891875913231e79bf657",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
+ }
+}

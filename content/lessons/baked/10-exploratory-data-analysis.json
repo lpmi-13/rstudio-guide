@@ -1,0 +1,445 @@
+{
+ "lesson": "10-exploratory-data-analysis",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [
+    "broom"
+   ],
+   "class": "character",
+   "dim": 18,
+   "files": [],
+   "fp": "98dda4058176947fcdaa16f8da03521c",
+   "fp_any": null,
+   "index": 1,
+   "library": "broom",
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "trips",
+     "class": "spec_tbl_df",
+     "code": "trips = read_csv('data/trips.csv', show_col_types = FALSE)",
+     "dim": [
+      149747,
+      10
+     ],
+     "fp": "925ba2a4e6f8a0e568dad6aeb7da9353",
+     "fp_any": "925ba2a4e6f8a0e568dad6aeb7da9353"
+    }
+   ],
+   "assigned": "trips",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    149747,
+    10
+   ],
+   "files": [],
+   "fp": "925ba2a4e6f8a0e568dad6aeb7da9353",
+   "fp_any": "925ba2a4e6f8a0e568dad6aeb7da9353",
+   "index": 2,
+   "messages": [
+    "Rows: 149747 Columns: 10",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): bike_id, member_type, bike_type\ndbl  (5): trip_id, start_station, end_station, distance_km, duration_min\ndttm (2): started_at, ended_at",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "variation",
+   "values": {
+    "n_trips": "149,747"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(trips) + geom_histogram(aes(duration_min), binwidth = 10)",
+     "dim": 1,
+     "fp": "118472a062eef3f7fe40c04371e52a71",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "118472a062eef3f7fe40c04371e52a71",
+   "fp_any": null,
+   "index": 3,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "variation",
+   "values": {
+    "max_min": "12,902"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(trips, aes(duration_min)) + geom_histogram(binwidth = 10) + coord_cartesian(ylim = c(0, 20))",
+     "dim": 1,
+     "fp": "118472a062eef3f7fe40c04371e52a71",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "118472a062eef3f7fe40c04371e52a71",
+   "fp_any": null,
+   "index": 4,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "unusual",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "spec_tbl_df",
+     "code": "filter(trips, duration_min <= 0 | duration_min > 1440)",
+     "dim": [
+      135,
+      10
+     ],
+     "fp": "3a74324a47aa533081c89af329c26e74",
+     "fp_any": "3a74324a47aa533081c89af329c26e74"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    135,
+    10
+   ],
+   "files": [],
+   "fp": "3a74324a47aa533081c89af329c26e74",
+   "fp_any": "3a74324a47aa533081c89af329c26e74",
+   "index": 5,
+   "messages": [],
+   "output": "# A tibble: 135 × 10\n   trip_id bike_id    started_at          ended_at            start_station end_station member_type bike_type distance_km duration_min\n     <dbl> <chr>      <dttm>              <dttm>                      <dbl>       <dbl> <chr>       <chr>           <dbl>        <dbl>\n 1  361121 LB-C-00222 2025-01-10 08:37:37 2025-01-10 08:37:37           106         106 member      classic          0             0  \n 2  361353 LB-C-00321 2025-01-11 16:23:36 2025-01-19 10:07:45           101          NA member      classic         NA         11144. \n 3  364035 LB-E-00159 2025-01-29 16:37:29 2025-01-31 14:20:42           131          NA member      electric        NA          2743. \n 4  364138 LB-E-00043 2025-01-30 08:08:29 2025-02-01 11:03:36           146          NA member      electric        NA          3055. \n 5  365469 LB-E-00231 2025-02-08 12:24:25 2025-02-13 21:33:14           105          NA member      electric        NA          7749. \n 6  366308 LB-C-00110 2025-02-14 07:33:02 2025-02-20 17:16:18           150          NA member      classic         NA          9223. \n 7  366859 LB-E-00099 2025-02-17 14:27:14 2025-02-17 14:21:30           137         104 casual      electric         3.14         -5.7\n 8  367475 LB-C-00398 2025-02-21 09:53:34 2025-02-21 09:53:34           105         105 member      classic          0             0  \n 9  368802 LB-E-00129 2025-03-01 17:16:01 2025-03-05 10:40:49           120          NA member      electric        NA          5365. \n10  370456 LB-E-00194 2025-03-09 15:07:38 2025-03-09 15:07:38           150         150 member      electric         0             0  \n# ℹ 125 more rows",
+   "plot": false,
+   "step": "unusual",
+   "values": {
+    "n_bad": "135",
+    "n_day": "62",
+    "n_day_no_end": "62",
+    "n_zero": "73"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "clean",
+     "class": "tbl_df",
+     "code": "clean = trips |> mutate(implausible = duration_min <= 0 | duration_min > 1440) |> mutate(duration_min = if_else(implausible, NA, duration_min))",
+     "dim": [
+      149747,
+      11
+     ],
+     "fp": "4a4b166eb3fef304fedd89ab2f79dff0",
+     "fp_any": "4a4b166eb3fef304fedd89ab2f79dff0"
+    }
+   ],
+   "assigned": "clean",
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    149747,
+    11
+   ],
+   "files": [],
+   "fp": "4a4b166eb3fef304fedd89ab2f79dff0",
+   "fp_any": "4a4b166eb3fef304fedd89ab2f79dff0",
+   "index": 6,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "na",
+   "values": {
+    "n_na": "135"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(clean) + geom_histogram(aes(duration_min), binwidth = 2)",
+     "dim": 1,
+     "fp": "b2cb818e84d11ae7eb485850ded4e419",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "b2cb818e84d11ae7eb485850ded4e419",
+   "fp_any": null,
+   "index": 7,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "na",
+   "values": {},
+   "visible": true,
+   "warnings": [
+    "Removed 135 rows containing non-finite outside the scale range (`stat_bin()`)."
+   ]
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(clean, aes(duration_min, after_stat(density), colour = member_type)) + geom_freqpoly(binwidth = 2) + coord_cartesian(xlim = c(0, 90))",
+     "dim": 1,
+     "fp": "74273bfc1600b8cfbf6d3afd0b3918f2",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "74273bfc1600b8cfbf6d3afd0b3918f2",
+   "fp_any": null,
+   "index": 8,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "category",
+   "values": {
+    "med_casual": "16",
+    "med_member": "11.7"
+   },
+   "visible": true,
+   "warnings": [
+    "Removed 135 rows containing non-finite outside the scale range (`stat_bin()`)."
+   ]
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "clean |> mutate(day = wday(started_at, label = TRUE), hour = hour(started_at)) |> count(day, hour) |> ggplot(aes(hour, day, fill = n)) + geom_tile()",
+     "dim": 1,
+     "fp": "a66d7ce22d054afef42142e16806552e",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "a66d7ce22d054afef42142e16806552e",
+   "fp_any": null,
+   "index": 9,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "tiles",
+   "values": {
+    "top_day": "Thursday",
+    "top_hour": "17"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(clean, aes(distance_km, duration_min)) + geom_bin_2d() + scale_x_log10() + scale_y_log10()",
+     "dim": 1,
+     "fp": "9ce765fc1a8fe658de443539e23a17e7",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "9ce765fc1a8fe658de443539e23a17e7",
+   "fp_any": null,
+   "index": 10,
+   "messages": [
+    "`stat_bin2d()` using `bins = 30`. Pick better value `binwidth`."
+   ],
+   "output": "",
+   "plot": true,
+   "step": "numbers",
+   "values": {
+    "n_zero_km": "44"
+   },
+   "visible": true,
+   "warnings": [
+    "log-10 transformation introduced infinite values.",
+    "Removed 135 rows containing non-finite outside the scale range (`stat_bin2d()`)."
+   ]
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "model",
+     "class": "lm",
+     "code": "model = lm(log(duration_min) ~ log(distance_km), clean)",
+     "dim": 13,
+     "fp": "a9da0464024b5f121188de769f7f91c1",
+     "fp_any": null
+    }
+   ],
+   "assigned": "model",
+   "attached": [],
+   "class": "lm",
+   "dim": 13,
+   "files": [],
+   "fp": "a9da0464024b5f121188de769f7f91c1",
+   "fp_any": null,
+   "index": 11,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "model",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "residuals",
+     "class": "tbl_df",
+     "code": "residuals = broom::augment(model, newdata = clean)",
+     "dim": [
+      149747,
+      13
+     ],
+     "fp": "dee0315ed8e57606dc2495a695df8408",
+     "fp_any": "dee0315ed8e57606dc2495a695df8408"
+    }
+   ],
+   "assigned": "residuals",
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    149747,
+    13
+   ],
+   "files": [],
+   "fp": "dee0315ed8e57606dc2495a695df8408",
+   "fp_any": "dee0315ed8e57606dc2495a695df8408",
+   "index": 12,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "model",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(residuals, aes(bike_type, .resid)) + geom_boxplot()",
+     "dim": 1,
+     "fp": "490809f9e7065aa30f1903798b0f39d7",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "490809f9e7065aa30f1903798b0f39d7",
+   "fp_any": null,
+   "index": 13,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "model",
+   "values": {
+    "pct_less": "26",
+    "res_classic": "0.06",
+    "res_electric": "-0.24"
+   },
+   "visible": true,
+   "warnings": [
+    "Removed 135 rows containing non-finite outside the scale range (`stat_boxplot()`)."
+   ]
+  }
+ ],
+ "stamp": {
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "format": "1",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "fbd3c87e76b1a04cf8a95ed9ed52b7992b62f541066690b2e2885ceb73ededc2",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
+ }
+}

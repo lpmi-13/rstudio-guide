@@ -1,0 +1,202 @@
+{
+  "id": "19-joins",
+  "version": 2,
+  "world": true,
+  "title": "Joins",
+  "modes": [
+    "demonstration",
+    "guided",
+    "solo"
+  ],
+  "script": "19-joins.R",
+  "summary": "Bring Larkhaven Bikes' tables together: check a key is unique, see what a duplicate does to a join, join trips to stations, keep trips by where they started, give each trip its hour's weather, and price each trip at the fare in force on its day.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse)",
+      "runs": [
+        {
+          "code": "library(tidyverse)",
+          "evidence": "attached",
+          "purpose": "load the tidyverse, which includes dplyr's joins",
+          "task": "Load the tidyverse with `library()`."
+        }
+      ],
+      "explain": "dplyr's joins combine two tables by matching values in columns they share."
+    },
+    {
+      "id": "keys",
+      "title": "Keys: is each one unique?",
+      "runs": [
+        {
+          "code": "stations <- read_csv(\"data/stations.csv\")",
+          "evidence": "assign",
+          "alternatives": [
+            "stations = read_csv('data/stations.csv', show_col_types = FALSE)"
+          ],
+          "purpose": "read the station registry into `stations`",
+          "task": "Read `data/stations.csv` into `stations`."
+        },
+        {
+          "code": "stations |> count(station_id) |> filter(n > 1)",
+          "evidence": "value",
+          "alternatives": [
+            "stations |> count(station_id) |> filter(n >= 2)"
+          ],
+          "values": {
+            "dup_id": "format(filter(count(stations, station_id), n > 1)$station_id[1])",
+            "dup_names": "paste(stations$name[stations$station_id %in% filter(count(stations, station_id), n > 1)$station_id], collapse = \" and \")"
+          },
+          "purpose": "look for station IDs that appear more than once",
+          "task": "Count the rows for each `station_id` and keep the IDs with more than one."
+        }
+      ],
+      "explain": "A primary key is a column whose value identifies each row: `station_id` should name one station. The trips refer to it as `start_station` and `end_station`, foreign keys pointing into this table. Check a key before relying on it: ID {dup_id} appears twice, for {dup_names}. The second, a temporary station that opened in May, was given the same number."
+    },
+    {
+      "id": "duplicate",
+      "title": "A duplicate key multiplies rows",
+      "runs": [
+        {
+          "code": "trips <- read_csv(\"data/trips.csv\")",
+          "evidence": "assign",
+          "alternatives": [
+            "trips = read_csv('data/trips.csv', show_col_types = FALSE)"
+          ],
+          "values": {
+            "n_trips": "format(nrow(trips), big.mark = \",\")"
+          },
+          "purpose": "read every 2025 trip into `trips`",
+          "task": "Read `data/trips.csv` into `trips`."
+        },
+        {
+          "code": "trips |> left_join(stations, join_by(start_station == station_id))",
+          "evidence": "value",
+          "warning": "many-to-many relationship",
+          "alternatives": [
+            "left_join(trips, stations, by = c('start_station' = 'station_id'))"
+          ],
+          "values": {
+            "n_joined": "format(nrow(suppressWarnings(left_join(trips, stations, join_by(start_station == station_id)))), big.mark = \",\")",
+            "n_extra": "format(sum(trips$start_station == filter(count(stations, station_id), n > 1)$station_id[1]), big.mark = \",\")"
+          },
+          "purpose": "add each trip's start station details from the registry",
+          "task": "Add the station details to each trip with `left_join()`, matching `start_station` in `trips` to `station_id` in `stations` with `join_by()`."
+        }
+      ],
+      "explain": "`left_join()` keeps every row of `trips` and adds the columns of the matching station. `join_by(start_station == station_id)` matches columns with different names. The result has {n_joined} rows, not {n_trips}: each of the {n_extra} trips from the duplicated station matched both of its rows, so it now appears twice. dplyr warns that it found many-to-many matches, which is almost never what a join means. A join that quietly adds rows would inflate every count after it."
+    },
+    {
+      "id": "fix",
+      "title": "Fix the key, then join",
+      "runs": [
+        {
+          "code": "stations <- stations |> filter(name != \"Quay Street (temporary)\")",
+          "evidence": "assign",
+          "alternatives": [
+            "stations = filter(stations, name != 'Quay Street (temporary)')"
+          ],
+          "purpose": "drop the temporary station's row, so each ID is unique again",
+          "task": "Drop the row of \"Quay Street (temporary)\" from `stations`, and store the result back in `stations`."
+        },
+        {
+          "code": "trips |>\n  left_join(\n    stations,\n    join_by(start_station == station_id),\n    relationship = \"many-to-one\"\n  )",
+          "evidence": "value",
+          "alternatives": [
+            "left_join(trips, stations, by = c('start_station' = 'station_id'), relationship = 'many-to-one')"
+          ],
+          "purpose": "join again, saying that each trip should match at most one station",
+          "task": "Join the stations to `trips` again, adding `relationship = \"many-to-one\"`."
+        }
+      ],
+      "explain": "With the temporary station's row gone, the join gives one row per trip again, {n_trips}. `relationship = \"many-to-one\"` states what the join should do: many trips to one station. If a duplicate came back, the join would stop with an error instead of a warning. Which row to keep is a decision about the data, not about code: here, the permanent station."
+    },
+    {
+      "id": "filtering",
+      "title": "Keep rows by a match: semi_join()",
+      "runs": [
+        {
+          "code": "trips |>\n  semi_join(\n    filter(stations, neighbourhood == \"University\"),\n    join_by(start_station == station_id)\n  )",
+          "evidence": "value",
+          "alternatives": [
+            "trips |> semi_join(stations |> filter(neighbourhood == 'University'), by = c('start_station' = 'station_id'))"
+          ],
+          "values": {
+            "n_uni": "format(nrow(semi_join(trips, filter(stations, neighbourhood == \"University\"), join_by(start_station == station_id))), big.mark = \",\")"
+          },
+          "purpose": "keep the trips that started at a station in the University neighbourhood",
+          "task": "Keep the trips that started at one of the University neighbourhood's stations, with `semi_join()`."
+        }
+      ],
+      "explain": "A filtering join keeps or drops rows of the first table without adding columns. `semi_join()` keeps the trips that have a match among the University stations, {n_uni} of them; `anti_join()`, from the last lesson, keeps those without one. Neither can add rows, so a duplicate key does no harm here."
+    },
+    {
+      "id": "weather",
+      "title": "Each trip's weather: joining on time",
+      "runs": [
+        {
+          "code": "weather <- read_csv(\"data/weather.csv\")",
+          "evidence": "assign",
+          "alternatives": [
+            "weather = read_csv('data/weather.csv', show_col_types = FALSE)"
+          ],
+          "purpose": "read the hourly weather into `weather`",
+          "task": "Read `data/weather.csv` into `weather`."
+        },
+        {
+          "code": "week <- read_csv(\"data/trips-week.csv\")",
+          "evidence": "assign",
+          "alternatives": [
+            "week = read_csv('data/trips-week.csv', show_col_types = FALSE)"
+          ],
+          "purpose": "read one week of trips into `week`",
+          "task": "Read `data/trips-week.csv` into `week`."
+        },
+        {
+          "code": "week |>\n  mutate(hour = floor_date(started_at, \"hour\")) |>\n  left_join(weather, join_by(hour == time)) |>\n  count(raining = rain_mm > 0)",
+          "evidence": "value",
+          "alternatives": [
+            "week |> mutate(hour = floor_date(started_at, 'hour')) |> left_join(weather, by = c('hour' = 'time')) |> count(raining = rain_mm > 0)"
+          ],
+          "values": {
+            "rain_hours": "format(nrow(filter(weather, time >= ymd(\"2025-06-02\"), time < ymd(\"2025-06-09\"), rain_mm > 0)))",
+            "rain_trips": "format(nrow(filter(left_join(mutate(week, hour = floor_date(started_at, \"hour\")), weather, join_by(hour == time)), rain_mm > 0)))",
+            "rain_rate": "local({w <- filter(weather, time >= ymd(\"2025-06-02\"), time < ymd(\"2025-06-09\")); j <- left_join(mutate(week, hour = floor_date(started_at, \"hour\")), weather, join_by(hour == time)); format(round(sum(j$rain_mm > 0) / sum(w$rain_mm > 0)))})",
+            "dry_rate": "local({w <- filter(weather, time >= ymd(\"2025-06-02\"), time < ymd(\"2025-06-09\")); j <- left_join(mutate(week, hour = floor_date(started_at, \"hour\")), weather, join_by(hour == time)); format(round(sum(j$rain_mm == 0) / sum(w$rain_mm == 0)))})"
+          },
+          "purpose": "give each of the week's trips the weather of the hour it started in, and count the trips taken in rain",
+          "task": "Add `hour`, each trip's `started_at` rounded down to the hour, join `weather` with `join_by(hour == time)`, and count the trips by `raining = rain_mm > 0`."
+        }
+      ],
+      "explain": "The weather is recorded once an hour, so each trip's start is rounded down to its hour first, and then the two tables share a key. Rain fell in {rain_hours} of the week's 168 hours, and {rain_trips} trips started in them: about {rain_rate} trips an hour, against {dry_rate} in dry hours. Joining on a computed key is common: make the column, then join on it."
+    },
+    {
+      "id": "fares",
+      "title": "The fare on the day: closest()",
+      "runs": [
+        {
+          "code": "fares <- read_csv(\"data/fares.csv\")",
+          "evidence": "assign",
+          "alternatives": [
+            "fares = read_csv('data/fares.csv', show_col_types = FALSE)"
+          ],
+          "purpose": "read the fare periods into `fares`",
+          "task": "Read `data/fares.csv` into `fares`."
+        },
+        {
+          "code": "trips |>\n  mutate(date = as_date(started_at)) |>\n  left_join(\n    fares,\n    join_by(member_type, bike_type, closest(date >= valid_from))\n  ) |>\n  count(fare_id)",
+          "evidence": "value",
+          "alternatives": [
+            "trips |> mutate(date = as_date(started_at)) |> left_join(fares, by = join_by(member_type, bike_type, closest(date >= valid_from))) |> count(fare_id)"
+          ],
+          "values": {
+            "n_old_fares": "format(sum(as_date(trips$started_at) < ymd(\"2025-04-01\")), big.mark = \",\")"
+          },
+          "purpose": "match each trip to the fare that applied on its day, for its rider and bike type, and count the trips at each fare",
+          "task": "Add `date` (`as_date(started_at)`), then join `fares` matching `member_type`, `bike_type` and the latest `valid_from` on or before `date`, with `closest(date >= valid_from)` in `join_by()`. Count the trips by `fare_id`."
+        }
+      ],
+      "explain": "Fares change over time, so a trip's fare depends on its date: the one whose period had begun by then. `closest(date >= valid_from)` is a rolling join: of the fares with `valid_from` on or before the trip's date, it picks the latest. The {n_old_fares} trips from January to March got the old fares, 5 to 8, and the rest the fares from 1 April, 9 to 12. `between(date, valid_from, valid_to)` would match on both ends of each period, but the current fares have no end date, `NA`, which matches nothing."
+    }
+  ]
+}

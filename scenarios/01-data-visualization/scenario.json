@@ -64,7 +64,7 @@
          "purpose": "colour the trips by bike type, and add a straight line for each",
          "task": "Draw the scatter plot again with `colour = bike_type` added to `aes()`, the points at `alpha = 0.3`, and a straight line for each bike type from `geom_smooth(method = \"lm\")`."}
       ],
-      "explain": "`colour = bike_type` is inside `aes()`, so it's a mapping: each point takes its colour from its trip's bike type, and ggplot2 adds a legend saying which is which. `alpha = 0.3` is outside `aes()`, so it's a setting: every point is 30% opaque, and crowded areas show darker. The colour mapping is in `ggplot()`, so every layer uses it, and `geom_smooth()` fitted one straight line per bike type (the Console's message names its formula, `y ~ x`). At 10 km the classic line is at about {classic_10} minutes and the electric one at about {electric_10}: e-bikes are faster."
+      "explain": "`colour = bike_type` is inside `aes()`, so it's a mapping: each point takes its colour from its trip's bike type, and ggplot2 adds a legend saying which is which. `alpha = 0.3` is outside `aes()`, so it's a setting: every point is 30% opaque, and crowded areas show darker. The colour mapping is in `ggplot()`, so every layer uses it, and `geom_smooth()` fitted one straight line per bike type (the Console's message names its formula, `y ~ x`). Mapped in `geom_point()` instead, the colour would apply only to the points, and there would be one line for all trips. At 10 km the classic line is at about {classic_10} minutes and the electric one at about {electric_10}: e-bikes are faster."
     },
     {
       "id": "polish",
@@ -121,7 +121,7 @@
          "purpose": "show when trips start, hour by hour",
          "task": "Draw a histogram of `started_at` with one bin per hour: `binwidth = 3600`, in seconds."}
       ],
-      "explain": "A histogram shows how a number is spread out: it cuts the x-axis into bins and counts the trips in each. With `binwidth = 2`, each bar is two minutes wide, and the tallest, from {peak_from} to {peak_to} minutes, is the most common trip length. The bars trail off to the right: a few trips last an hour or more. `started_at` is a date-time, counted in seconds, so `binwidth = 3600` makes one bar per hour. Weekdays have two peaks, the morning and evening rush hours; Saturday and Sunday have one, in the afternoon. A different bin width can change the picture: too wide hides the shape, too narrow turns it into noise."
+      "explain": "A histogram shows how a number is spread out: it cuts the x-axis into bins and counts the trips in each. With `binwidth = 2`, each bar is two minutes wide, and the tallest, from {peak_from} to {peak_to} minutes, is the most common trip length. The bars trail off to the right: a few trips last an hour or more. `started_at` is a date-time, counted in seconds, so `binwidth = 3600` makes one bar per hour. Weekdays have two peaks, the morning and evening rush hours; Saturday and Sunday have one broad hump, from late morning to late afternoon. The gaps on Monday at 5 pm and Thursday around midday are hours when it rained. A different bin width can change the picture: too wide hides the shape, too narrow turns it into noise."
     },
     {
       "id": "groups",

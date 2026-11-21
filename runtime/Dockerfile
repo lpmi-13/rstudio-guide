@@ -74,14 +74,14 @@ COPY runtime/03_lab_project /etc/cont-init.d/03_lab_project
 COPY runtime/04_lab_frame_origin /etc/cont-init.d/04_lab_frame_origin
 
 # Larkhaven Bikes, the city every lesson's data comes from (content/world/generate.R), in
-# /opt/lab/world. The big files (trips.csv and the archive) exist only here, and each run's project
+# /opt/lab/world. The big files (trips.csv, the archive and the database) exist only here, and each run's project
 # links to them. The small ones are also committed in content/world/data, and each run's project
 # gets a copy of those; the build fails if this image would generate different ones.
 COPY content/world /tmp/world-src
 RUN Rscript /tmp/world-src/generate.R /opt/lab/world \
  && Rscript /tmp/world-src/check.R /opt/lab/world \
  && cd /opt/lab/world \
- && find . -type f ! -path './archive/*' ! -name trips.csv | sort > /tmp/generated \
+ && find . -type f ! -path './archive/*' ! -name trips.csv ! -name larkhaven.duckdb | sort > /tmp/generated \
  && (cd /tmp/world-src/data && find . -type f ! -name README.md | sort) > /tmp/committed \
  && diff /tmp/committed /tmp/generated \
  && while read -r f; do cmp "$f" "/tmp/world-src/data/$f"; done < /tmp/generated \

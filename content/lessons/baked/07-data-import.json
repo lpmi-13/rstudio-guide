@@ -355,21 +355,57 @@
    "attached": [],
    "class": "spec_tbl_df",
    "dim": [
-    936,
-    11
+    78,
+    10
    ],
    "files": [
-    "activity.csv"
+    "jan.csv"
    ],
-   "fp": "dd15a7ff125fc030acb9312642b0cdde",
-   "fp_any": "dd15a7ff125fc030acb9312642b0cdde",
+   "fp": "9982f6eeba45a9ad41fe6d0fe82516db",
+   "fp_any": "9982f6eeba45a9ad41fe6d0fe82516db",
    "index": 11,
    "messages": [],
    "output": "",
    "plot": false,
-   "step": "save",
+   "step": "csv",
    "values": {},
    "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "spec_tbl_df",
+     "code": "read_csv('jan.csv', show_col_types = FALSE)",
+     "dim": [
+      78,
+      10
+     ],
+     "fp": "9982f6eeba45a9ad41fe6d0fe82516db",
+     "fp_any": "9982f6eeba45a9ad41fe6d0fe82516db"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    78,
+    10
+   ],
+   "files": [],
+   "fp": "9982f6eeba45a9ad41fe6d0fe82516db",
+   "fp_any": "9982f6eeba45a9ad41fe6d0fe82516db",
+   "index": 12,
+   "messages": [
+    "Rows: 78 Columns: 10",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr (5): Station Name, Neighbourhood, Avg Trip Distance, E-bike Share, Last Inspected\ndbl (5): Station ID, Trips Started, Trips Ended, Avg Duration (min), Dock Faults",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "# A tibble: 78 × 10\n   `Station ID` `Station Name`            Neighbourhood `Trips Started` `Trips Ended` `Avg Trip Distance` `Avg Duration (min)` `E-bike Share` `Dock Faults` `Last Inspected`\n          <dbl> <chr>                     <chr>                   <dbl>         <dbl> <chr>                              <dbl> <chr>                  <dbl> <chr>           \n 1          101 Market Square             Market Square             102           137 2.35 km                             10.2 51%                       NA <NA>            \n 2          102 MARKET SQUARE NORTH       Market Square              90           122 2.41 km                             12.3 38%                        1 <NA>            \n 3          103 Town Hall                 Market Square              67            94 2.56 km                             12.9 48%                        0 <NA>            \n 4          104 Bridge St & Water St      Market Square              67           104 2.44 km                             12.3 39%                        0 01/11/2025      \n 5          105 Larkhaven Central Station Market Square             141           165 2.33 km                             11.6 38%                        1 01/25/2025      \n 6          106 Corn Exchange             Market Square              75           121 2.20 km                             11.9 41%                        1 <NA>            \n 7          107 Library Plaza             Market Square             115           120 2.17 km                             10.8 37%                        0 01/20/2025      \n 8          108 Bellfounders Row          Market Square              83            89 2.21 km                             11.1 45%                        0 01/08/2025      \n 9          109 St. Agnes Square          Market Square              60            68 1.85 km                             10   50%                        0 01/26/2025      \n10          110 Guildhall Lane            Market Square              90            85 2.33 km                             10.4 40%                        0 01/20/2025      \n# ℹ 68 more rows",
+   "plot": false,
+   "step": "csv",
+   "values": {},
+   "visible": true,
    "warnings": []
   },
   {
@@ -377,21 +413,53 @@
    "attached": [],
    "class": "spec_tbl_df",
    "dim": [
-    936,
-    11
+    78,
+    10
    ],
    "files": [
-    "activity.rds"
+    "jan.rds"
    ],
-   "fp": "dd15a7ff125fc030acb9312642b0cdde",
-   "fp_any": "dd15a7ff125fc030acb9312642b0cdde",
-   "index": 12,
+   "fp": "9982f6eeba45a9ad41fe6d0fe82516db",
+   "fp_any": "9982f6eeba45a9ad41fe6d0fe82516db",
+   "index": 13,
    "messages": [],
    "output": "",
    "plot": false,
-   "step": "save",
+   "step": "rds",
    "values": {},
    "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "spec_tbl_df",
+     "code": "readRDS('jan.rds')",
+     "dim": [
+      78,
+      10
+     ],
+     "fp": "9982f6eeba45a9ad41fe6d0fe82516db",
+     "fp_any": "9982f6eeba45a9ad41fe6d0fe82516db"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    78,
+    10
+   ],
+   "files": [],
+   "fp": "9982f6eeba45a9ad41fe6d0fe82516db",
+   "fp_any": "9982f6eeba45a9ad41fe6d0fe82516db",
+   "index": 14,
+   "messages": [],
+   "output": "# A tibble: 78 × 10\n   `Station ID` `Station Name`            Neighbourhood `Trips Started` `Trips Ended` `Avg Trip Distance` `Avg Duration (min)` `E-bike Share` `Dock Faults` `Last Inspected`\n          <dbl> <chr>                     <chr>                   <dbl>         <dbl> <chr>                              <dbl> <chr>                  <int> <chr>           \n 1          101 Market Square             Market Square             102           137 2.35 km                             10.2 51%                       NA <NA>            \n 2          102 MARKET SQUARE NORTH       Market Square              90           122 2.41 km                             12.3 38%                        1 <NA>            \n 3          103 Town Hall                 Market Square              67            94 2.56 km                             12.9 48%                        0 <NA>            \n 4          104 Bridge St & Water St      Market Square              67           104 2.44 km                             12.3 39%                        0 01/11/2025      \n 5          105 Larkhaven Central Station Market Square             141           165 2.33 km                             11.6 38%                        1 01/25/2025      \n 6          106 Corn Exchange             Market Square              75           121 2.20 km                             11.9 41%                        1 <NA>            \n 7          107 Library Plaza             Market Square             115           120 2.17 km                             10.8 37%                        0 01/20/2025      \n 8          108 Bellfounders Row          Market Square              83            89 2.21 km                             11.1 45%                        0 01/08/2025      \n 9          109 St. Agnes Square          Market Square              60            68 1.85 km                             10   50%                        0 01/26/2025      \n10          110 Guildhall Lane            Market Square              90            85 2.33 km                             10.4 40%                        0 01/20/2025      \n# ℹ 68 more rows",
+   "plot": false,
+   "step": "rds",
+   "values": {},
+   "visible": true,
    "warnings": []
   },
   {
@@ -418,7 +486,7 @@
    "files": [],
    "fp": "8d57cf37f5ec47f4f9e83c9dd6fc6628",
    "fp_any": "47da7029be45aba45b98d732d4296bbd",
-   "index": 13,
+   "index": 15,
    "messages": [],
    "output": "",
    "plot": false,
@@ -429,12 +497,12 @@
   }
  ],
  "stamp": {
-  "evidence": "6975ac8d7ad699c3a66635638064a328ac1710406b714d34220eb9bced7dbb8c",
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
   "format": "1",
-  "image": "3c0b182f40fef71d474a0cb37e54efd6011616ae218ee460ff82417f952dd665",
-  "lesson": "805ae64fc6a0ab4cf6725cf7662ad4470b7b07e0dfefb6beb412272f0ac9585d",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "ba7ee68bf29e168f3e02d5b5727ddba3f9cec72ea302171bbd575a5f123d0164",
   "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
-  "runner": "9472982345c75b9e0a26c182169d195b09e2d6cf627aebf393bc826f06f28b58",
-  "world": "b5da1a346392e6f2105f0c5c907fee44ee37abd0549a94593dda88cdf46a47a1"
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
  }
 }

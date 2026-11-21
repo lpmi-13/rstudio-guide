@@ -22,6 +22,7 @@ rather than expected output, so their answers aren't in the page.
 """
 import importlib.util
 import json
+import os
 import secrets
 import shutil
 import sys
@@ -115,6 +116,13 @@ def action_hints(run):
         return "It's in the project folder.", f"Click {run['file']} in the Files pane."
     if action == "type":
         return f"It goes {run.get('where', 'at the end of the document')}.", ""
+    if action == "source":
+        return ("Look at the toolbar above the script.",
+                "Press Source, on the toolbar above the script, or press Ctrl+Shift+S.")
+    if action == "new-project":
+        return ("It's in the File menu.",
+                f"Choose File › New Project…, then New Directory, then New Project. Type {run['name']} as the "
+                "directory name, and press Create Project.")
     fail(f"unknown action {action!r}")
 
 
@@ -227,7 +235,7 @@ def prepare_lesson(scenario, project, root, image, bake, collection):
             continue
         if scenario.get("version") == 2:
             run["expected"] = {key: record.get(key) for key in EXPECTED}
-            if run["evidence"] == "console":
+            if run["evidence"] in ("console", "plot"):  # both compare the Console's printed output
                 run["expected_output"] = record["output"]
         else:
             run["expected_output"] = record["output"]
@@ -266,7 +274,7 @@ def main(root, image, project_name, *scenario_ids):
     if several and any("steps" not in scenario for scenario, _ in scenarios):
         fail("only lessons with steps can share a run")
 
-    run = root / "run"
+    run = root / os.environ.get("LAB_RUN_DIR", "run")  # run.sh sets it; parallel audits use run-1, run-2…
     project, public = run / "project", run / "public"
     for folder in (project, public):
         folder.mkdir(parents=True)

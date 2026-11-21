@@ -1,13 +1,22 @@
 #!/usr/bin/env bash
 # Start or stop RStudio with the coach. Each "up" gets a fresh project, run ID and password.
-# With no scenario, both lessons share the run, in a project called "lessons". The learner
-# chooses a lesson and a mode (Demonstration, Guided or Solo) in the coach, inside RStudio.
+# With no scenario, every lesson in content/lessons/collection.json that has been written shares the
+# run, in a project called "lessons". The learner chooses a lesson and a mode (Demonstration, Guided
+# or Solo) in the coach, inside RStudio.
 #
-#   ./run.sh up [scenario...]     (default: graphical-tools statistical-tools)
+#   ./run.sh up [scenario...]     (default: the collection's lessons that exist, in order)
 #   ./run.sh down
+#
+# A run's folder, ports and Docker Compose project can be changed, so that several runs work side by
+# side (tests/run_lesson_audits.py does this): LAB_RUN_DIR (default run), LAB_GATEWAY_PORT (8788),
+# LAB_RSTUDIO_PORT (18787) and LAB_COMPOSE_NAME (rstudio-guide).
 set -euo pipefail
 cd "$(dirname "$0")"
 IMAGE=rstudio-guide-runtime:local
+RUN_DIR=${LAB_RUN_DIR:-run}
+GATEWAY_PORT=${LAB_GATEWAY_PORT:-8788}
+RSTUDIO_PORT=${LAB_RSTUDIO_PORT:-18787}
+compose() { docker compose -p "${LAB_COMPOSE_NAME:-rstudio-guide}" --env-file "$RUN_DIR/.env" "$@"; }
 
 # Docker adds host network interfaces as containers start, and their IPv6 addresses
 # appear a moment later, sometimes after RStudio already answers. Chromium aborts
@@ -33,14 +42,14 @@ require() {
 }
 
 stop_run() {
-  if [ -f run/.env ]; then docker compose --env-file run/.env down --remove-orphans >/dev/null; fi
-  rm -rf run
+  if [ -f "$RUN_DIR/.env" ]; then compose down --remove-orphans >/dev/null; fi
+  rm -rf "$RUN_DIR"
 }
 
 case "${1:-up}" in
   up)
     scenarios=("${@:2}")
-    if [ ${#scenarios[@]} -eq 0 ]; then scenarios=(graphical-tools statistical-tools); fi
+    if [ ${#scenarios[@]} -eq 0 ]; then mapfile -t scenarios < <(python3 -I tools/collection.py); fi
     for scenario in "${scenarios[@]}"; do
       if [ ! -f "scenarios/$scenario/scenario.json" ]; then
         echo "Unknown scenario '$scenario'. Choose from: $(ls scenarios | tr '\n' ' ')" >&2
@@ -60,27 +69,27 @@ case "${1:-up}" in
       done < lab.env
     fi
     stop_run
-    mkdir -p run/evidence
+    mkdir -p "$RUN_DIR/evidence"
     password=$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 20)
     # HOST_UID/GID: RStudio's user must own the bind-mounted project to save into it.
     # GATEWAY_BIND: loopback by default. 0.0.0.0 serves plain HTTP on every interface (and Docker
     # bypasses ufw), so only behind a TLS proxy such as iximiuz's tab; otherwise use an SSH tunnel.
     # FRAME_ORIGIN / SAME_SITE: let a platform (e.g. https://labs.iximiuz.com) frame RStudio.
-    (umask 077; printf 'RSTUDIO_PASSWORD=%s\nLAB_SCENARIO=%s\nHOST_UID=%s\nHOST_GID=%s\nGATEWAY_BIND=%s\nFRAME_ORIGIN=%s\nSAME_SITE=%s\n' \
-      "$password" "$project" "$(id -u)" "$(id -g)" "${GATEWAY_BIND:-127.0.0.1}" "${FRAME_ORIGIN:-}" "${SAME_SITE:-}" > run/.env)
+    (umask 077; printf 'RSTUDIO_PASSWORD=%s\nLAB_SCENARIO=%s\nHOST_UID=%s\nHOST_GID=%s\nGATEWAY_BIND=%s\nFRAME_ORIGIN=%s\nSAME_SITE=%s\nLAB_RUN_DIR=%s\nGATEWAY_PORT=%s\nRSTUDIO_PORT=%s\n' \
+      "$password" "$project" "$(id -u)" "$(id -g)" "${GATEWAY_BIND:-127.0.0.1}" "${FRAME_ORIGIN:-}" "${SAME_SITE:-}" "$RUN_DIR" "$GATEWAY_PORT" "$RSTUDIO_PORT" > "$RUN_DIR/.env")
     # A rootfs with the runtime image preloaded sets LAB_PREBUILT=1, so nothing is rebuilt or pulled.
     if [ "${LAB_PREBUILT:-0}" != 1 ] || ! docker image inspect rstudio-guide-runtime:local >/dev/null 2>&1; then
-      docker compose --env-file run/.env build --quiet rstudio
+      compose build --quiet rstudio
     fi
-    python3 -I tools/provision.py "$PWD" "$IMAGE" "$project" "${scenarios[@]}"
-    docker compose --env-file run/.env up -d --quiet-pull
+    LAB_RUN_DIR="$RUN_DIR" python3 -I tools/provision.py "$PWD" "$IMAGE" "$project" "${scenarios[@]}"
+    compose up -d --quiet-pull
     for _ in $(seq 1 60); do
-      if curl -fsS -o /dev/null http://127.0.0.1:8788/auth-sign-in 2>/dev/null; then
+      if curl -fsS -o /dev/null "http://127.0.0.1:$GATEWAY_PORT/auth-sign-in" 2>/dev/null; then
         wait_for_host_network
-        touch run/ready # for launchers and the playground's terminal banner
-        if [ "${GATEWAY_BIND:-127.0.0.1}" = 127.0.0.1 ]; then where="at http://127.0.0.1:8788/"; else where="(open the RStudio tab)"; fi
+        touch "$RUN_DIR/ready" # for launchers and the playground's terminal banner
+        if [ "${GATEWAY_BIND:-127.0.0.1}" = 127.0.0.1 ]; then where="at http://127.0.0.1:$GATEWAY_PORT/"; else where="(open the RStudio tab)"; fi
         echo "Ready: ${scenarios[*]} $where  user: rstudio  password: $password"
-        python3 -I - run/public/session.json <<'PY'
+        python3 -I - "$RUN_DIR/public/session.json" <<'PY'
 import json, sys
 session = json.load(open(sys.argv[1]))
 lessons = session.get("lessons", [])
@@ -96,7 +105,7 @@ PY
       sleep 1
     done
     echo "RStudio did not answer through the gateway within 60 s" >&2
-    docker compose --env-file run/.env logs --tail 50 >&2
+    compose logs --tail 50 >&2
     exit 1
     ;;
   down)

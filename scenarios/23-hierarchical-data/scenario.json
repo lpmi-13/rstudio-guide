@@ -1,0 +1,177 @@
+{
+  "id": "23-hierarchical-data",
+  "version": 2,
+  "world": true,
+  "title": "Hierarchical data",
+  "modes": [
+    "demonstration",
+    "guided",
+    "solo"
+  ],
+  "script": "23-hierarchical-data.R",
+  "summary": "Turn Larkhaven Bikes' live station feed, JSON with lists inside lists, into tidy tables: look inside a list with str(), $, [[ and View(), keep the stations in a list-column, then spread their fields into columns and their vehicle counts into rows, and pull out just the fields you need.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse), library(jsonlite)",
+      "runs": [
+        {
+          "code": "library(tidyverse)",
+          "evidence": "attached",
+          "purpose": "load the tidyverse, which includes tidyr",
+          "task": "Load the tidyverse with `library()`."
+        },
+        {
+          "code": "library(jsonlite)",
+          "evidence": "attached",
+          "purpose": "load jsonlite, which reads JSON",
+          "task": "Load jsonlite with `library()`."
+        }
+      ],
+      "explain": "jsonlite reads JSON, the text format web services use to send data. tidyr has the functions that turn its nested lists into tables."
+    },
+    {
+      "id": "read",
+      "title": "JSON into a list: read_json() and str()",
+      "runs": [
+        {
+          "code": "status <- read_json(\"data/feed/station_status.json\")",
+          "evidence": "assign",
+          "alternatives": [
+            "status = jsonlite::read_json('data/feed/station_status.json')"
+          ],
+          "purpose": "read the station status feed into a list, `status`",
+          "task": "Read `data/feed/station_status.json` into `status` with `read_json()`."
+        },
+        {
+          "code": "str(status, max.level = 2)",
+          "evidence": "pattern",
+          "pattern": "^List of 4",
+          "purpose": "show the list's structure, two levels deep",
+          "task": "Show the structure of `status`, two levels deep, with `str(status, max.level = 2)`."
+        }
+      ],
+      "explain": "A JSON object becomes a named list, and a JSON array an unnamed one, so `status` is lists inside lists. `str()` shows the structure: four items at the top, among them `last_updated` and `data`, and inside `data` a list of `stations`. `max.level = 2` stops `str()` from printing every station's every field, which would run to hundreds of lines."
+    },
+    {
+      "id": "subset",
+      "title": "Inside a list: $, [[ and View()",
+      "runs": [
+        {
+          "code": "status$data$stations[[1]]",
+          "evidence": "value",
+          "alternatives": [
+            "status[[\"data\"]][[\"stations\"]][[1]]"
+          ],
+          "values": {
+            "first_id": "status$data$stations[[1]]$station_id",
+            "first_bikes": "format(status$data$stations[[1]]$num_vehicles_available)"
+          },
+          "purpose": "show the first station's status",
+          "task": "Show the first station in the feed: `status$data$stations`, then its first item with `[[1]]`."
+        },
+        {
+          "code": "View(status)",
+          "evidence": "ide",
+          "ide": {
+            "tab": "^status$"
+          },
+          "purpose": "open the list in RStudio's viewer, to explore it by clicking",
+          "task": "Open `status` in RStudio's viewer with `View()`."
+        }
+      ],
+      "explain": "`$` takes an item from a list by name, and `[[1]]` the first item by position; chained, they walk down the levels. Station {first_id} had {first_bikes} bikes available when the feed was made. `[[` returns the item itself, while `[` would return a smaller list holding it. `View()` opens a list in a Source tab where you can expand each level by clicking, and its button at the end of each row writes the code that reaches that item."
+    },
+    {
+      "id": "listcol",
+      "title": "A list-column: one row per station",
+      "runs": [
+        {
+          "code": "stations <- tibble(station = status$data$stations)",
+          "evidence": "assign",
+          "alternatives": [
+            "stations = tibble(station = status[['data']][['stations']])"
+          ],
+          "values": {
+            "n_stations": "format(nrow(stations))"
+          },
+          "purpose": "put the stations in a tibble, each station's list in one cell, as `stations`",
+          "task": "Make a tibble with one column, `station`, holding `status$data$stations`, and store it in `stations`."
+        },
+        {
+          "code": "stations",
+          "evidence": "value",
+          "purpose": "print `stations`",
+          "task": "Print `stations`."
+        }
+      ],
+      "explain": "A tibble's column can be a list: a list-column. `stations` has {n_stations} rows, one per station, and each cell holds that station's whole list of fields, which the printout summarises as `<named list [8]>` or `[9]`. One row per station is the right shape already; the fields still have to come out of the cells."
+    },
+    {
+      "id": "wider",
+      "title": "Fields into columns: unnest_wider()",
+      "runs": [
+        {
+          "code": "stations |> unnest_wider(station)",
+          "evidence": "value",
+          "alternatives": [
+            "unnest_wider(stations, station)"
+          ],
+          "values": {
+            "n_disabled": "format(sum(!is.na(unnest_wider(stations, station)$num_docks_disabled)))"
+          },
+          "purpose": "spread each station's fields into columns",
+          "task": "Spread the fields in `station` into columns with `unnest_wider()`."
+        }
+      ],
+      "explain": "`unnest_wider()` makes a column of each named field. Most fields hold one value, so they become ordinary columns, typed as numbers, text and `TRUE`/`FALSE`. A field only some stations have, `num_docks_disabled`, is `NA` for the others: only {n_disabled} report it. `vehicle_types_available` is still a list-column, because each of its cells holds a list of vehicle types."
+    },
+    {
+      "id": "longer",
+      "title": "Lists into rows: unnest_longer()",
+      "runs": [
+        {
+          "code": "stations |>\n  unnest_wider(station) |>\n  unnest_longer(vehicle_types_available) |>\n  unnest_wider(vehicle_types_available)",
+          "evidence": "value",
+          "alternatives": [
+            "stations |> unnest_wider(station) |> unnest_longer(vehicle_types_available) |> unnest_wider(vehicle_types_available, names_sep = NULL)"
+          ],
+          "values": {
+            "n_rows": "format(nrow(unnest_longer(unnest_wider(stations, station), vehicle_types_available)))"
+          },
+          "purpose": "give each station one row per vehicle type, with the type and its count as columns",
+          "task": "After `unnest_wider(station)`, give each vehicle type its own row with `unnest_longer(vehicle_types_available)`, then spread its fields with `unnest_wider(vehicle_types_available)`."
+        }
+      ],
+      "explain": "`unnest_longer()` turns each element of a list into a row of its own, repeating the station's other columns. Stations with both classic bikes and e-bikes get two rows and the rest one: {n_rows} rows in all. Each element is itself a little list, a type and a count, so `unnest_wider()` spreads it into `vehicle_type_id` and `count`. Nested data comes apart one level at a time: wider for named fields, longer for unnamed lists."
+    },
+    {
+      "id": "hoist",
+      "title": "Pull out what you need: hoist()",
+      "runs": [
+        {
+          "code": "info <- read_json(\"data/feed/station_information.json\")",
+          "evidence": "assign",
+          "alternatives": [
+            "info = jsonlite::read_json('data/feed/station_information.json')"
+          ],
+          "purpose": "read the station information feed into `info`",
+          "task": "Read `data/feed/station_information.json` into `info`."
+        },
+        {
+          "code": "tibble(station = info$data$stations) |>\n  hoist(station, \"station_id\", name = list(\"name\", 1, \"text\"), \"capacity\")",
+          "evidence": "value",
+          "alternatives": [
+            "tibble(station = info$data$stations) |> hoist(station, station_id = 'station_id', name = list('name', 1, 'text'), capacity = 'capacity')"
+          ],
+          "values": {
+            "first_name": "info$data$stations[[1]]$name[[1]]$text"
+          },
+          "purpose": "pull each station's ID, its name in the first language, and its capacity out of the lists",
+          "task": "Put `info$data$stations` in a tibble's `station` column, then pull out `\"station_id\"`, `\"capacity\"` and `name`: the `\"text\"` of the `\"name\"` field's first item, `list(\"name\", 1, \"text\")`, with `hoist()`."
+        }
+      ],
+      "explain": "In this feed a station's name is a list of translations, each with a `text` and a `language`, as in the GBFS standard that real bike-share schemes publish. `hoist()` reaches into each cell and pulls out just the fields named, at any depth: `list(\"name\", 1, \"text\")` means the name field, its first item, its text, such as \"{first_name}\". Everything not pulled out stays behind in `station`, a smaller list, so nothing is lost."
+    }
+  ]
+}

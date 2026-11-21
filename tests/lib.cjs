@@ -6,7 +6,10 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const GATEWAY = 'http://127.0.0.1:8788';
+// The run under test: run.sh's defaults, or another run's folder and port (tests/run_lesson_audits.py
+// runs several side by side, each with its own LAB_RUN_DIR, LAB_GATEWAY_PORT and so on).
+const RUN_DIR = path.join(ROOT, process.env.LAB_RUN_DIR || 'run');
+const GATEWAY = `http://127.0.0.1:${process.env.LAB_GATEWAY_PORT || 8788}`;
 
 function audit(outDir) {
   fs.mkdirSync(outDir, {recursive: true});
@@ -30,7 +33,7 @@ const tokens = s => s.split(/\s+/).filter(Boolean).sort().join(' ');
 // `./run.sh up` with these scenarios; none means the default run with both lessons.
 function provision(...scenarios) {
   execFileSync(path.join(ROOT, 'run.sh'), ['up', ...scenarios], {stdio: ['ignore', 'ignore', 'inherit']});
-  return fs.readFileSync(path.join(ROOT, 'run/.env'), 'utf8').match(/RSTUDIO_PASSWORD=(\S+)/)[1];
+  return fs.readFileSync(path.join(RUN_DIR, '.env'), 'utf8').match(/RSTUDIO_PASSWORD=(\S+)/)[1];
 }
 
 // RStudio's sign-in button calls submitRealForm() from js/signin.js. Once in ~6 audit runs
@@ -163,7 +166,9 @@ function verifySpotlight(rec, since, until) {
   }
   // The spotlight spans the editor, so the caret's line must be inside it. Its x isn't checked: the
   // edit is recorded before Ace scrolls sideways to follow the caret along (or back from) a long line.
-  const keys = rec.edits.filter(e => e.t >= since && e.t <= until && e.action === 'insert' && !e.text.includes('\n'));
+  // Indentation isn't checked either: the coach sets a new line's indentation in the same instant as
+  // it presses Enter, before the spotlight's next frame reaches that line.
+  const keys = rec.edits.filter(e => e.t >= since && e.t <= until && e.action === 'insert' && !e.text.includes('\n') && e.text.trim());
   for (const k of keys) {
     const r = k.ring;
     assert(k.dim && r && k.caret.y >= r.top && k.caret.y <= r.bottom,
@@ -181,9 +186,15 @@ const overlayState = page => page.evaluate(() => {
 // The code was typed one key at a time at a person's pace. RStudio's auto-pairing adds ")" as a
 // second insert after "(", and the ")" typed later only moves the cursor, so inserts match characters.
 // `codes` is what should have been typed; [] means the code was already there, so nothing is.
-function verifyTyping(rec, since, until, codes) {
-  const keys = rec.edits.filter(e => e.t >= since && e.t <= until && e.action === 'insert' && !e.text.includes('\n'));
-  const chars = codes.reduce((n, code) => n + code.length, 0);
+// Spaces aren't counted on either side: RStudio indents each new line of a statement, and the coach
+// sets that indentation to the reference's in one edit. `shortcuts` pipes or arrows came from
+// Ctrl+Shift+M or Alt+-: for each, RStudio inserts " |> " or " <- " and the coach rewrites the line
+// up to it, so neither of those edits is a keystroke and the two characters aren't counted.
+function verifyTyping(rec, since, until, codes, {shortcuts = 0} = {}) {
+  const fromShortcut = k => shortcuts > 0 && k.text.length > 2 && /(\|>|<-)$/.test(k.text.trimEnd());
+  const keys = rec.edits.filter(e => e.t >= since && e.t <= until && e.action === 'insert' && !e.text.includes('\n')
+    && e.text.trim() && !fromShortcut(e));
+  const chars = codes.reduce((n, code) => n + code.replace(/\s/g, '').length, 0) - 2 * shortcuts;
   if (!chars) {
     assert(keys.length === 0, `${keys.length} keystrokes, but the code was already in the script`);
     return {keys: 0};
@@ -195,6 +206,34 @@ function verifyTyping(rec, since, until, codes) {
   const median = gaps[Math.floor(gaps.length / 2)];
   assert(median >= 35 && median <= 250, `median gap between keystrokes was ${median.toFixed(0)} ms`);
   return {keys: keys.length, chars, medianGapMs: Math.round(median)};
+}
+
+// R's own record of what ran (runtime/evidence.R, served at /coach/api/evidence to a signed-in
+// browser): the session, its recent calls with their fingerprints, and IDE state such as the
+// attached packages and the project's files.
+const rEvidence = page => page.evaluate(() => fetch('/coach/api/evidence', {cache: 'no-store'})
+  .then(r => (r.ok ? r.json() : {session: null, seq: 0, calls: [], state: null})));
+// Each statement in `runs` left the bake's evidence in R since `mark` (an earlier rEvidence): a call
+// with the reference fingerprint, the package attached, or the file written. This checks R's record
+// against the bake directly, apart from the coach's own matching. Returns the kinds checked.
+function verifyEvidence(doc, runs, mark) {
+  const fresh = (doc.calls || []).filter(c => doc.session !== mark.session || c.seq > mark.seq);
+  const met = [];
+  for (const run of runs.filter(r => r.code)) {
+    const want = run.expected || {};
+    let ok;
+    switch (run.evidence) {
+      case 'value': ok = fresh.some(c => (run.order === 'any' ? c.fp_any === want.fp_any : c.fp === want.fp)); break;
+      case 'assign': ok = fresh.some(c => c.assigned === want.assigned && c.fp === want.fp); break;
+      case 'ggplot': ok = fresh.some(c => c.visible && c.fp === want.fp); break;
+      case 'attached': ok = (doc.state?.attached || []).includes(want.library); break;
+      case 'file': ok = (doc.state?.files || []).some(f => f.path === run.path); break;
+      default: continue; // console and pattern evidence show in the Console
+    }
+    assert(ok, `R's evidence has no ${run.evidence} result matching the bake for ${JSON.stringify(run.code.split('\n')[0])}`);
+    met.push(run.evidence);
+  }
+  return met;
 }
 
 // What a fresh start resets, as RStudio shows it: the script in the Source pane (and whether Ctrl+Z
@@ -262,7 +301,7 @@ async function dockedGeometry(page) {
 }
 
 module.exports = {
-  ROOT, GATEWAY, audit, assert, tokens, provision, warnings, signIn, waitForCoach, coachEl,
+  ROOT, RUN_DIR, GATEWAY, audit, assert, tokens, provision, warnings, signIn, waitForCoach, coachEl,
   installRecorder, now, record, editorLines, verifyPointer, verifyTyping, verifySpotlight, overlayState, plotSrc, dockedGeometry,
-  rstudioState, verifyFresh, waitForFreshStart, freshStarts,
+  rstudioState, verifyFresh, waitForFreshStart, freshStarts, rEvidence, verifyEvidence,
 };

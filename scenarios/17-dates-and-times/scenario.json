@@ -1,0 +1,178 @@
+{
+  "id": "17-dates-and-times",
+  "version": 2,
+  "world": true,
+  "title": "Dates and times",
+  "modes": [
+    "demonstration",
+    "guided",
+    "solo"
+  ],
+  "script": "17-dates-and-times.R",
+  "summary": "Handle Larkhaven's dates and times with lubridate: parse them in the city's time zone, take them apart and build them from parts, round to weeks, see what the clocks changing does to a trip's length, and move between time zones.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse)",
+      "runs": [
+        {
+          "code": "library(tidyverse)",
+          "evidence": "attached",
+          "purpose": "load the tidyverse, which includes lubridate",
+          "task": "Load the tidyverse with `library()`."
+        }
+      ],
+      "explain": "`library(tidyverse)` attaches lubridate, whose functions parse, take apart and do arithmetic with dates and times."
+    },
+    {
+      "id": "parse",
+      "title": "Parse dates and times",
+      "runs": [
+        {
+          "code": "ymd_hms(\"2025-03-09 01:41:07\", tz = \"America/Toronto\")",
+          "evidence": "value",
+          "purpose": "turn text into a date-time in Larkhaven's time zone",
+          "task": "Parse \"2025-03-09 01:41:07\" with `ymd_hms()`, in the time zone \"America/Toronto\"."
+        },
+        {
+          "code": "mdy(\"03/09/2025\")",
+          "evidence": "value",
+          "purpose": "parse a date written the American way, month first",
+          "task": "Parse \"03/09/2025\", written month first, with `mdy()`."
+        },
+        {
+          "code": "trips <- read_csv(\"data/trips.csv\", locale = locale(tz = \"America/Toronto\"))",
+          "evidence": "assign",
+          "alternatives": [
+            "trips = read_csv('data/trips.csv', locale = locale(tz = 'America/Toronto'), show_col_types = FALSE)"
+          ],
+          "purpose": "read every 2025 trip, with its times in Larkhaven's time zone, into `trips`",
+          "task": "Read `data/trips.csv` into `trips`, with `locale = locale(tz = \"America/Toronto\")`."
+        }
+      ],
+      "explain": "lubridate's parsers are named for the order of a date's parts: `ymd_hms()` for year, month, day, hours, minutes, seconds, and `mdy()` for the American month-first dates in the station exports. A date-time is an instant, and its clock time depends on where you are, so `tz` says where: Larkhaven keeps the same time as Toronto, EST in winter and EDT in summer. The trip file records clock times without a time zone, and `read_csv()` would read them as UTC; its `locale` gives them Larkhaven's."
+    },
+    {
+      "id": "components",
+      "title": "Take apart and build: wday(), make_date()",
+      "runs": [
+        {
+          "code": "trips |> count(day = wday(started_at, label = TRUE))",
+          "evidence": "value",
+          "alternatives": [
+            "trips |> mutate(day = wday(started_at, label = TRUE)) |> count(day)"
+          ],
+          "values": {
+            "top_day": "local({c <- count(trips, day = wday(started_at, label = TRUE, abbr = FALSE)); as.character(c$day[which.max(c$n)])})"
+          },
+          "purpose": "count the trips on each day of the week",
+          "task": "Count the trips by `day`, the day of the week of `started_at` with `wday(label = TRUE)`."
+        },
+        {
+          "code": "make_date(2025, 1:12, 1)",
+          "evidence": "value",
+          "purpose": "make the first day of each month of 2025 from its parts",
+          "task": "Make the first day of each month of 2025 with `make_date()`: year 2025, months `1:12`, day 1."
+        }
+      ],
+      "explain": "`year()`, `month()`, `day()`, `hour()`, `minute()` and `wday()` each take one part out of a date-time; `label = TRUE` names the day or month as an ordered factor, so the days count from Sunday to Saturday. The days of the week are nearly level, {top_day} just ahead. `make_date()` and `make_datetime()` go the other way, building dates from parts held in separate numbers, and work on vectors: `1:12` gives a date for every month."
+    },
+    {
+      "id": "round",
+      "title": "Round to weeks: floor_date()",
+      "runs": [
+        {
+          "code": "trips |>\n  count(week = floor_date(started_at, \"week\", week_start = 1)) |>\n  ggplot(aes(x = week, y = n)) +\n  geom_line()",
+          "evidence": "ggplot",
+          "alternatives": [
+            "trips |> mutate(week = floor_date(started_at, unit = 'week', week_start = 1)) |> count(week) |> ggplot(aes(week, n)) + geom_line()"
+          ],
+          "values": {
+            "n_weeks": "format(nrow(count(trips, week = floor_date(started_at, \"week\", week_start = 1))))",
+            "top_week": "str_squish(format(slice_max(count(trips, week = floor_date(started_at, \"week\", week_start = 1)), n)$week[1], \"%e %B\"))"
+          },
+          "purpose": "count the trips in each week, each week starting on a Monday, and draw the counts as a line",
+          "task": "Count the trips by `week`, rounding `started_at` down to the Monday it falls in with `floor_date(started_at, \"week\", week_start = 1)`, then draw `n` against `week` as a line."
+        }
+      ],
+      "explain": "`floor_date()` rounds a date-time down to the start of a unit, here the Monday the trip's week began, so all of a week's trips count together: {n_weeks} weeks, as the first and last are partial weeks. The busiest week began on {top_week}. `round_date()` and `ceiling_date()` round to the nearest or up. Rounding to a week smooths out the weekday-weekend wobble in the daily counts, so the seasons show."
+    },
+    {
+      "id": "spans",
+      "title": "When the clocks change: durations and periods",
+      "runs": [
+        {
+          "code": "spring <- trips |> filter(trip_id == 370330)",
+          "evidence": "assign",
+          "alternatives": [
+            "spring = filter(trips, trip_id == 370330)"
+          ],
+          "values": {
+            "clock_gap": "format(as.numeric(force_tz(spring$ended_at, \"UTC\") - force_tz(spring$started_at, \"UTC\"), units = \"mins\"))",
+            "recorded": "format(spring$duration_min)"
+          },
+          "purpose": "keep the trip that crossed the change to summer time, as `spring`",
+          "task": "Keep the trip whose `trip_id` is 370330 and store it in `spring`."
+        },
+        {
+          "code": "spring$ended_at - spring$started_at",
+          "evidence": "value",
+          "purpose": "work out how long that trip took",
+          "task": "Subtract `spring$started_at` from `spring$ended_at`."
+        },
+        {
+          "code": "c(spring$started_at + ddays(1), spring$started_at + days(1))",
+          "evidence": "value",
+          "purpose": "add one day to its start, first as 24 hours and then as a calendar day",
+          "task": "Add a day to `spring$started_at` twice, in one vector: as a duration, `ddays(1)`, and as a period, `days(1)`."
+        }
+      ],
+      "explain": "Trip 370330 started at 1:41 on 9 March and ended at 3:07, {clock_gap} minutes later by the clock. But at 2:00 that night the clocks jumped to 3:00, so the trip really took {recorded} minutes, which is what subtracting date-times in the right time zone gives. A duration, such as `ddays(1)`, is an exact number of seconds: 24 hours after 1:41 on 9 March, a day only 23 hours long, is 2:41 the next day. A period, such as `days(1)`, follows the calendar: the same clock time the next day, 1:41. Use periods for \"the same time tomorrow\" and durations for elapsed time."
+    },
+    {
+      "id": "zones",
+      "title": "Time zones: with_tz() and force_tz()",
+      "runs": [
+        {
+          "code": "with_tz(spring$started_at, \"UTC\")",
+          "evidence": "value",
+          "purpose": "show the same instant on a UTC clock",
+          "task": "Show `spring$started_at` in UTC with `with_tz()`."
+        },
+        {
+          "code": "force_tz(spring$started_at, \"UTC\")",
+          "evidence": "value",
+          "purpose": "keep the clock time but say it is UTC, which makes it a different instant",
+          "task": "Keep the clock time of `spring$started_at` but set its time zone to UTC with `force_tz()`."
+        },
+        {
+          "code": "trips |> filter(ended_at < started_at, duration_min > 0)",
+          "evidence": "value",
+          "alternatives": [
+            "filter(trips, started_at > ended_at, duration_min > 0)"
+          ],
+          "values": {
+            "n_backwards": "format(nrow(filter(trips, ended_at < started_at, duration_min > 0)))"
+          },
+          "purpose": "find trips that ended before they started by the clock, though they took some time",
+          "task": "Keep the trips whose `ended_at` is before `started_at`, but whose `duration_min` is above 0."
+        }
+      ],
+      "explain": "`with_tz()` changes the clock a time is shown on, not the instant: 1:41 in Larkhaven is 6:41 in UTC. `force_tz()` keeps the clock time and changes the time zone, so it moves the instant: use it to correct a time read in the wrong zone. The {n_backwards} trips the filter finds started in the first 1 am on 2 November and ended in the second, after the clocks went back an hour. Clock times can't tell the two 1 ams apart, so these trips seem to end before they start; their `duration_min`, recorded by the scheme, is right."
+    },
+    {
+      "id": "today",
+      "title": "Today: today()",
+      "runs": [
+        {
+          "code": "today()",
+          "evidence": "pattern",
+          "pattern": "^\\[1\\] \"\\d{4}-\\d{2}-\\d{2}\"$",
+          "purpose": "show today's date",
+          "task": "Show today's date with `today()`."
+        }
+      ],
+      "explain": "`today()` gives the date where R is running, and `now()` the date-time; both change every time you run them, so the coach checks only their shape. Dates are stored as the number of days since 1 January 1970, which is why subtracting two of them gives a number of days."
+    }
+  ]
+}

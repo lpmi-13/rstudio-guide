@@ -1,0 +1,381 @@
+{
+ "lesson": "20-spreadsheets",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [
+    "readxl"
+   ],
+   "class": "character",
+   "dim": 18,
+   "files": [],
+   "fp": "863ee20ebac14d2add447c585c03d449",
+   "fp_any": null,
+   "index": 1,
+   "library": "readxl",
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [
+    "writexl"
+   ],
+   "class": "character",
+   "dim": 19,
+   "files": [],
+   "fp": "83a2626e97354fe734b7b17ab36feb84",
+   "fp_any": null,
+   "index": 2,
+   "library": "writexl",
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "character",
+   "dim": 4,
+   "files": [],
+   "fp": "bd6ea27cc253dcc5ee8e27518dd86738",
+   "fp_any": null,
+   "index": 3,
+   "messages": [],
+   "output": "[1] \"Summary\"   \"Northgate\" \"Harbour\"   \"Eastfield\"",
+   "plot": false,
+   "step": "sheets",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    146,
+    7
+   ],
+   "files": [],
+   "fp": "45a087fad20f95e1fa7df40dbd39d1bd",
+   "fp_any": "4ffb2ec0f3b7aa916680dd46478e7124",
+   "index": 4,
+   "messages": [
+    "New names:\n• `` -> `...2`\n• `` -> `...3`\n• `` -> `...4`\n• `` -> `...5`\n• `` -> `...6`\n• `` -> `...7`"
+   ],
+   "output": "# A tibble: 146 × 7\n   `Larkhaven Bikes - Northgate depot`                            ...2       ...3         ...4     ...5    ...6        ...7                        \n   <chr>                                                          <chr>      <chr>        <chr>    <chr>   <chr>       <chr>                       \n 1 Repair log, January to December 2025 (exported from FleetDesk) <NA>       <NA>         <NA>     <NA>    <NA>        <NA>                        \n 2 <NA>                                                           <NA>       <NA>         <NA>     <NA>    <NA>        <NA>                        \n 3 Date                                                           Bike       Fault        Mechanic Minutes Parts (CAD) Notes                       \n 4 45659                                                          LB-C-00198 Lights       Ama      29      N/A         <NA>                        \n 5 45660                                                          LB00029    Frame damage Tomasz   41      42.12       <NA>                        \n 6 45660                                                          LB-C-00417 Chain        Ama      54      17.77       <NA>                        \n 7 45664                                                          LB-C-00416 Saddle       Ama      23      -           <NA>                        \n 8 45666                                                          LB-C-00418 Brakes       Tomasz   59      14.16       <NA>                        \n 9 45670                                                          LB-E-00020 Lights       Ama      16      -           <NA>                        \n10 45671                                                          LB-E-00252 Flat tyre    Priya    65      N/A         Returned to service same day\n# ℹ 136 more rows",
+   "plot": false,
+   "step": "skip",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    143,
+    7
+   ],
+   "files": [],
+   "fp": "367540b329f8b308decd4ca96203a170",
+   "fp_any": "113d649429981e77b551c986b50f04bc",
+   "index": 5,
+   "messages": [],
+   "output": "# A tibble: 143 × 7\n   Date  Bike       Fault        Mechanic Minutes `Parts (CAD)` Notes                       \n   <chr> <chr>      <chr>        <chr>    <chr>   <chr>         <chr>                       \n 1 45659 LB-C-00198 Lights       Ama      29      N/A           <NA>                        \n 2 45660 LB00029    Frame damage Tomasz   41      42.12         <NA>                        \n 3 45660 LB-C-00417 Chain        Ama      54      17.77         <NA>                        \n 4 45664 LB-C-00416 Saddle       Ama      23      -             <NA>                        \n 5 45666 LB-C-00418 Brakes       Tomasz   59      14.16         <NA>                        \n 6 45670 LB-E-00020 Lights       Ama      16      -             <NA>                        \n 7 45671 LB-E-00252 Flat tyre    Priya    65      N/A           Returned to service same day\n 8 45672 LB-C-00379 Frame damage Priya    10      27.53         Recurring fault             \n 9 45672 LB-E-00050 Flat tyre    Ama      15      -             <NA>                        \n10 45673 LB-C-00268 Flat tyre    Ama      34      30.58         <NA>                        \n# ℹ 133 more rows",
+   "plot": false,
+   "step": "skip",
+   "values": {
+    "n_rows": "143"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "columns",
+     "class": "character",
+     "code": "columns = c(\"numeric\", \"text\", \"text\", \"text\", \"numeric\", \"numeric\", \"text\")",
+     "dim": 7,
+     "fp": "3ee4650bec9c04ee86b8fbbd2085fd6a",
+     "fp_any": null
+    }
+   ],
+   "assigned": "columns",
+   "attached": [],
+   "class": "character",
+   "dim": 7,
+   "files": [],
+   "fp": "3ee4650bec9c04ee86b8fbbd2085fd6a",
+   "fp_any": null,
+   "index": 6,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "types",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "northgate",
+     "class": "tbl_df",
+     "code": "northgate = read_excel('data/maintenance.xlsx', 'Northgate', skip = 3, na = c('', 'N/A', '-'), col_types = columns)",
+     "dim": [
+      143,
+      7
+     ],
+     "fp": "f2569e90df99ed556ef042d703ec8b29",
+     "fp_any": "5571205809b7dae7c24aa7bde4d3b505"
+    }
+   ],
+   "assigned": "northgate",
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    143,
+    7
+   ],
+   "files": [],
+   "fp": "f2569e90df99ed556ef042d703ec8b29",
+   "fp_any": "5571205809b7dae7c24aa7bde4d3b505",
+   "index": 7,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "types",
+   "values": {
+    "n_minutes_na": "3"
+   },
+   "visible": false,
+   "warnings": [
+    "Expecting numeric in E18 / R18C5: got '45?'",
+    "Expecting numeric in E37 / R37C5: got 'approx 40'",
+    "Expecting numeric in E82 / R82C5: got 'see notes'",
+    "Expecting numeric in A147 / R147C1: got 'Total'"
+   ]
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "filter(northgate, is.na(Minutes))",
+     "dim": [
+      3,
+      7
+     ],
+     "fp": "3f361796e9e55b44fd7369d2db155362",
+     "fp_any": "3f361796e9e55b44fd7369d2db155362"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    3,
+    7
+   ],
+   "files": [],
+   "fp": "3f361796e9e55b44fd7369d2db155362",
+   "fp_any": "3f361796e9e55b44fd7369d2db155362",
+   "index": 8,
+   "messages": [],
+   "output": "# A tibble: 3 × 7\n   Date Bike       Fault     Mechanic Minutes `Parts (CAD)` Notes                       \n  <dbl> <chr>      <chr>     <chr>      <dbl>         <dbl> <chr>                       \n1 45683 LB-E-00190 Brakes    Ama           NA         16.2  <NA>                        \n2 45722 LB-C-00395 Flat tyre Tomasz        NA         NA    Returned to service same day\n3 45826 LB-E-00064 Flat tyre Tomasz        NA          8.25 <NA>                        ",
+   "plot": false,
+   "step": "types",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "northgate |> filter(!is.na(Date)) |> mutate(Date = as.Date(Date, origin = '1899-12-30'))",
+     "dim": [
+      142,
+      7
+     ],
+     "fp": "08a06acdcf3c2851bb3ade36063da524",
+     "fp_any": "36c47ccb09b2fe6e684a284f4295a12e"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    142,
+    7
+   ],
+   "files": [],
+   "fp": "08a06acdcf3c2851bb3ade36063da524",
+   "fp_any": "36c47ccb09b2fe6e684a284f4295a12e",
+   "index": 9,
+   "messages": [],
+   "output": "# A tibble: 142 × 7\n   Date       Bike       Fault        Mechanic Minutes `Parts (CAD)` Notes                       \n   <date>     <chr>      <chr>        <chr>      <dbl>         <dbl> <chr>                       \n 1 2025-01-02 LB-C-00198 Lights       Ama           29          NA   <NA>                        \n 2 2025-01-03 LB00029    Frame damage Tomasz        41          42.1 <NA>                        \n 3 2025-01-03 LB-C-00417 Chain        Ama           54          17.8 <NA>                        \n 4 2025-01-07 LB-C-00416 Saddle       Ama           23          NA   <NA>                        \n 5 2025-01-09 LB-C-00418 Brakes       Tomasz        59          14.2 <NA>                        \n 6 2025-01-13 LB-E-00020 Lights       Ama           16          NA   <NA>                        \n 7 2025-01-14 LB-E-00252 Flat tyre    Priya         65          NA   Returned to service same day\n 8 2025-01-15 LB-C-00379 Frame damage Priya         10          27.5 Recurring fault             \n 9 2025-01-15 LB-E-00050 Flat tyre    Ama           15          NA   <NA>                        \n10 2025-01-16 LB-C-00268 Flat tyre    Ama           34          30.6 <NA>                        \n# ℹ 132 more rows",
+   "plot": false,
+   "step": "dates",
+   "values": {
+    "first_date": "2 January 2025",
+    "first_serial": "45659"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "repairs",
+     "class": "tbl_df",
+     "code": "repairs = c('Northgate', 'Harbour', 'Eastfield') |> set_names() |> map(function(sheet) read_excel('data/maintenance.xlsx', sheet = sheet, skip = 3, na = c('', 'N/A', '-'), col_types = columns)) |> list_rbind(names_to = 'depot') |> filter(!is.na(Date)) |> mutate(Date = as_date(Date, origin = '1899-12-30'))",
+     "dim": [
+      391,
+      8
+     ],
+     "fp": "a4106a9b25dac535aba7fd55be5ba809",
+     "fp_any": "369f1376166154681828015f02a109f4"
+    }
+   ],
+   "assigned": "repairs",
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    391,
+    8
+   ],
+   "files": [],
+   "fp": "a4106a9b25dac535aba7fd55be5ba809",
+   "fp_any": "369f1376166154681828015f02a109f4",
+   "index": 10,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "combine",
+   "values": {
+    "n_repairs": "391"
+   },
+   "visible": false,
+   "warnings": [
+    "Expecting numeric in E18 / R18C5: got '45?'",
+    "Expecting numeric in E37 / R37C5: got 'approx 40'",
+    "Expecting numeric in E82 / R82C5: got 'see notes'",
+    "Expecting numeric in A147 / R147C1: got 'Total'",
+    "Expecting numeric in E8 / R8C5: got 'see notes'",
+    "Expecting numeric in E35 / R35C5: got '45?'",
+    "Expecting numeric in E83 / R83C5: got 'approx 40'",
+    "Expecting numeric in A123 / R123C1: got 'Total'",
+    "Expecting numeric in E54 / R54C5: got 'see notes'",
+    "Expecting numeric in E55 / R55C5: got '45?'",
+    "Expecting numeric in E59 / R59C5: got 'approx 40'",
+    "Expecting numeric in A136 / R136C1: got 'Total'"
+   ]
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "repairs |> group_by(depot) |> summarize(repairs = n(), hours = sum(Minutes, na.rm = TRUE) / 60)",
+     "dim": [
+      3,
+      3
+     ],
+     "fp": "478817bb423bfbf9779b0c557df459d1",
+     "fp_any": "478817bb423bfbf9779b0c557df459d1"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    3,
+    3
+   ],
+   "files": [],
+   "fp": "9b67d4511cfe400b54953f9263a7abf2",
+   "fp_any": "478817bb423bfbf9779b0c557df459d1",
+   "index": 11,
+   "messages": [],
+   "output": "# A tibble: 3 × 3\n  depot     repairs hours\n  <chr>       <int> <dbl>\n1 Northgate     142  76.8\n2 Harbour       118  69.4\n3 Eastfield     131  69.9",
+   "plot": false,
+   "step": "combine",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "character",
+   "dim": 1,
+   "files": [
+    "repairs.xlsx"
+   ],
+   "fp": "fd582c38646daf62809f5a68c18cc77f",
+   "fp_any": null,
+   "index": 12,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "write",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  }
+ ],
+ "stamp": {
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "format": "1",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "cb612f5714ef2886e7b5a17e9e917111ea9063c345469f15578b59e3676db826",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
+ }
+}

@@ -1,0 +1,201 @@
+{
+  "id": "18-missing-values",
+  "version": 2,
+  "world": true,
+  "title": "Missing values",
+  "modes": [
+    "demonstration",
+    "guided",
+    "solo"
+  ],
+  "script": "18-missing-values.R",
+  "summary": "Find and handle what's missing from Larkhaven Bikes' data: blanks to fill down, a code that means missing, fallbacks for missing names, hours with no row at all, a mean of nothing, and stations that never appear in the trips.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse), library(readxl)",
+      "runs": [
+        {
+          "code": "library(tidyverse)",
+          "evidence": "attached",
+          "purpose": "load the tidyverse",
+          "task": "Load the tidyverse with `library()`."
+        },
+        {
+          "code": "library(readxl)",
+          "evidence": "attached",
+          "purpose": "load readxl, which reads Excel files",
+          "task": "Load readxl with `library()`."
+        }
+      ],
+      "explain": "tidyr and dplyr, from the tidyverse, have the functions for missing values; readxl reads the depots' maintenance workbook."
+    },
+    {
+      "id": "fill",
+      "title": "Blanks that mean \"same as above\": fill()",
+      "runs": [
+        {
+          "code": "depot_months <- read_excel(\"data/maintenance.xlsx\", sheet = \"Summary\")",
+          "evidence": "assign",
+          "alternatives": [
+            "depot_months = read_excel('data/maintenance.xlsx', sheet = 'Summary')"
+          ],
+          "purpose": "read the maintenance workbook's summary sheet into `depot_months`",
+          "task": "Read the \"Summary\" sheet of `data/maintenance.xlsx` into `depot_months` with `read_excel()`."
+        },
+        {
+          "code": "depot_months |> fill(Depot)",
+          "evidence": "value",
+          "alternatives": [
+            "depot_months |> fill(Depot, .direction = 'down')"
+          ],
+          "purpose": "fill each depot's name down into the blank rows below it",
+          "task": "Fill `Depot` down into the missing rows with `fill()`."
+        }
+      ],
+      "explain": "Whoever made the summary typed each depot's name once, on its January row, and left the rows below blank because they mean \"same as above\". Read in, those blanks are `NA`, yet the value is known. `fill()` carries the last value down into the `NA`s below it, so each month is labelled with its depot; `.direction = \"up\"` would carry values up instead."
+    },
+    {
+      "id": "sentinel",
+      "title": "A code for missing: na_if()",
+      "runs": [
+        {
+          "code": "weather <- read_csv(\"data/weather.csv\")",
+          "evidence": "assign",
+          "alternatives": [
+            "weather = read_csv('data/weather.csv', show_col_types = FALSE)"
+          ],
+          "purpose": "read the hourly weather into `weather`",
+          "task": "Read `data/weather.csv` into `weather`."
+        },
+        {
+          "code": "weather |> summarize(coldest = min(temp_c), calmest = min(wind_kmh))",
+          "evidence": "value",
+          "alternatives": [
+            "summarize(weather, coldest = min(temp_c), calmest = min(wind_kmh))"
+          ],
+          "purpose": "find the lowest temperature and wind speed",
+          "task": "Find the lowest `temp_c` (as `coldest`) and the lowest `wind_kmh` (as `calmest`) with `summarize()`."
+        },
+        {
+          "code": "weather <- weather |>\n  mutate(temp_c = na_if(temp_c, -99), wind_kmh = na_if(wind_kmh, -99))",
+          "evidence": "assign",
+          "alternatives": [
+            "weather = weather |> mutate(temp_c = if_else(temp_c == -99, NA, temp_c), wind_kmh = if_else(wind_kmh == -99, NA, wind_kmh))"
+          ],
+          "values": {
+            "n_sentinel": "format(sum(is.na(weather$temp_c)) + sum(is.na(weather$wind_kmh)))",
+            "coldest": "format(min(weather$temp_c, na.rm = TRUE))"
+          },
+          "purpose": "replace the sensor's -99 readings with NA, in both columns",
+          "task": "Replace -99 with `NA` in `temp_c` and in `wind_kmh` with `na_if()`, and store the result back in `weather`."
+        }
+      ],
+      "explain": "A temperature of -99 °C and a wind of -99 km/h can't be real: the sensor writes -99 when it has no reading. A code like that is worse than a blank, because sums and means treat it as a number. `na_if(x, -99)` turns every -99 into `NA`, here {n_sentinel} readings, after which `min()` would need `na.rm = TRUE` and give a believable coldest hour, {coldest} °C. Check a dataset's documentation, or its extreme values, for codes such as -99, 9999 or \"n/a\"."
+    },
+    {
+      "id": "coalesce",
+      "title": "A fallback for missing: coalesce()",
+      "runs": [
+        {
+          "code": "stations <- read_csv(\"data/stations.csv\")",
+          "evidence": "assign",
+          "alternatives": [
+            "stations = read_csv('data/stations.csv', show_col_types = FALSE)"
+          ],
+          "purpose": "read the station registry into `stations`",
+          "task": "Read `data/stations.csv` into `stations`."
+        },
+        {
+          "code": "stations |>\n  mutate(january_name = coalesce(former_name, name), .keep = \"used\") |>\n  filter(january_name != name)",
+          "evidence": "value",
+          "alternatives": [
+            "stations |> transmute(name, former_name, january_name = if_else(is.na(former_name), name, former_name)) |> filter(january_name != name)"
+          ],
+          "purpose": "find each station's name at the start of 2025: its former name if it has one, otherwise its name",
+          "task": "Add `january_name`: `former_name` where there is one, and `name` where it's missing, with `coalesce()`. Keep the columns used, and show the rows where it differs from `name`."
+        }
+      ],
+      "explain": "Two stations were renamed during 2025, and `former_name` holds their old names; for every other station it is `NA`. `coalesce()` takes the first value that isn't missing, row by row, from the vectors it's given: the former name if there is one, otherwise the current name. So `january_name` is what each station was called at the start of the year, and only the two renamed stations differ."
+    },
+    {
+      "id": "implicit",
+      "title": "Rows that aren't there: complete()",
+      "runs": [
+        {
+          "code": "june <- weather |>\n  filter(month(time) == 6) |>\n  complete(time = seq(min(time), max(time), by = \"hour\"))",
+          "evidence": "assign",
+          "alternatives": [
+            "june = weather |> filter(month(time) == 6) |> complete(time = seq(min(time), max(time), by = '1 hour'))"
+          ],
+          "values": {
+            "n_june": "format(nrow(filter(weather, month(time) == 6)))",
+            "n_added": "format(nrow(june) - nrow(filter(weather, month(time) == 6)))"
+          },
+          "purpose": "keep June's hours and add a row for every hour the sensor missed, as `june`",
+          "task": "Keep June's rows (`month(time) == 6`), then add a row for every missing hour with `complete()` and `time = seq(min(time), max(time), by = \"hour\")`. Store the result in `june`."
+        },
+        {
+          "code": "june |> filter(is.na(temp_c))",
+          "evidence": "value",
+          "alternatives": [
+            "filter(june, is.na(temp_c))"
+          ],
+          "purpose": "show June's hours with no temperature",
+          "task": "Keep the rows of `june` whose `temp_c` is missing."
+        }
+      ],
+      "explain": "An explicit missing value is an `NA` you can see; an implicit one is a row that isn't there at all. June has 720 hours, but `weather` has only {n_june} rows for it: the sensor stopped for a while. `complete()` makes the missing rows, one for every value of `time` in the sequence that has no row yet, and fills their other columns with `NA`. That added {n_added} rows, and now the gap shows: from 23 June to 25 June, all of 24 June included."
+    },
+    {
+      "id": "nan",
+      "title": "Nothing to average: NaN",
+      "runs": [
+        {
+          "code": "june |>\n  mutate(day = as_date(time)) |>\n  summarize(mean_temp = mean(temp_c, na.rm = TRUE), .by = day) |>\n  filter(is.nan(mean_temp))",
+          "evidence": "value",
+          "alternatives": [
+            "june |> group_by(day = as_date(time)) |> summarize(mean_temp = mean(temp_c, na.rm = TRUE)) |> filter(is.nan(mean_temp))"
+          ],
+          "purpose": "average each June day's temperature, leaving out missing hours, and show the days whose mean isn't a number",
+          "task": "Add `day` (`as_date(time)`), find the mean `temp_c` for each day with `na.rm = TRUE`, then keep the days whose mean `is.nan()`."
+        }
+      ],
+      "explain": "With `na.rm = TRUE`, `mean()` leaves out the missing hours. On 24 June every hour is missing, so the mean is of nothing at all, 0 divided by 0, which R calls `NaN`, \"not a number\". `NaN` behaves like `NA`, and `is.na()` is `TRUE` for both; `is.nan()` picks out only `NaN`. Seeing one usually means a group had no values left to summarise."
+    },
+    {
+      "id": "groups",
+      "title": "Missing groups: anti_join() and .drop",
+      "runs": [
+        {
+          "code": "trips <- read_csv(\"data/trips.csv\")",
+          "evidence": "assign",
+          "alternatives": [
+            "trips = read_csv('data/trips.csv', show_col_types = FALSE)"
+          ],
+          "purpose": "read every 2025 trip into `trips`",
+          "task": "Read `data/trips.csv` into `trips`."
+        },
+        {
+          "code": "stations |> anti_join(trips, join_by(station_id == start_station))",
+          "evidence": "value",
+          "alternatives": [
+            "anti_join(stations, trips, by = c('station_id' = 'start_station'))"
+          ],
+          "purpose": "find the stations that no trip started from",
+          "task": "Keep the stations with no trips starting from them, with `anti_join()` and `join_by(station_id == start_station)`."
+        },
+        {
+          "code": "trips |>\n  mutate(\n    start_station = factor(start_station, levels = unique(stations$station_id))\n  ) |>\n  count(start_station, .drop = FALSE) |>\n  filter(n == 0)",
+          "evidence": "value",
+          "alternatives": [
+            "trips |> mutate(start_station = factor(start_station, levels = unique(stations$station_id))) |> count(start_station, .drop = FALSE) |> filter(n < 1)"
+          ],
+          "purpose": "count the trips from every station in the registry, keeping stations with none",
+          "task": "Make `start_station` a factor whose levels are every station in the registry (`unique(stations$station_id)`), count by it with `.drop = FALSE`, and keep the counts of 0."
+        }
+      ],
+      "explain": "A count only has rows for values that occur, so a station with no trips is simply absent from `count(trips, start_station)`. `anti_join()` finds them by comparison: the stations with no matching trip, the two in Saltings. A factor knows its possible values even when they don't occur, and `.drop = FALSE` keeps a row for each, with a count of 0. Either way, a missing group becomes something you can see."
+    }
+  ]
+}

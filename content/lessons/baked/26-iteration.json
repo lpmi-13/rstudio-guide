@@ -1,0 +1,333 @@
+{
+ "lesson": "26-iteration",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "weather",
+     "class": "tbl_df",
+     "code": "weather = read_csv('data/weather.csv', show_col_types = FALSE) |> mutate(temp_c = na_if(temp_c, -99), wind_kmh = na_if(wind_kmh, -99))",
+     "dim": [
+      8711,
+      4
+     ],
+     "fp": "ba5fbd7a0fe4595f364d01b5f5aeb974",
+     "fp_any": "ba5fbd7a0fe4595f364d01b5f5aeb974"
+    }
+   ],
+   "assigned": "weather",
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    8711,
+    4
+   ],
+   "files": [],
+   "fp": "ba5fbd7a0fe4595f364d01b5f5aeb974",
+   "fp_any": "ba5fbd7a0fe4595f364d01b5f5aeb974",
+   "index": 1,
+   "messages": [
+    "Rows: 8711 Columns: 4",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\ndbl  (3): temp_c, rain_mm, wind_kmh\ndttm (1): time",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "across",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "weather |> summarize(across(c(temp_c, rain_mm, wind_kmh), \\(x) mean(x, na.rm = TRUE)))",
+     "dim": [
+      1,
+      3
+     ],
+     "fp": "cd355f2153234b4b8a34bcd312051929",
+     "fp_any": "cd355f2153234b4b8a34bcd312051929"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    1,
+    3
+   ],
+   "files": [],
+   "fp": "cd355f2153234b4b8a34bcd312051929",
+   "fp_any": "cd355f2153234b4b8a34bcd312051929",
+   "index": 2,
+   "messages": [],
+   "output": "# A tibble: 1 × 3\n  temp_c rain_mm wind_kmh\n   <dbl>   <dbl>    <dbl>\n1   7.34   0.188     14.8",
+   "plot": false,
+   "step": "across",
+   "values": {
+    "mean_temp": "7.3"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "weather |> summarize(across(c(temp_c, wind_kmh), list(low = \\(x) min(x, na.rm = TRUE), high = \\(x) max(x, na.rm = TRUE))))",
+     "dim": [
+      1,
+      4
+     ],
+     "fp": "437518f63f5cd33a36bf3d1b4c5d2fe3",
+     "fp_any": "437518f63f5cd33a36bf3d1b4c5d2fe3"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    1,
+    4
+   ],
+   "files": [],
+   "fp": "437518f63f5cd33a36bf3d1b4c5d2fe3",
+   "fp_any": "437518f63f5cd33a36bf3d1b4c5d2fe3",
+   "index": 3,
+   "messages": [],
+   "output": "# A tibble: 1 × 4\n  temp_c_low temp_c_high wind_kmh_low wind_kmh_high\n       <dbl>       <dbl>        <dbl>         <dbl>\n1      -13.9        34.4            5            35",
+   "plot": false,
+   "step": "names",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "weather |> filter(is.na(temp_c) | is.na(rain_mm) | is.na(wind_kmh))",
+     "dim": [
+      14,
+      4
+     ],
+     "fp": "7f085ff094e1d0ab4912ec935e7c1e7a",
+     "fp_any": "7f085ff094e1d0ab4912ec935e7c1e7a"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    14,
+    4
+   ],
+   "files": [],
+   "fp": "7f085ff094e1d0ab4912ec935e7c1e7a",
+   "fp_any": "7f085ff094e1d0ab4912ec935e7c1e7a",
+   "index": 4,
+   "messages": [],
+   "output": "# A tibble: 14 × 4\n   time                temp_c rain_mm wind_kmh\n   <dttm>               <dbl>   <dbl>    <dbl>\n 1 2025-01-12 01:00:00   -8.8       0       NA\n 2 2025-01-26 14:00:00   -5.1       0       NA\n 3 2025-03-22 23:00:00   NA         0       14\n 4 2025-03-31 15:00:00   NA         0       13\n 5 2025-08-18 21:00:00   24.6       0       NA\n 6 2025-08-24 13:00:00   24.3       0       NA\n 7 2025-09-26 08:00:00   11.1       0       NA\n 8 2025-10-13 15:00:00   NA         0       24\n 9 2025-10-19 05:00:00   NA         0       12\n10 2025-11-10 07:00:00   NA         0        8\n11 2025-11-26 06:00:00   NA         0       15\n12 2025-12-11 03:00:00   NA         0       12\n13 2025-12-24 17:00:00   NA         0       13\n14 2025-12-25 02:00:00   NA         0       13",
+   "plot": false,
+   "step": "if-any",
+   "values": {
+    "n_any_na": "14"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "paths",
+     "class": "fs_path",
+     "code": "paths = fs::dir_ls('data/exports', glob = '*.csv')",
+     "dim": 12,
+     "fp": "a5371549cccc8f18dba1b9cf3b110e0e",
+     "fp_any": null
+    }
+   ],
+   "assigned": "paths",
+   "attached": [],
+   "class": "fs_path",
+   "dim": 12,
+   "files": [],
+   "fp": "a5371549cccc8f18dba1b9cf3b110e0e",
+   "fp_any": null,
+   "index": 5,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "map",
+   "values": {
+    "n_paths": "12"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "exports",
+     "class": "tbl_df",
+     "code": "exports = paths |> map(function(path) read_csv(path, skip = 1, na = c('', 'n/a', '-'), show_col_types = FALSE)) |> list_rbind(names_to = 'file')",
+     "dim": [
+      936,
+      11
+     ],
+     "fp": "6704933e77ecf318bc977b577f603452",
+     "fp_any": "6704933e77ecf318bc977b577f603452"
+    }
+   ],
+   "assigned": "exports",
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    936,
+    11
+   ],
+   "files": [],
+   "fp": "6704933e77ecf318bc977b577f603452",
+   "fp_any": "6704933e77ecf318bc977b577f603452",
+   "index": 6,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "map",
+   "values": {
+    "n_exports": "936"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "by_area",
+     "class": "tbl_df",
+     "code": "by_area = read_csv('data/stations.csv', show_col_types = FALSE) |> nest(.by = neighbourhood) |> mutate(path = paste0('neighbourhoods/', neighbourhood, '.csv'))",
+     "dim": [
+      11,
+      3
+     ],
+     "fp": "1ec7820ebcf06f3c5be8d07701af0c37",
+     "fp_any": null
+    }
+   ],
+   "assigned": "by_area",
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    11,
+    3
+   ],
+   "files": [],
+   "fp": "1ec7820ebcf06f3c5be8d07701af0c37",
+   "fp_any": null,
+   "index": 7,
+   "messages": [
+    "Rows: 81 Columns: 8",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): name, neighbourhood, former_name\ndbl  (4): station_id, lat, lon, docks\ndate (1): opened",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "walk",
+   "values": {
+    "n_areas": "11"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "fs_path",
+   "dim": 1,
+   "files": [],
+   "fp": "fe6ea6ec36c0f5245e2bfbd80612dd19",
+   "fp_any": null,
+   "index": 8,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "walk",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "list",
+   "dim": 11,
+   "files": [
+    "neighbourhoods/Castle Hill.csv",
+    "neighbourhoods/Eastfield.csv",
+    "neighbourhoods/Fenwick Park.csv",
+    "neighbourhoods/Market Square.csv",
+    "neighbourhoods/Millbrook.csv",
+    "neighbourhoods/Northgate.csv",
+    "neighbourhoods/Old Harbour.csv",
+    "neighbourhoods/Riverside.csv",
+    "neighbourhoods/Saltings.csv",
+    "neighbourhoods/University.csv",
+    "neighbourhoods/Westmoor.csv"
+   ],
+   "fp": "e57d21d2ba14cea7f372b033f546275e",
+   "fp_any": null,
+   "index": 9,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "walk",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  }
+ ],
+ "stamp": {
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "format": "1",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "9841a02731ec15875b1d46c679de35db5407703b6347c1a62516fb049712442b",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
+ }
+}

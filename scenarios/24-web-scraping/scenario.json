@@ -1,0 +1,156 @@
+{
+  "id": "24-web-scraping",
+  "version": 2,
+  "world": true,
+  "title": "Web scraping",
+  "modes": [
+    "demonstration",
+    "guided",
+    "solo"
+  ],
+  "script": "24-web-scraping.R",
+  "summary": "Read data out of Larkhaven Bikes' web pages with rvest: select elements with CSS selectors, take their text and attributes, build a table with one row per station card even where a card lacks a field, and read an HTML table in one go.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse), library(rvest)",
+      "runs": [
+        {
+          "code": "library(tidyverse)",
+          "evidence": "attached",
+          "purpose": "load the tidyverse",
+          "task": "Load the tidyverse with `library()`."
+        },
+        {
+          "code": "library(rvest)",
+          "evidence": "attached",
+          "purpose": "load rvest, which reads data from web pages",
+          "task": "Load rvest with `library()`."
+        }
+      ],
+      "explain": "rvest reads HTML, the language web pages are written in, and finds things in it. The lab has no internet, so these pages are copies in `data/site`; the code is the same for a page on the web, given its URL."
+    },
+    {
+      "id": "read",
+      "title": "Read a page: read_html()",
+      "runs": [
+        {
+          "code": "page <- read_html(\"data/site/stations.html\")",
+          "evidence": "assign",
+          "alternatives": [
+            "page = rvest::read_html('data/site/stations.html')"
+          ],
+          "purpose": "read the stations page into `page`",
+          "task": "Read `data/site/stations.html` with `read_html()` and store it in `page`."
+        },
+        {
+          "code": "page |> html_elements(\"h1\")",
+          "evidence": "value",
+          "alternatives": [
+            "html_elements(page, 'h1')"
+          ],
+          "purpose": "find the page's main heading",
+          "task": "Find the page's `h1` elements with `html_elements()`."
+        }
+      ],
+      "explain": "HTML marks up a page with elements: a start tag such as `<h1>`, content, and an end tag, `</h1>`. Elements nest, and a start tag can carry attributes, such as `class=\"station\"` or `href=\"…\"`. `read_html()` parses the page, and `html_elements()` finds every element matching a CSS selector; the simplest selector is a tag's name, `h1`. To see the markup, click `stations.html` in the Files pane and choose Open in Editor."
+    },
+    {
+      "id": "select",
+      "title": "CSS selectors: the station cards",
+      "runs": [
+        {
+          "code": "cards <- page |> html_elements(\"article.station\")",
+          "evidence": "assign",
+          "alternatives": [
+            "cards = html_elements(page, 'article.station')"
+          ],
+          "values": {
+            "n_cards": "format(length(cards))"
+          },
+          "purpose": "find every station card, an `article` with the class `station`, as `cards`",
+          "task": "Find the `article` elements with class `station` (`\"article.station\"`), and store them in `cards`."
+        },
+        {
+          "code": "cards |> html_element(\".name\") |> html_text2()",
+          "evidence": "value",
+          "alternatives": [
+            "html_text2(html_element(cards, '.name'))"
+          ],
+          "purpose": "take each card's name as text",
+          "task": "From each card, take the element with class `name` (`\".name\"`) with `html_element()`, then its text with `html_text2()`."
+        }
+      ],
+      "explain": "In a CSS selector, `.station` means \"with the class station\", so `article.station` picks the {n_cards} station cards and nothing else on the page. `html_element()`, singular, finds one element inside each card: its name. `html_text2()` takes the text out of the tags, the way a browser would show it, so `&amp;` becomes &."
+    },
+    {
+      "id": "attributes",
+      "title": "Attributes: html_attr()",
+      "runs": [
+        {
+          "code": "cards |> html_element(\"a.details\") |> html_attr(\"href\")",
+          "evidence": "value",
+          "alternatives": [
+            "html_attr(html_element(cards, 'a.details'), 'href')"
+          ],
+          "purpose": "take each card's link to the station's page",
+          "task": "From each card, take the `a` element with class `details`, then its `href` attribute with `html_attr()`."
+        }
+      ],
+      "explain": "A link's text is just Details; where it leads is in its `href` attribute. `html_attr()` reads an attribute's value, here each station's page, `station.html?id=…`, which holds the station's ID. A scraper that follows links reads these, then reads each page they lead to."
+    },
+    {
+      "id": "missing",
+      "title": "One row per card: missing fields",
+      "runs": [
+        {
+          "code": "cards |> html_elements(\".note\") |> html_text2()",
+          "evidence": "value",
+          "alternatives": [
+            "html_text2(html_elements(cards, '.note'))"
+          ],
+          "values": {
+            "n_notes": "format(length(html_elements(cards, \".note\")))"
+          },
+          "purpose": "find every note on any card, with `html_elements()`",
+          "task": "Find every element with class `note` in `cards` with `html_elements()`, plural, and take their text."
+        },
+        {
+          "code": "stations <- tibble(\n  name = cards |> html_element(\".name\") |> html_text2(),\n  docks = cards |> html_element(\".count\") |> html_text2() |> parse_integer(),\n  note = cards |> html_element(\".note\") |> html_text2()\n)",
+          "evidence": "assign",
+          "alternatives": [
+            "stations = tibble(name = html_text2(html_element(cards, '.name')), docks = parse_integer(html_text2(html_element(cards, '.count'))), note = html_text2(html_element(cards, '.note')))"
+          ],
+          "purpose": "build a table with one row per card: its name, docks and note, as `stations`",
+          "task": "Make a tibble called `stations` with one row per card: `name` (the `.name` text), `docks` (the `.count` text, as a whole number with `parse_integer()`) and `note` (the `.note` text), each with `html_element()`."
+        },
+        {
+          "code": "stations |> filter(!is.na(note))",
+          "evidence": "value",
+          "alternatives": [
+            "filter(stations, !is.na(note))"
+          ],
+          "purpose": "show the stations that have a note",
+          "task": "Keep the rows of `stations` that have a `note`."
+        }
+      ],
+      "explain": "Only {n_notes} cards have a note, so `html_elements()` returns {n_notes} notes with no way of telling which card each belongs to. `html_element()`, singular, returns exactly one result for each card, `NA` where the card has no note, so every column of `stations` lines up, row by row, with the cards. Always select the repeated unit first, here the cards, then one element inside each."
+    },
+    {
+      "id": "table",
+      "title": "Tables: html_table()",
+      "runs": [
+        {
+          "code": "read_html(\"data/site/fares.html\") |>\n  html_element(\"table\") |>\n  html_table()",
+          "evidence": "value",
+          "alternatives": [
+            "html_table(html_element(read_html('data/site/fares.html'), 'table'))"
+          ],
+          "purpose": "read the fares page's table straight into a tibble",
+          "task": "Read `data/site/fares.html`, find its `table` element and turn it into a tibble with `html_table()`."
+        }
+      ],
+      "explain": "An HTML table already has rows and columns, so `html_table()` turns it into a tibble in one step, with the header row as column names. The prices are text, such as $1.50, for `parse_number()` to turn into numbers. Before scraping a real site, read its terms of use and its `robots.txt`, keep your requests slow, and don't collect personal data; if the site offers a download or an API, use that instead."
+    }
+  ]
+}

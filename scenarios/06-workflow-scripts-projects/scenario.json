@@ -1,0 +1,99 @@
+{
+  "id": "06-workflow-scripts-projects",
+  "version": 2,
+  "world": true,
+  "title": "Workflow: scripts and projects",
+  "modes": ["demonstration", "guided", "solo"],
+  "script": "06-workflow-scripts-projects.R",
+  "summary": "Write an analysis of daily trips in a script, save its results with paths relative to the project, prove the script stands alone by restarting R and sourcing it, then start a project of your own.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse)",
+      "runs": [
+        {"code": "library(tidyverse)", "evidence": "attached",
+         "purpose": "load the tidyverse",
+         "task": "In the script, below the Setup heading, load the tidyverse with `library()`, and run it with Ctrl+Enter."}
+      ],
+      "explain": "`library(tidyverse)` is the first line of the script, so whoever runs the script from the top has the packages it needs."
+    },
+    {
+      "id": "script",
+      "title": "Write code in a script",
+      "runs": [
+        {"code": "trips <- read_csv(\"data/trips.csv\")", "evidence": "assign",
+         "alternatives": ["trips = read_csv('data/trips.csv', show_col_types = FALSE)"],
+         "purpose": "read every 2025 trip into `trips`",
+         "task": "In the script, below this step's heading, read `data/trips.csv` into `trips`, and run it."},
+        {"code": "daily <- trips |> count(date = as_date(started_at), name = \"trips\")", "evidence": "assign",
+         "alternatives": ["daily = trips |> mutate(date = as_date(started_at)) |> count(date, name = 'trips')"],
+         "values": {"n_days": "format(nrow(daily))"},
+         "purpose": "count the trips that started on each day, as `daily`",
+         "task": "Count the trips that started on each day, in a column called `date` made with `as_date(started_at)`, naming the count `trips`, and store the result in `daily`."},
+        {"code": "daily |> slice_max(trips, n = 3)", "evidence": "value",
+         "alternatives": ["daily |> arrange(desc(trips)) |> head(3)"],
+         "values": {
+           "top_date": "str_squish(format(slice_max(daily, trips, n = 1)$date[1], \"%A %e %B\"))",
+           "top_trips": "format(slice_max(daily, trips, n = 1)$trips[1], big.mark = \",\")"
+         },
+         "purpose": "show the three busiest days",
+         "task": "Show the three days with the most `trips`, with `slice_max()`."}
+      ],
+      "explain": "This lesson's code goes into its script, not straight into the Console. The Console runs what you type and moves on; a script keeps each statement, in order, so the whole analysis can run again. Ctrl+Enter runs the statement the cursor is on and moves the cursor to the next. While a script has changes that aren't saved, its name in the tab turns red with a `*`, and Ctrl+S saves it. `daily` has a row for each of the {n_days} days of 2025; the busiest was {top_date}, with {top_trips} trips."
+    },
+    {
+      "id": "paths",
+      "title": "Paths start at the working directory",
+      "runs": [
+        {"code": "getwd()", "evidence": "pattern", "pattern": "^\\[1\\] \"/.+\"$",
+         "purpose": "show R's working directory",
+         "task": "Show R's working directory with `getwd()`."},
+        {"code": "write_csv(daily, \"outputs/daily-trips.csv\")", "evidence": "file", "path": "outputs/daily-trips.csv",
+         "purpose": "save `daily` as a CSV file in the project's `outputs` folder",
+         "task": "Save `daily` as `outputs/daily-trips.csv` with `write_csv()`."}
+      ],
+      "explain": "`getwd()` shows the working directory, where R looks for a path that doesn't start with `/` or `~`. Here it's the project's folder, so `data/trips.csv` means the `data` folder inside it, and `write_csv()` wrote `daily` to `outputs/daily-trips.csv` inside it too: the Files pane shows it in `outputs`. A path relative to the project works wherever the project's folder is copied; a full path, such as one starting `/home/rstudio`, works only on one computer. So a script shouldn't change the working directory with `setwd()`: open the project, and RStudio sets it."
+    },
+    {
+      "id": "chart",
+      "title": "Save a chart with a relative path",
+      "runs": [
+        {"code": "ggplot(daily, aes(x = date, y = trips)) +\n  geom_line()", "evidence": "ggplot",
+         "alternatives": ["ggplot(daily, aes(date, trips)) + geom_line()"],
+         "values": {
+           "peak_month": "format(slice_max(daily, trips, n = 1)$date[1], \"%B\")",
+           "low_month": "format(slice_min(daily, trips, n = 1)$date[1], \"%B\")"
+         },
+         "purpose": "draw the number of trips each day as a line",
+         "task": "Draw `trips` against `date` for `daily` as a line, with `geom_line()`."},
+        {"code": "ggsave(\"outputs/daily-trips.png\", width = 8, height = 4)", "evidence": "file", "path": "outputs/daily-trips.png",
+         "purpose": "save the chart as `outputs/daily-trips.png`",
+         "task": "Save the chart as `outputs/daily-trips.png`, 8 by 4 inches, with `ggsave()`."}
+      ],
+      "explain": "The line rises from winter to summer and falls again: the busiest day was in {peak_month} and the quietest in {low_month}, and each sharp dip is a day of rain or cold. `ggsave()` saved the last chart drawn to `outputs/daily-trips.png`, again relative to the project's folder. A script that writes its results to files leaves a record that doesn't depend on what is on screen."
+    },
+    {
+      "id": "source",
+      "title": "Restart R, then Source the script",
+      "runs": [
+        {"action": "menu", "menu": ["Session", "Restart R"], "evidence": "ide", "ide": {"restarted": true},
+         "purpose": "restart R, so nothing from before is left",
+         "task": "Restart R from the Session menu."},
+        {"action": "source", "evidence": "file", "path": "outputs/daily-trips.png",
+         "purpose": "run the whole saved script from the top",
+         "task": "Run the whole script with the Source button at the top of the script (or Ctrl+Shift+S). It runs only what the script holds, so every statement so far must be in it."}
+      ],
+      "explain": "Restart R started a new R process: the Environment is empty, and the tidyverse is no longer attached. Source saved the script and ran it from the top in that clean session, as the `source()` call in the Console shows. It wrote both files in `outputs` again, so the script holds everything its results need, and nothing depends on code that was only typed in the Console. This lab's RStudio never saves the workspace to an `.RData` file, nor loads one when R starts (Tools › Global Options › General). Set your own RStudio the same way, so that every session starts clean and your scripts are the record of your work."
+    },
+    {
+      "id": "project",
+      "title": "A project of your own",
+      "runs": [
+        {"action": "new-project", "name": "practice", "evidence": "ide", "ide": {"project": "^practice"},
+         "purpose": "start a new project, `practice`, in a new folder",
+         "task": "Start a new project with File › New Project… › New Directory › New Project. Call it `practice`, and press Create Project."}
+      ],
+      "explain": "A project is a folder with an `.Rproj` file in it. Creating `practice` made the folder and its `practice.Rproj`, then RStudio reopened in it: a new R session whose working directory is the project's folder, as the Console's title shows. The menu at the top right of RStudio now names `practice`, and the Files pane shows the new folder. Keep each piece of work in its own project, with its data, scripts and outputs inside, and use paths relative to it. RStudio remembers each project's open scripts, so you can pick up where you left off. To return to the lessons, choose any mode in this panel, or the lessons' project in that menu."
+    }
+  ]
+}

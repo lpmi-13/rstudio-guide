@@ -1,0 +1,172 @@
+{
+  "id": "25-functions",
+  "version": 2,
+  "world": true,
+  "title": "Functions",
+  "modes": [
+    "demonstration",
+    "guided",
+    "solo"
+  ],
+  "script": "25-functions.R",
+  "summary": "Write your own functions for Larkhaven Bikes' trips: one that converts units, one that works on columns inside mutate(), a summary function, a data frame function that takes column names with {{ }}, and a plot function that writes its own title.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse)",
+      "runs": [
+        {
+          "code": "library(tidyverse)",
+          "evidence": "attached",
+          "purpose": "load the tidyverse",
+          "task": "Load the tidyverse with `library()`."
+        }
+      ],
+      "explain": "Every function in this lesson is built from tidyverse functions: once written, a function of your own works just like theirs."
+    },
+    {
+      "id": "first",
+      "title": "A first function",
+      "runs": [
+        {
+          "code": "km_to_miles <- function(km) {\n  km * 0.621371\n}",
+          "evidence": "assign",
+          "alternatives": [
+            "km_to_miles = function(km) km * 0.621371",
+            "km_to_miles <- \\(km) km * 0.621371"
+          ],
+          "purpose": "write a function, `km_to_miles()`, that converts kilometres to miles",
+          "task": "Write a function called `km_to_miles` with one argument, `km`, that returns `km * 0.621371`."
+        },
+        {
+          "code": "km_to_miles(c(1, 2.5, 10))",
+          "evidence": "value",
+          "purpose": "convert three distances with it",
+          "task": "Call `km_to_miles()` on `c(1, 2.5, 10)`."
+        }
+      ],
+      "explain": "A function has a name, arguments, and a body: `function(km) { … }` makes one, and `<-` keeps it under a name, as for any other value. Its body uses its argument, and the last value it works out is what it returns. The rule of thumb is to write a function once you have copied and pasted the same code three times: the conversion factor then lives in one place, and the name says what the code is for. Arithmetic works on vectors, so `km_to_miles()` converts all three distances at once."
+    },
+    {
+      "id": "vector",
+      "title": "Vector functions in mutate()",
+      "runs": [
+        {
+          "code": "trips <- read_csv(\"data/trips.csv\")",
+          "evidence": "assign",
+          "alternatives": [
+            "trips = read_csv('data/trips.csv', show_col_types = FALSE)"
+          ],
+          "purpose": "read every 2025 trip into `trips`",
+          "task": "Read `data/trips.csv` into `trips`."
+        },
+        {
+          "code": "speed_kmh <- function(km, minutes) {\n  km / minutes * 60\n}",
+          "evidence": "assign",
+          "alternatives": [
+            "speed_kmh = function(km, minutes) km / minutes * 60"
+          ],
+          "purpose": "write `speed_kmh()`, which works out speed in km/h from a distance and a time in minutes",
+          "task": "Write `speed_kmh`, a function of `km` and `minutes` that returns `km / minutes * 60`."
+        },
+        {
+          "code": "trips |> mutate(speed = speed_kmh(distance_km, duration_min), .keep = \"used\")",
+          "evidence": "value",
+          "alternatives": [
+            "trips |> transmute(distance_km, duration_min, speed = speed_kmh(km = distance_km, minutes = duration_min))"
+          ],
+          "values": {
+            "first_speed": "format(round(trips$distance_km[1] / trips$duration_min[1] * 60, 1))"
+          },
+          "purpose": "add each trip's speed with the new function",
+          "task": "Add `speed`, made with `speed_kmh(distance_km, duration_min)`, keeping only the columns used."
+        }
+      ],
+      "explain": "A vector function takes vectors and returns one of the same length, so it fits in `mutate()`, where each argument is a whole column: the first trip's speed is {first_speed} km/h. Inside the function, `km` and `minutes` are just names for whatever was passed in, here `distance_km` and `duration_min`. Arguments match by position, as here, or by name, `speed_kmh(km = …, minutes = …)`."
+    },
+    {
+      "id": "summary",
+      "title": "Summary functions",
+      "runs": [
+        {
+          "code": "share_of <- function(x, value) {\n  mean(x == value, na.rm = TRUE)\n}",
+          "evidence": "assign",
+          "alternatives": [
+            "share_of = function(x, value) mean(x == value, na.rm = TRUE)"
+          ],
+          "purpose": "write `share_of()`, which gives the share of a vector equal to a value",
+          "task": "Write `share_of`, a function of `x` and `value` that returns `mean(x == value, na.rm = TRUE)`."
+        },
+        {
+          "code": "trips |>\n  summarize(electric = share_of(bike_type, \"electric\"), .by = member_type)",
+          "evidence": "value",
+          "order": "any",
+          "alternatives": [
+            "trips |> group_by(member_type) |> summarize(electric = share_of(bike_type, 'electric'))"
+          ],
+          "purpose": "find the share of e-bike trips for each rider type",
+          "task": "For each `member_type`, find the share of trips with `bike_type` \"electric\", using `share_of()` in `summarize()`."
+        }
+      ],
+      "explain": "A summary function turns a vector into a single value, so it fits in `summarize()`. `share_of()` packs lesson 12's trick, the mean of a condition, behind a name that says what it means. A function that needs a default for a rarely changed argument gets one in its definition: `function(x, value, na.rm = TRUE)` would let a caller turn off the dropping of missing values."
+    },
+    {
+      "id": "dataframe",
+      "title": "Data frame functions: {{ }}",
+      "runs": [
+        {
+          "code": "summarize_trips <- function(df, group) {\n  df |>\n    summarize(\n      trips = n(),\n      median_minutes = median(duration_min),\n      .by = {{ group }}\n    )\n}",
+          "evidence": "assign",
+          "alternatives": [
+            "summarize_trips = function(df, group) df |> summarize(trips = n(), median_minutes = median(duration_min), .by = {{ group }})"
+          ],
+          "purpose": "write `summarize_trips()`, which counts trips and finds their median length for any grouping column",
+          "task": "Write `summarize_trips`, a function of `df` and `group`, that summarises `df` with `trips = n()` and `median_minutes = median(duration_min)`, grouped `.by = {{ group }}`."
+        },
+        {
+          "code": "summarize_trips(trips, member_type)",
+          "evidence": "value",
+          "order": "any",
+          "purpose": "summarise the trips by rider type with it",
+          "task": "Call `summarize_trips()` on `trips`, grouping by `member_type`."
+        },
+        {
+          "code": "summarize_trips(trips, c(member_type, bike_type))",
+          "evidence": "value",
+          "order": "any",
+          "purpose": "and by rider type and bike type together",
+          "task": "Call it again, grouping by `c(member_type, bike_type)`."
+        }
+      ],
+      "explain": "dplyr lets you write column names bare, `.by = member_type`, because it looks them up in the data. Inside a function, though, `group` is the function's argument, and `.by = group` would look for a column called group. Embracing it, `{{ group }}`, tells dplyr to use whatever the caller wrote in its place, here `member_type`, or `c(member_type, bike_type)`. Embrace every argument that names columns."
+    },
+    {
+      "id": "plot",
+      "title": "Plot functions",
+      "runs": [
+        {
+          "code": "duration_histogram <- function(df, binwidth = 2) {\n  ggplot(df, aes(x = duration_min)) +\n    geom_histogram(binwidth = binwidth) +\n    labs(title = str_glue(\"{nrow(df)} trips\"))\n}",
+          "evidence": "assign",
+          "alternatives": [
+            "duration_histogram = function(df, binwidth = 2) ggplot(df, aes(duration_min)) + geom_histogram(binwidth = binwidth) + labs(title = str_glue('{nrow(df)} trips'))"
+          ],
+          "purpose": "write `duration_histogram()`, which draws a histogram of trip lengths titled with how many trips it shows",
+          "task": "Write `duration_histogram`, a function of `df` and `binwidth` (default 2), that draws a histogram of `duration_min` with that `binwidth`, titled with `str_glue(\"{nrow(df)} trips\")`."
+        },
+        {
+          "code": "trips |>\n  filter(member_type == \"casual\", duration_min > 0, duration_min < 120) |>\n  duration_histogram()",
+          "evidence": "ggplot",
+          "alternatives": [
+            "duration_histogram(filter(trips, member_type == 'casual', duration_min > 0, duration_min < 120), binwidth = 2)"
+          ],
+          "values": {
+            "n_casual": "format(nrow(filter(trips, member_type == \"casual\", duration_min > 0, duration_min < 120)))"
+          },
+          "purpose": "draw the histogram for casual riders' trips of under two hours",
+          "task": "Keep casual riders' trips longer than 0 and shorter than 120 minutes, then pipe them into `duration_histogram()`."
+        }
+      ],
+      "explain": "A function can return a chart as easily as a number. `binwidth = 2` gives the argument a default, so a caller can leave it out. The title is worked out from the data, so it always says how many trips are drawn: {n_casual}. Name functions with verbs or descriptions of what they return, and arguments with nouns, data first, so that functions work with the pipe."
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+project:
+  type: website
+
+website:
+  title: "Larkhaven Bikes"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: stations.qmd
+        text: Stations
+
+format:
+  html: default

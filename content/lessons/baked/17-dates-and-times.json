@@ -1,0 +1,353 @@
+{
+ "lesson": "17-dates-and-times",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "POSIXct",
+   "dim": 1,
+   "files": [],
+   "fp": "9c7116dcfa07c7ad6f1c8fa71d977a55",
+   "fp_any": null,
+   "index": 1,
+   "messages": [],
+   "output": "[1] \"2025-03-09 01:41:07 EST\"",
+   "plot": false,
+   "step": "parse",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "Date",
+   "dim": 1,
+   "files": [],
+   "fp": "6c223f9f4950a423f21b5c8dd1be5e9e",
+   "fp_any": null,
+   "index": 2,
+   "messages": [],
+   "output": "[1] \"2025-03-09\"",
+   "plot": false,
+   "step": "parse",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "trips",
+     "class": "spec_tbl_df",
+     "code": "trips = read_csv('data/trips.csv', locale = locale(tz = 'America/Toronto'), show_col_types = FALSE)",
+     "dim": [
+      149747,
+      10
+     ],
+     "fp": "6f929ff938f2699bb111408e6c089e42",
+     "fp_any": "6f929ff938f2699bb111408e6c089e42"
+    }
+   ],
+   "assigned": "trips",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    149747,
+    10
+   ],
+   "files": [],
+   "fp": "6f929ff938f2699bb111408e6c089e42",
+   "fp_any": "6f929ff938f2699bb111408e6c089e42",
+   "index": 3,
+   "messages": [
+    "Rows: 149747 Columns: 10",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): bike_id, member_type, bike_type\ndbl  (5): trip_id, start_station, end_station, distance_km, duration_min\ndttm (2): started_at, ended_at",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "parse",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "trips |> mutate(day = wday(started_at, label = TRUE)) |> count(day)",
+     "dim": [
+      7,
+      2
+     ],
+     "fp": "a1036f28c0378991a17c047a291bcf98",
+     "fp_any": "586ebbfbddbbd103f47823ae2d106018"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    7,
+    2
+   ],
+   "files": [],
+   "fp": "a1036f28c0378991a17c047a291bcf98",
+   "fp_any": "586ebbfbddbbd103f47823ae2d106018",
+   "index": 4,
+   "messages": [],
+   "output": "# A tibble: 7 × 2\n  day       n\n  <ord> <int>\n1 Sun   22249\n2 Mon   21398\n3 Tue   21524\n4 Wed   20456\n5 Thu   21528\n6 Fri   21157\n7 Sat   21435",
+   "plot": false,
+   "step": "components",
+   "values": {
+    "top_day": "Sunday"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "Date",
+   "dim": 12,
+   "files": [],
+   "fp": "a6d4d8bb3ca39c2f8a9ef01f704a9686",
+   "fp_any": null,
+   "index": 5,
+   "messages": [],
+   "output": " [1] \"2025-01-01\" \"2025-02-01\" \"2025-03-01\" \"2025-04-01\" \"2025-05-01\" \"2025-06-01\" \"2025-07-01\" \"2025-08-01\" \"2025-09-01\" \"2025-10-01\" \"2025-11-01\" \"2025-12-01\"",
+   "plot": false,
+   "step": "components",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "trips |> mutate(week = floor_date(started_at, unit = 'week', week_start = 1)) |> count(week) |> ggplot(aes(week, n)) + geom_line()",
+     "dim": 1,
+     "fp": "b2b0a3a862ee751936b28c5ffe7dc985",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "b2b0a3a862ee751936b28c5ffe7dc985",
+   "fp_any": null,
+   "index": 6,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "round",
+   "values": {
+    "n_weeks": "53",
+    "top_week": "9 June"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "spring",
+     "class": "spec_tbl_df",
+     "code": "spring = filter(trips, trip_id == 370330)",
+     "dim": [
+      1,
+      10
+     ],
+     "fp": "71087e87e3b796babfcaaf6892970b8c",
+     "fp_any": "71087e87e3b796babfcaaf6892970b8c"
+    }
+   ],
+   "assigned": "spring",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    1,
+    10
+   ],
+   "files": [],
+   "fp": "71087e87e3b796babfcaaf6892970b8c",
+   "fp_any": "71087e87e3b796babfcaaf6892970b8c",
+   "index": 7,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "spans",
+   "values": {
+    "clock_gap": "86.4",
+    "recorded": "26.4"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "difftime",
+   "dim": 1,
+   "files": [],
+   "fp": "c1e46b4cdd3f31145658803b19564e34",
+   "fp_any": null,
+   "index": 8,
+   "messages": [],
+   "output": "Time difference of 26.4 mins",
+   "plot": false,
+   "step": "spans",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "POSIXct",
+   "dim": 2,
+   "files": [],
+   "fp": "a18fca99330ad1ccb08b802966f11955",
+   "fp_any": null,
+   "index": 9,
+   "messages": [],
+   "output": "[1] \"2025-03-10 02:41:07 EDT\" \"2025-03-10 01:41:07 EDT\"",
+   "plot": false,
+   "step": "spans",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "POSIXct",
+   "dim": 1,
+   "files": [],
+   "fp": "6de93cfbbae1f778559b063184822dfd",
+   "fp_any": null,
+   "index": 10,
+   "messages": [],
+   "output": "[1] \"2025-03-09 06:41:07 UTC\"",
+   "plot": false,
+   "step": "zones",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "POSIXct",
+   "dim": 1,
+   "files": [],
+   "fp": "9c5e27ec5048f6b69d1ba50b610329c3",
+   "fp_any": null,
+   "index": 11,
+   "messages": [],
+   "output": "[1] \"2025-03-09 01:41:07 UTC\"",
+   "plot": false,
+   "step": "zones",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "spec_tbl_df",
+     "code": "filter(trips, started_at > ended_at, duration_min > 0)",
+     "dim": [
+      3,
+      10
+     ],
+     "fp": "b0cf8f29d3764031e3e6e1bf1d01f40b",
+     "fp_any": "b0cf8f29d3764031e3e6e1bf1d01f40b"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    3,
+    10
+   ],
+   "files": [],
+   "fp": "b0cf8f29d3764031e3e6e1bf1d01f40b",
+   "fp_any": "b0cf8f29d3764031e3e6e1bf1d01f40b",
+   "index": 12,
+   "messages": [],
+   "output": "# A tibble: 3 × 10\n  trip_id bike_id    started_at          ended_at            start_station end_station member_type bike_type distance_km duration_min\n    <dbl> <chr>      <dttm>              <dttm>                      <dbl>       <dbl> <chr>       <chr>           <dbl>        <dbl>\n1  496357 LB-E-00031 2025-11-02 01:38:12 2025-11-02 01:12:42           101         156 member      electric         6.48         34.5\n2  496358 LB-C-00153 2025-11-02 01:48:42 2025-11-02 01:00:54           126         101 casual      classic          1.75         12.2\n3  496359 LB-C-00118 2025-11-02 01:51:40 2025-11-02 01:19:52           132         105 casual      classic          3.06         28.2",
+   "plot": false,
+   "step": "zones",
+   "values": {
+    "n_backwards": "3"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "Date",
+   "dim": 1,
+   "files": [],
+   "fp": "2cb2203229ad9c7a76a9dd331affdb7f",
+   "fp_any": null,
+   "index": 13,
+   "messages": [],
+   "output": "[1] \"2026-11-21\"",
+   "plot": false,
+   "step": "today",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  }
+ ],
+ "stamp": {
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "format": "1",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "a5c5460d6b10a4fd6145f127d7f1142d145904ec04a36edb812646b0f36652cd",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
+ }
+}

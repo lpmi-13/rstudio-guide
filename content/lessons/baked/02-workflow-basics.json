@@ -1,0 +1,367 @@
+{
+ "lesson": "02-workflow-basics",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "numeric",
+   "dim": 1,
+   "files": [],
+   "fp": "1d22033f365c9835be20cfc42d4df4f0",
+   "fp_any": null,
+   "index": 1,
+   "messages": [],
+   "output": "[1] 5.1",
+   "plot": false,
+   "step": "calculator",
+   "values": {
+    "fare": "5.1"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "numeric",
+   "dim": 1,
+   "files": [],
+   "fp": "f7e273a76cc67064d837b49f557b68f3",
+   "fp_any": null,
+   "index": 2,
+   "messages": [],
+   "output": "[1] 33.6",
+   "plot": false,
+   "step": "calculator",
+   "values": {
+    "bracketed": "33.6"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "assigned": "unlock_fee",
+   "attached": [],
+   "class": "numeric",
+   "dim": 1,
+   "files": [],
+   "fp": "fdaf4a0f4258e86b3af87e88f9d81a9d",
+   "fp_any": null,
+   "index": 3,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "assign",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "assigned": "per_minute",
+   "attached": [],
+   "class": "numeric",
+   "dim": 1,
+   "files": [],
+   "fp": "02925d8bec0989eb9542acbe4ac3a179",
+   "fp_any": null,
+   "index": 4,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "assign",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "numeric",
+   "dim": 1,
+   "files": [],
+   "fp": "1d22033f365c9835be20cfc42d4df4f0",
+   "fp_any": null,
+   "index": 5,
+   "messages": [],
+   "output": "[1] 5.1",
+   "plot": false,
+   "step": "assign",
+   "values": {
+    "fare_again": "5.1"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "minutes",
+     "class": "numeric",
+     "code": "minutes = c(12, 25, 8, 41, 17)",
+     "dim": 5,
+     "fp": "874ecc16909c71b1f5b6269ea9bc0b34",
+     "fp_any": null
+    }
+   ],
+   "assigned": "minutes",
+   "attached": [],
+   "class": "numeric",
+   "dim": 5,
+   "files": [],
+   "fp": "874ecc16909c71b1f5b6269ea9bc0b34",
+   "fp_any": null,
+   "index": 6,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "vectors",
+   "values": {
+    "n_minutes": "5"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "numeric",
+   "dim": 5,
+   "files": [],
+   "fp": "ff3362db122a087306e0e3a59cfd0a5d",
+   "fp_any": null,
+   "index": 7,
+   "messages": [],
+   "output": "[1] 3.66 6.00 2.94 8.88 4.56",
+   "plot": false,
+   "step": "vectors",
+   "values": {
+    "costs": "3.66, 6.00, 2.94, 8.88, 4.56",
+    "first_cost": "3.66"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "trip_cost",
+     "class": "numeric",
+     "code": "trip_cost = unlock_fee + per_minute * minutes",
+     "dim": 5,
+     "fp": "ff3362db122a087306e0e3a59cfd0a5d",
+     "fp_any": null
+    }
+   ],
+   "assigned": "trip_cost",
+   "attached": [],
+   "class": "numeric",
+   "dim": 5,
+   "files": [],
+   "fp": "ff3362db122a087306e0e3a59cfd0a5d",
+   "fp_any": null,
+   "index": 8,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "names",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "error": "object 'Trip_cost' not found",
+   "files": [],
+   "index": 9,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "names",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "numeric",
+     "code": "seq(5, 60, by = 5)",
+     "dim": 12,
+     "fp": "0bd4f6339e7c929515face46b219cc77",
+     "fp_any": null
+    },
+    {
+     "assigned": null,
+     "class": "numeric",
+     "code": "seq(5, 60, 5)",
+     "dim": 12,
+     "fp": "0bd4f6339e7c929515face46b219cc77",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "numeric",
+   "dim": 12,
+   "files": [],
+   "fp": "0bd4f6339e7c929515face46b219cc77",
+   "fp_any": null,
+   "index": 10,
+   "messages": [],
+   "output": " [1]  5 10 15 20 25 30 35 40 45 50 55 60",
+   "plot": false,
+   "step": "functions",
+   "values": {
+    "n_seq": "12"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "numeric",
+     "code": "round(mean(trip_cost), 2)",
+     "dim": 1,
+     "fp": "d44d777ff7757ef0dd044b4abe1ed72d",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "numeric",
+   "dim": 1,
+   "files": [],
+   "fp": "d44d777ff7757ef0dd044b4abe1ed72d",
+   "fp_any": null,
+   "index": 11,
+   "messages": [],
+   "output": "[1] 5.21",
+   "plot": false,
+   "step": "functions",
+   "values": {
+    "mean_cost": "5.21",
+    "raw_mean": "5.208"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "error": "'data/fare.csv' does not exist in current working directory: '/work/project'.",
+   "files": [],
+   "index": 12,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "errors",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "fares",
+     "class": "spec_tbl_df",
+     "code": "fares = read_csv('data/fares.csv', show_col_types = FALSE)",
+     "dim": [
+      12,
+      7
+     ],
+     "fp": "4d47f7c7363423b12631a1456bc7057b",
+     "fp_any": "4d47f7c7363423b12631a1456bc7057b"
+    }
+   ],
+   "assigned": "fares",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    12,
+    7
+   ],
+   "files": [],
+   "fp": "4d47f7c7363423b12631a1456bc7057b",
+   "fp_any": "4d47f7c7363423b12631a1456bc7057b",
+   "index": 13,
+   "messages": [
+    "Rows: 12 Columns: 7",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (2): member_type, bike_type\ndbl  (3): fare_id, unlock_fee, per_minute\ndate (2): valid_from, valid_to",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "errors",
+   "values": {
+    "n_current": "4",
+    "n_fares": "12"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    12,
+    7
+   ],
+   "files": [],
+   "fp": "4d47f7c7363423b12631a1456bc7057b",
+   "fp_any": "4d47f7c7363423b12631a1456bc7057b",
+   "index": 14,
+   "messages": [],
+   "output": "# A tibble: 12 × 7\n   fare_id member_type bike_type valid_from valid_to   unlock_fee per_minute\n     <dbl> <chr>       <chr>     <date>     <date>          <dbl>      <dbl>\n 1       1 casual      classic   2021-04-15 2023-03-31       1          0.12\n 2       2 casual      electric  2021-04-15 2023-03-31       1          0.25\n 3       3 member      classic   2021-04-15 2023-03-31       0          0   \n 4       4 member      electric  2021-04-15 2023-03-31       0          0.12\n 5       5 casual      classic   2023-04-01 2025-03-31       1.25       0.15\n 6       6 casual      electric  2023-04-01 2025-03-31       1.25       0.3 \n 7       7 member      classic   2023-04-01 2025-03-31       0          0   \n 8       8 member      electric  2023-04-01 2025-03-31       0          0.15\n 9       9 casual      classic   2025-04-01 NA               1.5        0.18\n10      10 casual      electric  2025-04-01 NA               1.5        0.35\n11      11 member      classic   2025-04-01 NA               0          0   \n12      12 member      electric  2025-04-01 NA               0          0.18",
+   "plot": false,
+   "step": "errors",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  }
+ ],
+ "stamp": {
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "format": "1",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "9c04715ce6cf5ba61befd48e6f89e0d17315bdfa540b080a2ba29269bc3828b1",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
+ }
+}

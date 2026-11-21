@@ -1,0 +1,119 @@
+{
+  "id": "08-workflow-getting-help",
+  "version": 2,
+  "world": true,
+  "title": "Workflow: getting help",
+  "modes": ["demonstration", "guided", "solo"],
+  "script": "08-workflow-getting-help.R",
+  "summary": "Get unstuck the way experienced R users do: read what an error says, cut a puzzling result down to a small example and render it with reprex, find the answer on a help page, share data as code, and record your versions.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse), library(reprex)",
+      "runs": [
+        {"code": "library(tidyverse)", "evidence": "attached",
+         "purpose": "load the tidyverse",
+         "task": "Load the tidyverse with `library()`."},
+        {"code": "library(reprex)", "evidence": "attached",
+         "purpose": "load reprex, which renders small examples to share",
+         "task": "Load reprex with `library()`."}
+      ],
+      "explain": "The tidyverse is attached as in the other lessons. reprex renders a small piece of code, with its output, into text you can paste where you ask for help."
+    },
+    {
+      "id": "error",
+      "title": "Read the error message",
+      "runs": [
+        {"code": "trips <- read_csv(\"data/trips.csv\")", "evidence": "assign",
+         "alternatives": ["trips = read_csv('data/trips.csv', show_col_types = FALSE)"],
+         "values": {"n_trips": "format(nrow(trips), big.mark = \",\")"},
+         "purpose": "read every 2025 trip into `trips`",
+         "task": "Read `data/trips.csv` into a variable called `trips`."},
+        {"code": "trips |> filter(start_station = 101)", "evidence": "error", "error": "named input",
+         "purpose": "keep the trips from station 101, with `=` where `==` belongs",
+         "task": "Keep the trips that started at station 101, but write `start_station = 101`, with one `=`, to see R's error."},
+        {"code": "trips |> filter(start_station == 101)", "evidence": "value",
+         "alternatives": ["filter(trips, start_station == 101)"],
+         "values": {"n_101": "format(nrow(filter(trips, start_station == 101)), big.mark = \",\")"},
+         "purpose": "do the same with `==`, as the error suggests",
+         "task": "Do the same with `==`, as R's error suggests."}
+      ],
+      "explain": "Read an error from the top. `Error in filter()` says which function stopped. The line starting `!` says what went wrong: a named input, `start_station = 101`, where `filter()` expects a condition. The lines starting `ℹ` suggest a cause and a fix: `=` gives a name, `==` tests equality. With `==`, `filter()` keeps the {n_101} trips that started at station 101. When a message isn't this helpful, searching for its `!` line, without your own names in it, usually finds others who met it."
+    },
+    {
+      "id": "puzzle",
+      "title": "A result that looks wrong",
+      "runs": [
+        {"code": "trips |> summarize(mean_km = mean(distance_km))", "evidence": "value",
+         "alternatives": ["summarize(trips, mean_km = mean(distance_km))"],
+         "purpose": "find the mean trip distance",
+         "task": "Find the mean of `distance_km` across all trips, with `summarize()` and `mean()`."}
+      ],
+      "explain": "There is no error, but the mean distance is `NA`, which can't be right for trips that all went somewhere. A result that is quietly wrong is harder to search for than an error. The next step cuts the problem down until its cause shows."
+    },
+    {
+      "id": "minimal",
+      "title": "Cut it down to a small example",
+      "runs": [
+        {"code": "rides <- tibble(km = c(2.4, NA, 3.1))", "evidence": "assign",
+         "alternatives": ["rides = tibble(km = c(2.4, NA, 3.1))"],
+         "purpose": "make a three-row table with one missing distance, as `rides`",
+         "task": "Make a table called `rides` with `tibble()`: one column, `km`, holding 2.4, `NA` and 3.1."},
+        {"code": "rides |> summarize(mean_km = mean(km))", "evidence": "value",
+         "alternatives": ["summarize(rides, mean_km = mean(km))"],
+         "purpose": "find its mean distance the same way",
+         "task": "Find the mean of `km` in `rides`, the same way as before."}
+      ],
+      "explain": "Three rows show the same problem as all {n_trips} trips: one `NA` makes the mean `NA`. That points at the cause, missing distances. In `trips`, those are lost bikes, which ended at no station. A small example like this, with its data typed into the code, is what to share when you ask for help: anyone can run it, and it shows the problem and nothing else."
+    },
+    {
+      "id": "reprex",
+      "title": "Render it with reprex()",
+      "runs": [
+        {"code": "reprex({\n  library(tidyverse)\n  rides <- tibble(km = c(2.4, NA, 3.1))\n  rides |> summarize(mean_km = mean(km))\n})", "evidence": "ide", "ide": {"viewer": true},
+         "purpose": "render the small example, with its output, ready to share",
+         "task": "Render the example with `reprex()`: inside `reprex({ })`, put `library(tidyverse)`, the line that makes `rides`, and the line that finds its mean."}
+      ],
+      "explain": "`reprex()` ran the example in a new, empty R session, so an example has to load its own packages and make its own data, as this one does. If it works in reprex, it will work for whoever reads it. The Viewer shows the result: the code, with its output below each line as comments starting `#>`. reprex wrote the same as Markdown, which forums and GitHub show this way. On a desktop, reprex puts it on the clipboard; RStudio on a server has none, so reprex opened the Markdown file in the Source pane, to copy from there. The Console's `[WARNING] Deprecated` line comes from Pandoc, the program that made the Viewer's page, and doesn't affect the result."
+    },
+    {
+      "id": "help",
+      "title": "Help pages: ?",
+      "runs": [
+        {"code": "?mean", "evidence": "ide", "ide": {"help": "^Arithmetic Mean$"},
+         "purpose": "open the help page for `mean()`",
+         "task": "Open the help page for `mean()` with `?`."},
+        {"code": "trips |> summarize(mean_km = mean(distance_km, na.rm = TRUE))", "evidence": "value",
+         "alternatives": ["summarize(trips, mean_km = mean(distance_km, na.rm = TRUE))"],
+         "values": {"mean_km": "sprintf(\"%.2f\", mean(trips$distance_km, na.rm = TRUE))"},
+         "purpose": "find the mean distance again, leaving out the missing values",
+         "task": "Find the mean of `distance_km` again, adding `na.rm = TRUE` to `mean()`."}
+      ],
+      "explain": "`?mean` opens the help page for `mean()` in the Help pane. Its Usage section lists the arguments with their defaults, among them `na.rm = FALSE`, and Arguments explains it: whether to strip `NA` values before computing. With `na.rm = TRUE`, the mean distance is {mean_km} km. Most help pages end with Examples, code you can run with `example()`, which is often the quickest way to see what a function does."
+    },
+    {
+      "id": "dput",
+      "title": "Share data as code: dput()",
+      "runs": [
+        {"code": "trips |>\n  slice_head(n = 3) |>\n  select(trip_id, member_type, distance_km) |>\n  dput()", "evidence": "pattern", "pattern": "structure\\(list\\(trip_id = c\\(",
+         "purpose": "print R code that makes three rows of `trips`",
+         "task": "Take the first 3 rows of `trips`, keep `trip_id`, `member_type` and `distance_km`, and print them as code with `dput()`."}
+      ],
+      "explain": "`dput()` prints R code that makes the data again, exactly: each column's values and type, and that it's a tibble. When the problem needs your own data, paste a few rows of this into the example instead of attaching a file. Keep only the rows and columns the problem needs."
+    },
+    {
+      "id": "versions",
+      "title": "Record your versions",
+      "runs": [
+        {"code": "packageVersion(\"dplyr\")", "evidence": "value",
+         "values": {"dplyr_version": "format(packageVersion(\"dplyr\"))"},
+         "purpose": "show which version of dplyr is installed",
+         "task": "Show which version of dplyr is installed, with `packageVersion()`."},
+        {"code": "sessionInfo()", "evidence": "pattern", "pattern": "R version \\d+\\.\\d+\\.\\d+",
+         "purpose": "show the versions of R and of every attached package",
+         "task": "Show the versions of R and of the packages attached, with `sessionInfo()`."}
+      ],
+      "explain": "Functions change between versions, so whoever helps you needs to know yours: here, dplyr is version {dplyr_version}. `sessionInfo()` lists R's version, the operating system, and each attached package with its version. `reprex(session_info = TRUE)` adds the same to a reprex."
+    }
+  ]
+}

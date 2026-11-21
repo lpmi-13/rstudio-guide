@@ -1,0 +1,232 @@
+{
+ "lesson": "04-workflow-code-style",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "files": [],
+   "index": 1,
+   "step": "reformat"
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "trips",
+     "class": "spec_tbl_df",
+     "code": "trips = read_csv('data/trips.csv', show_col_types = FALSE)",
+     "dim": [
+      149747,
+      10
+     ],
+     "fp": "925ba2a4e6f8a0e568dad6aeb7da9353",
+     "fp_any": "925ba2a4e6f8a0e568dad6aeb7da9353"
+    }
+   ],
+   "assigned": "trips",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    149747,
+    10
+   ],
+   "files": [],
+   "fp": "925ba2a4e6f8a0e568dad6aeb7da9353",
+   "fp_any": "925ba2a4e6f8a0e568dad6aeb7da9353",
+   "index": 2,
+   "messages": [
+    "Rows: 149747 Columns: 10",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): bike_id, member_type, bike_type\ndbl  (5): trip_id, start_station, end_station, distance_km, duration_min\ndttm (2): started_at, ended_at",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "names",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "morning_member_trips",
+     "class": "spec_tbl_df",
+     "code": "morning_member_trips = filter(trips, hour(started_at) %in% 7:9, member_type == 'member')",
+     "dim": [
+      23154,
+      10
+     ],
+     "fp": "05a64f0f5f8ef5f26c5468f6a00edd90",
+     "fp_any": "05a64f0f5f8ef5f26c5468f6a00edd90"
+    }
+   ],
+   "assigned": "morning_member_trips",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    23154,
+    10
+   ],
+   "files": [],
+   "fp": "05a64f0f5f8ef5f26c5468f6a00edd90",
+   "fp_any": "05a64f0f5f8ef5f26c5468f6a00edd90",
+   "index": 3,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "names",
+   "values": {
+    "n_morning": "23,154"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "station_mornings",
+     "class": "tbl_df",
+     "code": "station_mornings = morning_member_trips |> summarize(trips = n(), median_minutes = median(duration_min), .by = start_station) |> arrange(desc(trips))",
+     "dim": [
+      78,
+      3
+     ],
+     "fp": "021b07c8cb9de85d0a973ce8f91eb92f",
+     "fp_any": "69d3866086b7dbcb5bc2c613e9e0e96a"
+    }
+   ],
+   "assigned": "station_mornings",
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    78,
+    3
+   ],
+   "files": [],
+   "fp": "021b07c8cb9de85d0a973ce8f91eb92f",
+   "fp_any": "69d3866086b7dbcb5bc2c613e9e0e96a",
+   "index": 4,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "pipes",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    78,
+    3
+   ],
+   "files": [],
+   "fp": "021b07c8cb9de85d0a973ce8f91eb92f",
+   "fp_any": "69d3866086b7dbcb5bc2c613e9e0e96a",
+   "index": 5,
+   "messages": [],
+   "output": "# A tibble: 78 × 3\n   start_station trips median_minutes\n           <dbl> <int>          <dbl>\n 1           153   696           14.8\n 2           145   685           19.4\n 3           140   604           21.4\n 4           154   534           15.3\n 5           150   530           17.8\n 6           177   524           22.7\n 7           160   516           17.0\n 8           105   513            6.7\n 9           176   507           22  \n10           148   469           14.2\n# ℹ 68 more rows",
+   "plot": false,
+   "step": "pipes",
+   "values": {
+    "top_median": "14.8",
+    "top_station": "153",
+    "top_trips": "696"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "ggplot2::ggplot",
+     "code": "ggplot(station_mornings, aes(trips, median_minutes)) + geom_point()",
+     "dim": 1,
+     "fp": "134e16ca38f2bbef44ea7940a2217688",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "134e16ca38f2bbef44ea7940a2217688",
+   "fp_any": null,
+   "index": 6,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "charts",
+   "values": {
+    "busy_mean": "16",
+    "n_busy": "14",
+    "quiet_mean": "11.9"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "files": [
+    "04-workflow-code-style.R"
+   ],
+   "index": 7,
+   "step": "sections"
+  },
+  {
+   "files": [
+    "04-workflow-code-style.R"
+   ],
+   "index": 8,
+   "step": "sections"
+  },
+  {
+   "files": [
+    "04-workflow-code-style.R"
+   ],
+   "index": 9,
+   "step": "sections"
+  }
+ ],
+ "stamp": {
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "format": "1",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "4ffef59a6ed73db23366f47f5ab8baae4d1d3c9509f3f3ed8e5f340b2c040793",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
+ }
+}

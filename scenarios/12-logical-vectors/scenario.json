@@ -1,0 +1,120 @@
+{
+  "id": "12-logical-vectors",
+  "version": 2,
+  "world": true,
+  "title": "Logical vectors",
+  "modes": ["demonstration", "guided", "solo"],
+  "script": "12-logical-vectors.R",
+  "summary": "Ask yes-or-no questions of every trip: compare and test membership, compare decimals safely, see what a missing value does to an answer, combine conditions, summarise TRUE and FALSE, and turn conditions into categories.",
+  "steps": [
+    {
+      "id": "setup",
+      "title": "Setup: library(tidyverse)",
+      "runs": [
+        {"code": "library(tidyverse)", "evidence": "attached",
+         "purpose": "load the tidyverse",
+         "task": "Load the tidyverse with `library()`."}
+      ],
+      "explain": "`library(tidyverse)` attaches dplyr, whose `filter()`, `mutate()` and `summarize()` this lesson feeds with logical vectors, and lubridate's `hour()`."
+    },
+    {
+      "id": "compare",
+      "title": "Comparisons and %in%",
+      "runs": [
+        {"code": "trips <- read_csv(\"data/trips.csv\")", "evidence": "assign",
+         "alternatives": ["trips = read_csv('data/trips.csv', show_col_types = FALSE)"],
+         "purpose": "read every 2025 trip into `trips`",
+         "task": "Read `data/trips.csv` into a variable called `trips`."},
+        {"code": "trips |>\n  mutate(\n    rush_hour = hour(started_at) %in% c(7, 8, 16, 17, 18),\n    round_trip = start_station == end_station,\n    .keep = \"used\"\n  )", "evidence": "value",
+         "alternatives": ["trips |> transmute(started_at, start_station, end_station, rush_hour = hour(started_at) %in% c(7, 8, 16, 17, 18), round_trip = start_station == end_station)"],
+         "values": {
+           "n_rush": "format(sum(hour(trips$started_at) %in% c(7, 8, 16, 17, 18)), big.mark = \",\")"
+         },
+         "purpose": "add two yes-or-no columns: whether each trip started in a rush hour, and whether it ended where it started",
+         "task": "Add two columns with `mutate()`: `rush_hour`, whether `hour(started_at)` is one of 7, 8, 16, 17 or 18 (`%in%`), and `round_trip`, whether `start_station == end_station`. Keep only the columns used, with `.keep = \"used\"`."}
+      ],
+      "explain": "A comparison such as `start_station == end_station` asks a question of every row at once and answers with a logical vector: `TRUE` or `FALSE` for each trip. `%in%` asks whether each value is one of a set, so `hour(started_at) %in% c(7, 8, 16, 17, 18)` marks the {n_rush} trips that started in a rush hour. `.keep = \"used\"` keeps only the columns the new ones were made from, so the answers are easy to check. Some `round_trip` values are `NA`; step 4 shows why."
+    },
+    {
+      "id": "near",
+      "title": "Decimals: near()",
+      "runs": [
+        {"code": "trips |> filter(distance_km * 1000 == 2010)", "evidence": "value",
+         "alternatives": ["filter(trips, distance_km * 1000 == 2010)"],
+         "purpose": "look for trips of 2,010 metres by converting each distance to metres",
+         "task": "Keep the trips whose `distance_km * 1000` equals 2010, with `==`."},
+        {"code": "trips |> filter(near(distance_km * 1000, 2010))", "evidence": "value",
+         "alternatives": ["filter(trips, near(distance_km * 1000, 2010))"],
+         "values": {
+           "n_2010": "format(nrow(filter(trips, near(distance_km * 1000, 2010))))",
+           "stored": "sprintf(\"%.13f\", 2.01 * 1000)"
+         },
+         "purpose": "look again, with `near()` instead of `==`",
+         "task": "Do the same with `near(distance_km * 1000, 2010)` instead of `==`."}
+      ],
+      "explain": "The first filter finds nothing, yet {n_2010} trips went 2.01 km. A computer stores most decimals, 2.01 among them, as the nearest binary fraction, so `2.01 * 1000` comes out as {stored}, not 2010, and `==` asks for an exact match. `near()` allows for that tiny difference. Use it whenever you compare numbers that came out of arithmetic."
+    },
+    {
+      "id": "missing",
+      "title": "Missing values in comparisons",
+      "runs": [
+        {"code": "trips |> count(round_trip = start_station == end_station)", "evidence": "value",
+         "alternatives": ["trips |> mutate(round_trip = start_station == end_station) |> count(round_trip)"],
+         "values": {
+           "n_round": "format(sum(trips$start_station == trips$end_station, na.rm = TRUE), big.mark = \",\")",
+           "n_unknown": "format(sum(is.na(trips$end_station)))"
+         },
+         "purpose": "count the round trips, the one-way trips and the trips whose end isn't known",
+         "task": "Count `trips` by `round_trip = start_station == end_station`."},
+        {"code": "trips |> filter(start_station == end_station | is.na(end_station))", "evidence": "value",
+         "alternatives": ["filter(trips, is.na(end_station) | start_station == end_station)"],
+         "values": {"n_either": "format(nrow(filter(trips, start_station == end_station | is.na(end_station))), big.mark = \",\")"},
+         "purpose": "keep the round trips together with the trips whose end isn't known",
+         "task": "Keep the trips that ended where they started, or whose `end_station` is missing (`is.na()`), joining the two conditions with `|`."}
+      ],
+      "explain": "{n_round} trips ended where they started. For {n_unknown} the answer is `NA`: a lost bike has no end station, and a comparison with an unknown value is itself unknown. `filter()` keeps only the rows where its condition is `TRUE`, so those trips would drop out of any filter on `end_station` without a word. `is.na()` asks about missing values directly. `|` (or) is `TRUE` when either side is, so `NA | TRUE` is `TRUE`, and the filter keeps {n_either} trips."
+    },
+    {
+      "id": "algebra",
+      "title": "Combining conditions: !, & and |",
+      "runs": [
+        {"code": "trips |> filter(!(is.na(end_station) | duration_min <= 0))", "evidence": "value",
+         "alternatives": ["trips |> filter(!is.na(end_station) & duration_min > 0)", "trips |> filter(!is.na(end_station), duration_min > 0)"],
+         "values": {"n_complete": "format(nrow(filter(trips, !is.na(end_station), duration_min > 0)), big.mark = \",\")"},
+         "purpose": "keep the complete trips: not lost, and with a length above zero",
+         "task": "Keep the trips that are not lost (missing `end_station`) or broken (`duration_min <= 0`): put `!` in front of those two conditions joined by `|`."}
+      ],
+      "explain": "`!` turns `TRUE` into `FALSE` and back. `!(lost | broken)` keeps the trips that are neither, {n_complete} of them, the same as `!lost & !broken`: \"not (A or B)\" is \"not A and not B\". In `filter()`, a comma between conditions means `&`. Choose the form that reads most like the question you are asking."
+    },
+    {
+      "id": "summaries",
+      "title": "Logical summaries: sum(), mean(), any()",
+      "runs": [
+        {"code": "trips |>\n  summarize(\n    trips = n(),\n    lost = sum(is.na(end_station)),\n    share_electric = mean(bike_type == \"electric\"),\n    any_negative = any(duration_min < 0),\n    .by = member_type\n  )", "evidence": "value", "order": "any",
+         "alternatives": ["trips |> group_by(member_type) |> summarize(trips = n(), lost = sum(is.na(end_station)), share_electric = mean(bike_type == 'electric'), any_negative = any(duration_min < 0))"],
+         "values": {
+           "lost_member": "format(sum(is.na(trips$end_station[trips$member_type == \"member\"])))",
+           "e_member": "format(round(100 * mean(trips$bike_type[trips$member_type == \"member\"] == \"electric\")))",
+           "e_casual": "format(round(100 * mean(trips$bike_type[trips$member_type == \"casual\"] == \"electric\")))"
+         },
+         "purpose": "count each rider type's trips and lost bikes, find their share of e-bike trips, and check for negative lengths",
+         "task": "For each `member_type`, find with `summarize()`: the number of trips, `n()`; the lost bikes, `sum(is.na(end_station))`; the share on e-bikes, `mean(bike_type == \"electric\")`; and whether any trip has a negative length, `any(duration_min < 0)`."}
+      ],
+      "explain": "In arithmetic, `TRUE` counts as 1 and `FALSE` as 0. So `sum()` of a condition counts the rows where it holds, {lost_member} lost bikes among members' trips, and `mean()` gives the share where it holds: {e_member}% of members' trips were on e-bikes, against {e_casual}% of casual riders'. `any()` asks whether at least one is `TRUE`, and `all()` whether every one is. These summaries return `NA` if a value is missing, unless you add `na.rm = TRUE`."
+    },
+    {
+      "id": "case-when",
+      "title": "Conditions into categories: case_when()",
+      "runs": [
+        {"code": "trips |>\n  mutate(\n    kind = case_when(\n      is.na(end_station) ~ \"lost\",\n      duration_min <= 0 ~ \"clock error\",\n      start_station == end_station ~ \"round trip\",\n      .default = \"one way\"\n    )\n  ) |>\n  count(kind)", "evidence": "value",
+         "alternatives": ["trips |> mutate(kind = case_when(is.na(end_station) ~ 'lost', duration_min <= 0 ~ 'clock error', start_station == end_station ~ 'round trip', TRUE ~ 'one way')) |> count(kind)"],
+         "values": {
+           "n_clock": "format(sum(!is.na(trips$end_station) & trips$duration_min <= 0))"
+         },
+         "purpose": "sort every trip into lost, clock error, round trip or one way, and count each kind",
+         "task": "Add a column `kind` with `case_when()`: \"lost\" where `end_station` is missing, else \"clock error\" where `duration_min <= 0`, else \"round trip\" where the stations match, and \"one way\" for the rest (`.default`). Then count the trips of each `kind`."}
+      ],
+      "explain": "`case_when()` takes pairs of `condition ~ value` and gives each row the value of the first condition that is `TRUE`, so their order matters: a lost bike is \"lost\" whatever comes after, and only the trips left over reach `.default`. The {n_clock} clock errors here are trips that did reach a station. With only two outcomes, `if_else(condition, yes, no)` does the same job more briefly."
+    }
+  ]
+}

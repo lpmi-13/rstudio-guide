@@ -1,0 +1,476 @@
+{
+ "lesson": "19-joins",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "stations",
+     "class": "spec_tbl_df",
+     "code": "stations = read_csv('data/stations.csv', show_col_types = FALSE)",
+     "dim": [
+      81,
+      8
+     ],
+     "fp": "6d66718310fccdef241ea5ff39a0ec50",
+     "fp_any": "6d66718310fccdef241ea5ff39a0ec50"
+    }
+   ],
+   "assigned": "stations",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    81,
+    8
+   ],
+   "files": [],
+   "fp": "6d66718310fccdef241ea5ff39a0ec50",
+   "fp_any": "6d66718310fccdef241ea5ff39a0ec50",
+   "index": 1,
+   "messages": [
+    "Rows: 81 Columns: 8",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): name, neighbourhood, former_name\ndbl  (4): station_id, lat, lon, docks\ndate (1): opened",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "keys",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "spec_tbl_df",
+     "code": "stations |> count(station_id) |> filter(n >= 2)",
+     "dim": [
+      1,
+      2
+     ],
+     "fp": "8331ed634a5dd27c27f24a70e114cfab",
+     "fp_any": "8331ed634a5dd27c27f24a70e114cfab"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    1,
+    2
+   ],
+   "files": [],
+   "fp": "8331ed634a5dd27c27f24a70e114cfab",
+   "fp_any": "8331ed634a5dd27c27f24a70e114cfab",
+   "index": 2,
+   "messages": [],
+   "output": "# A tibble: 1 × 2\n  station_id     n\n       <dbl> <int>\n1        117     2",
+   "plot": false,
+   "step": "keys",
+   "values": {
+    "dup_id": "117",
+    "dup_names": "Quay Street and Quay Street (temporary)"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "trips",
+     "class": "spec_tbl_df",
+     "code": "trips = read_csv('data/trips.csv', show_col_types = FALSE)",
+     "dim": [
+      149747,
+      10
+     ],
+     "fp": "925ba2a4e6f8a0e568dad6aeb7da9353",
+     "fp_any": "925ba2a4e6f8a0e568dad6aeb7da9353"
+    }
+   ],
+   "assigned": "trips",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    149747,
+    10
+   ],
+   "files": [],
+   "fp": "925ba2a4e6f8a0e568dad6aeb7da9353",
+   "fp_any": "925ba2a4e6f8a0e568dad6aeb7da9353",
+   "index": 3,
+   "messages": [
+    "Rows: 149747 Columns: 10",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): bike_id, member_type, bike_type\ndbl  (5): trip_id, start_station, end_station, distance_km, duration_min\ndttm (2): started_at, ended_at",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "duplicate",
+   "values": {
+    "n_trips": "149,747"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "spec_tbl_df",
+     "code": "left_join(trips, stations, by = c('start_station' = 'station_id'))",
+     "dim": [
+      152694,
+      17
+     ],
+     "fp": "53a7c11f52f5335eb1ea2ef58bf6001d",
+     "fp_any": "53a7c11f52f5335eb1ea2ef58bf6001d"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    152694,
+    17
+   ],
+   "files": [],
+   "fp": "53a7c11f52f5335eb1ea2ef58bf6001d",
+   "fp_any": "53a7c11f52f5335eb1ea2ef58bf6001d",
+   "index": 4,
+   "messages": [],
+   "output": "# A tibble: 152,694 × 17\n   trip_id bike_id    started_at          ended_at            start_station end_station member_type bike_type distance_km duration_min name       neighbourhood   lat   lon docks opened     former_name\n     <dbl> <chr>      <dttm>              <dttm>                      <dbl>       <dbl> <chr>       <chr>           <dbl>        <dbl> <chr>      <chr>         <dbl> <dbl> <dbl> <date>     <chr>      \n 1  360164 LB-C-00149 2025-01-01 01:23:02 2025-01-01 01:41:08           120         130 member      classic          4.1          18.1 Boatyard   Old Harbour    44.7 -79.9    19 2022-05-01 <NA>       \n 2  360165 LB00151    2025-01-01 01:58:29 2025-01-01 02:03:51           130         137 member      classic          1.28          5.4 universit… University     44.7 -79.9    28 2021-04-15 <NA>       \n 3  360166 LB-C-00048 2025-01-01 04:02:49 2025-01-01 04:19:55           152         137 member      classic          2.46         17.1 Hatter's … Northgate      44.7 -79.9    14 2022-05-01 <NA>       \n 4  360167 LB-C-00277 2025-01-01 06:40:56 2025-01-01 07:11:21           162         154 member      classic          4.96         30.4 Rowan Str… Eastfield      44.7 -79.8    18 2023-04-15 <NA>       \n 5  360168 LB-E-00214 2025-01-01 06:47:25 2025-01-01 06:58:41           117         130 member      electric         3.28         11.3 Quay Stre… Old Harbour    44.7 -79.9    23 2021-04-15 <NA>       \n 6  360168 LB-E-00214 2025-01-01 06:47:25 2025-01-01 06:58:41           117         130 member      electric         3.28         11.3 Quay Stre… Old Harbour    44.7 -79.9    27 2025-05-01 <NA>       \n 7  360169 LB-C-00263 2025-01-01 06:54:36 2025-01-01 07:07:50           136         113 member      classic          3.45         13.2 Residence… University     44.7 -79.9    20 2021-04-15 <NA>       \n 8  360170 LB-C-00024 2025-01-01 07:33:14 2025-01-01 07:41:22           114         113 member      classic          0.85          8.1 Ferry Lan… Old Harbour    44.7 -79.9    23 2021-04-15 <NA>       \n 9  360171 LB-E-00253 2025-01-01 07:36:03 2025-01-01 07:40:52           117         118 member      electric         0.93          4.8 Quay Stre… Old Harbour    44.7 -79.9    23 2021-04-15 <NA>       \n10  360171 LB-E-00253 2025-01-01 07:36:03 2025-01-01 07:40:52           117         118 member      electric         0.93          4.8 Quay Stre… Old Harbour    44.7 -79.9    27 2025-05-01 <NA>       \n# ℹ 152,684 more rows",
+   "plot": false,
+   "step": "duplicate",
+   "values": {
+    "n_extra": "2,947",
+    "n_joined": "152,694"
+   },
+   "visible": true,
+   "warnings": [
+    "Detected an unexpected many-to-many relationship between `x` and `y`.\nℹ Row 5 of `x` matches multiple rows in `y`.\nℹ Row 17 of `y` matches multiple rows in `x`.\nℹ If a many-to-many relationship is expected, set `relationship = \"many-to-many\"` to silence this warning."
+   ]
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "stations",
+     "class": "spec_tbl_df",
+     "code": "stations = filter(stations, name != 'Quay Street (temporary)')",
+     "dim": [
+      80,
+      8
+     ],
+     "fp": "99ed1de9cce192ce7fce416f5383817e",
+     "fp_any": "99ed1de9cce192ce7fce416f5383817e"
+    }
+   ],
+   "assigned": "stations",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    80,
+    8
+   ],
+   "files": [],
+   "fp": "99ed1de9cce192ce7fce416f5383817e",
+   "fp_any": "99ed1de9cce192ce7fce416f5383817e",
+   "index": 5,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "fix",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "spec_tbl_df",
+     "code": "left_join(trips, stations, by = c('start_station' = 'station_id'), relationship = 'many-to-one')",
+     "dim": [
+      149747,
+      17
+     ],
+     "fp": "3175b1c9a5adbcd24073a3ccffd6d63d",
+     "fp_any": "3175b1c9a5adbcd24073a3ccffd6d63d"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    149747,
+    17
+   ],
+   "files": [],
+   "fp": "3175b1c9a5adbcd24073a3ccffd6d63d",
+   "fp_any": "3175b1c9a5adbcd24073a3ccffd6d63d",
+   "index": 6,
+   "messages": [],
+   "output": "# A tibble: 149,747 × 17\n   trip_id bike_id    started_at          ended_at            start_station end_station member_type bike_type distance_km duration_min name       neighbourhood   lat   lon docks opened     former_name\n     <dbl> <chr>      <dttm>              <dttm>                      <dbl>       <dbl> <chr>       <chr>           <dbl>        <dbl> <chr>      <chr>         <dbl> <dbl> <dbl> <date>     <chr>      \n 1  360164 LB-C-00149 2025-01-01 01:23:02 2025-01-01 01:41:08           120         130 member      classic          4.1          18.1 Boatyard   Old Harbour    44.7 -79.9    19 2022-05-01 <NA>       \n 2  360165 LB00151    2025-01-01 01:58:29 2025-01-01 02:03:51           130         137 member      classic          1.28          5.4 universit… University     44.7 -79.9    28 2021-04-15 <NA>       \n 3  360166 LB-C-00048 2025-01-01 04:02:49 2025-01-01 04:19:55           152         137 member      classic          2.46         17.1 Hatter's … Northgate      44.7 -79.9    14 2022-05-01 <NA>       \n 4  360167 LB-C-00277 2025-01-01 06:40:56 2025-01-01 07:11:21           162         154 member      classic          4.96         30.4 Rowan Str… Eastfield      44.7 -79.8    18 2023-04-15 <NA>       \n 5  360168 LB-E-00214 2025-01-01 06:47:25 2025-01-01 06:58:41           117         130 member      electric         3.28         11.3 Quay Stre… Old Harbour    44.7 -79.9    23 2021-04-15 <NA>       \n 6  360169 LB-C-00263 2025-01-01 06:54:36 2025-01-01 07:07:50           136         113 member      classic          3.45         13.2 Residence… University     44.7 -79.9    20 2021-04-15 <NA>       \n 7  360170 LB-C-00024 2025-01-01 07:33:14 2025-01-01 07:41:22           114         113 member      classic          0.85          8.1 Ferry Lan… Old Harbour    44.7 -79.9    23 2021-04-15 <NA>       \n 8  360171 LB-E-00253 2025-01-01 07:36:03 2025-01-01 07:40:52           117         118 member      electric         0.93          4.8 Quay Stre… Old Harbour    44.7 -79.9    23 2021-04-15 <NA>       \n 9  360172 LB-C-00310 2025-01-01 07:41:59 2025-01-01 08:00:31           140         127 member      classic          4.01         18.5 Millbrook… Millbrook      44.7 -79.9    15 2022-05-01 <NA>       \n10  360173 LB-C-00098 2025-01-01 08:01:03 2025-01-01 08:31:14           162         137 member      classic          4.75         30.2 Rowan Str… Eastfield      44.7 -79.8    18 2023-04-15 <NA>       \n# ℹ 149,737 more rows",
+   "plot": false,
+   "step": "fix",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "spec_tbl_df",
+     "code": "trips |> semi_join(stations |> filter(neighbourhood == 'University'), by = c('start_station' = 'station_id'))",
+     "dim": [
+      24085,
+      10
+     ],
+     "fp": "38b28ada32f80ef69bcf1449d7b0bd4f",
+     "fp_any": "38b28ada32f80ef69bcf1449d7b0bd4f"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    24085,
+    10
+   ],
+   "files": [],
+   "fp": "38b28ada32f80ef69bcf1449d7b0bd4f",
+   "fp_any": "38b28ada32f80ef69bcf1449d7b0bd4f",
+   "index": 7,
+   "messages": [],
+   "output": "# A tibble: 24,085 × 10\n   trip_id bike_id    started_at          ended_at            start_station end_station member_type bike_type distance_km duration_min\n     <dbl> <chr>      <dttm>              <dttm>                      <dbl>       <dbl> <chr>       <chr>           <dbl>        <dbl>\n 1  360165 LB00151    2025-01-01 01:58:29 2025-01-01 02:03:51           130         137 member      classic          1.28          5.4\n 2  360169 LB-C-00263 2025-01-01 06:54:36 2025-01-01 07:07:50           136         113 member      classic          3.45         13.2\n 3  360180 LB-C-00173 2025-01-01 09:58:58 2025-01-01 10:07:54           137         103 member      classic          2.33          8.9\n 4  360183 LB-E-00044 2025-01-01 10:23:38 2025-01-01 10:38:06           131         145 member      electric         4.52         14.5\n 5  360184 LB-C-00319 2025-01-01 10:28:49 2025-01-01 10:43:34           130         154 member      classic          3.31         14.8\n 6  360185 LB-C-00359 2025-01-01 10:36:22 2025-01-01 10:44:43           136         161 member      classic          1.95          8.3\n 7  360198 LB-C-00333 2025-01-01 11:28:36 2025-01-01 12:05:14           138         135 casual      classic          1.74         36.6\n 8  360199 LB-E-00248 2025-01-01 11:28:56 2025-01-01 11:41:16           134         114 casual      electric         3.4          12.3\n 9  360202 LB-C-00359 2025-01-01 11:42:10 2025-01-01 11:59:02           135         138 casual      classic          1.47         16.9\n10  360203 LB-E-00019 2025-01-01 11:44:36 2025-01-01 11:46:19           137         132 member      electric         0.42          1.7\n# ℹ 24,075 more rows",
+   "plot": false,
+   "step": "filtering",
+   "values": {
+    "n_uni": "24,085"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "weather",
+     "class": "spec_tbl_df",
+     "code": "weather = read_csv('data/weather.csv', show_col_types = FALSE)",
+     "dim": [
+      8711,
+      4
+     ],
+     "fp": "a11c4104c09b13d3061a3be144c8c5dd",
+     "fp_any": "a11c4104c09b13d3061a3be144c8c5dd"
+    }
+   ],
+   "assigned": "weather",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    8711,
+    4
+   ],
+   "files": [],
+   "fp": "a11c4104c09b13d3061a3be144c8c5dd",
+   "fp_any": "a11c4104c09b13d3061a3be144c8c5dd",
+   "index": 8,
+   "messages": [
+    "Rows: 8711 Columns: 4",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\ndbl  (3): temp_c, rain_mm, wind_kmh\ndttm (1): time",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "weather",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "week",
+     "class": "spec_tbl_df",
+     "code": "week = read_csv('data/trips-week.csv', show_col_types = FALSE)",
+     "dim": [
+      4540,
+      10
+     ],
+     "fp": "850d6021e84462d03174ed63cad2f913",
+     "fp_any": "850d6021e84462d03174ed63cad2f913"
+    }
+   ],
+   "assigned": "week",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    4540,
+    10
+   ],
+   "files": [],
+   "fp": "850d6021e84462d03174ed63cad2f913",
+   "fp_any": "850d6021e84462d03174ed63cad2f913",
+   "index": 9,
+   "messages": [
+    "Rows: 4540 Columns: 10",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): bike_id, member_type, bike_type\ndbl  (5): trip_id, start_station, end_station, distance_km, duration_min\ndttm (2): started_at, ended_at",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "weather",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "week |> mutate(hour = floor_date(started_at, 'hour')) |> left_join(weather, by = c('hour' = 'time')) |> count(raining = rain_mm > 0)",
+     "dim": [
+      2,
+      2
+     ],
+     "fp": "36923ff29c2261516b69dd24d2156e69",
+     "fp_any": "36923ff29c2261516b69dd24d2156e69"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    2,
+    2
+   ],
+   "files": [],
+   "fp": "36923ff29c2261516b69dd24d2156e69",
+   "fp_any": "36923ff29c2261516b69dd24d2156e69",
+   "index": 10,
+   "messages": [],
+   "output": "# A tibble: 2 × 2\n  raining     n\n  <lgl>   <int>\n1 FALSE    4407\n2 TRUE      133",
+   "plot": false,
+   "step": "weather",
+   "values": {
+    "dry_rate": "28",
+    "rain_hours": "12",
+    "rain_rate": "11",
+    "rain_trips": "133"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "fares",
+     "class": "spec_tbl_df",
+     "code": "fares = read_csv('data/fares.csv', show_col_types = FALSE)",
+     "dim": [
+      12,
+      7
+     ],
+     "fp": "4d47f7c7363423b12631a1456bc7057b",
+     "fp_any": "4d47f7c7363423b12631a1456bc7057b"
+    }
+   ],
+   "assigned": "fares",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    12,
+    7
+   ],
+   "files": [],
+   "fp": "4d47f7c7363423b12631a1456bc7057b",
+   "fp_any": "4d47f7c7363423b12631a1456bc7057b",
+   "index": 11,
+   "messages": [
+    "Rows: 12 Columns: 7",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (2): member_type, bike_type\ndbl  (3): fare_id, unlock_fee, per_minute\ndate (2): valid_from, valid_to",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "fares",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "trips |> mutate(date = as_date(started_at)) |> left_join(fares, by = join_by(member_type, bike_type, closest(date >= valid_from))) |> count(fare_id)",
+     "dim": [
+      8,
+      2
+     ],
+     "fp": "0c9233003f549f018ec4ba983166c3f9",
+     "fp_any": "0c9233003f549f018ec4ba983166c3f9"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    8,
+    2
+   ],
+   "files": [],
+   "fp": "0c9233003f549f018ec4ba983166c3f9",
+   "fp_any": "0c9233003f549f018ec4ba983166c3f9",
+   "index": 12,
+   "messages": [],
+   "output": "# A tibble: 8 × 2\n  fare_id     n\n    <dbl> <int>\n1       5  2231\n2       6  1919\n3       7  7515\n4       8  5117\n5       9 26099\n6      10 21371\n7      11 51351\n8      12 34144",
+   "plot": false,
+   "step": "fares",
+   "values": {
+    "n_old_fares": "16,782"
+   },
+   "visible": true,
+   "warnings": []
+  }
+ ],
+ "stamp": {
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "format": "1",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "471252e34fa374bd8a2ff9376330061840515454d82886907df76a5db1d7b814",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
+ }
+}

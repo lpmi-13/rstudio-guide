@@ -1,0 +1,438 @@
+{
+ "lesson": "11-communication",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [
+    "ggrepel"
+   ],
+   "class": "character",
+   "dim": 18,
+   "files": [],
+   "fp": "2045a3a820d56a0a2965d74e5f2b2343",
+   "fp_any": null,
+   "index": 1,
+   "library": "ggrepel",
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [
+    "patchwork"
+   ],
+   "class": "character",
+   "dim": 19,
+   "files": [],
+   "fp": "5455d73e62e8c91b0497d63073d50785",
+   "fp_any": null,
+   "index": 2,
+   "library": "patchwork",
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "by_hour",
+     "class": "spec_tbl_df",
+     "code": "by_hour = read_csv('data/trips.csv', show_col_types = FALSE) |> filter(!wday(started_at, label = TRUE) %in% c('Sat', 'Sun')) |> count(hour = hour(started_at), member_type)",
+     "dim": [
+      48,
+      3
+     ],
+     "fp": "1bc3ef7e024f9f1c8db640d842502623",
+     "fp_any": "1bc3ef7e024f9f1c8db640d842502623"
+    }
+   ],
+   "assigned": "by_hour",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    48,
+    3
+   ],
+   "files": [],
+   "fp": "1bc3ef7e024f9f1c8db640d842502623",
+   "fp_any": "1bc3ef7e024f9f1c8db640d842502623",
+   "index": 3,
+   "messages": [
+    "Rows: 149747 Columns: 10",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): bike_id, member_type, bike_type\ndbl  (5): trip_id, start_station, end_station, distance_km, duration_min\ndttm (2): started_at, ended_at",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "plain",
+   "values": {
+    "n_weekday": "106,063"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "base",
+     "class": "ggplot2::ggplot",
+     "code": "base = ggplot(by_hour, aes(hour, n, colour = member_type)) + geom_line()",
+     "dim": 1,
+     "fp": "52191b681a89772a8f19de43fa0052bd",
+     "fp_any": null
+    }
+   ],
+   "assigned": "base",
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "52191b681a89772a8f19de43fa0052bd",
+   "fp_any": null,
+   "index": 4,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "plain",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "52191b681a89772a8f19de43fa0052bd",
+   "fp_any": null,
+   "index": 5,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "plain",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "labelled",
+     "class": "ggplot2::ggplot",
+     "code": "labelled = base + labs(title = 'Members ride at the rush hours, casual riders all afternoon', subtitle = 'Trips started in each hour of a weekday, 2025', x = 'Hour of the day', y = 'Trips', colour = 'Rider', caption = 'Data: Larkhaven Bikes')",
+     "dim": 1,
+     "fp": "2dd622bbcef4759f44679e54374b8a7b",
+     "fp_any": null
+    }
+   ],
+   "assigned": "labelled",
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "2dd622bbcef4759f44679e54374b8a7b",
+   "fp_any": null,
+   "index": 6,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "labels",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "2dd622bbcef4759f44679e54374b8a7b",
+   "fp_any": null,
+   "index": 7,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "labels",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "peaks",
+     "class": "tbl_df",
+     "code": "peaks = by_hour |> group_by(member_type) |> slice_max(n) |> ungroup() |> mutate(label = paste0(scales::comma(n), ' trips at ', hour, ':00'))",
+     "dim": [
+      2,
+      4
+     ],
+     "fp": "a0832258307d75332a26650ee5f00ad5",
+     "fp_any": "8449ec8304fe5dccb91acc15007ec8d7"
+    }
+   ],
+   "assigned": "peaks",
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    2,
+    4
+   ],
+   "files": [],
+   "fp": "a0832258307d75332a26650ee5f00ad5",
+   "fp_any": "8449ec8304fe5dccb91acc15007ec8d7",
+   "index": 8,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "annotate",
+   "values": {
+    "casual_peak": "2,831 trips at 17:00",
+    "member_peak": "9,672 trips at 8:00"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "annotated",
+     "class": "ggplot2::ggplot",
+     "code": "annotated = labelled + geom_point(data = peaks) + geom_label_repel(data = peaks, mapping = aes(label = label), seed = 1, show.legend = FALSE)",
+     "dim": 1,
+     "fp": "4482039db608fbd7011d4903189deae7",
+     "fp_any": null
+    }
+   ],
+   "assigned": "annotated",
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "4482039db608fbd7011d4903189deae7",
+   "fp_any": null,
+   "index": 9,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "annotate",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "4482039db608fbd7011d4903189deae7",
+   "fp_any": null,
+   "index": 10,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "annotate",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "scaled",
+     "class": "ggplot2::ggplot",
+     "code": "scaled = annotated + scale_x_continuous(breaks = c(0, 3, 6, 9, 12, 15, 18, 21, 24), labels = scales::label_number(suffix = ':00')) + scale_y_continuous(labels = scales::label_comma())",
+     "dim": 1,
+     "fp": "4482039db608fbd7011d4903189deae7",
+     "fp_any": null
+    }
+   ],
+   "assigned": "scaled",
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "4482039db608fbd7011d4903189deae7",
+   "fp_any": null,
+   "index": 11,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "scales",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "4482039db608fbd7011d4903189deae7",
+   "fp_any": null,
+   "index": 12,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "scales",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "polished",
+     "class": "ggplot2::ggplot",
+     "code": "polished = scaled + theme_minimal() + theme(legend.position = 'top')",
+     "dim": 1,
+     "fp": "4482039db608fbd7011d4903189deae7",
+     "fp_any": null
+    }
+   ],
+   "assigned": "polished",
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "4482039db608fbd7011d4903189deae7",
+   "fp_any": null,
+   "index": 13,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "theme",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "4482039db608fbd7011d4903189deae7",
+   "fp_any": null,
+   "index": 14,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "theme",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "totals",
+     "class": "ggplot2::ggplot",
+     "code": "totals = ggplot(by_hour, aes(member_type, n, fill = member_type)) + geom_col(show.legend = FALSE) + scale_y_continuous(labels = scales::label_comma()) + labs(x = NULL, y = 'Weekday trips') + theme_minimal()",
+     "dim": 1,
+     "fp": "dfb05ec579dd9de78e1e409d65555bbb",
+     "fp_any": null
+    }
+   ],
+   "assigned": "totals",
+   "attached": [],
+   "class": "ggplot2::ggplot",
+   "dim": 1,
+   "files": [],
+   "fp": "dfb05ec579dd9de78e1e409d65555bbb",
+   "fp_any": null,
+   "index": 15,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "patchwork",
+   "values": {
+    "casual_total": "30,433",
+    "member_total": "75,630"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "patchwork",
+     "code": "wrap_plots(polished, totals, widths = c(3, 1))",
+     "dim": 2,
+     "fp": "cce701f23459d96e2298d82f9e8439c2",
+     "fp_any": null
+    }
+   ],
+   "attached": [],
+   "class": "patchwork",
+   "dim": 2,
+   "files": [],
+   "fp": "cce701f23459d96e2298d82f9e8439c2",
+   "fp_any": null,
+   "index": 16,
+   "messages": [],
+   "output": "",
+   "plot": true,
+   "step": "patchwork",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  }
+ ],
+ "stamp": {
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "format": "1",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "6888482d414390782b29b3942c5f222e35654e71a9e4abcdc7d3824de71d925f",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
+ }
+}

@@ -1,0 +1,541 @@
+{
+ "lesson": "05-data-tidying",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "months",
+     "class": "spec_tbl_df",
+     "code": "months = read_csv('data/station-months.csv', show_col_types = FALSE)",
+     "dim": [
+      80,
+      14
+     ],
+     "fp": "82853b899d0de48b8ce37623dd2061c3",
+     "fp_any": "82853b899d0de48b8ce37623dd2061c3"
+    }
+   ],
+   "assigned": "months",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    80,
+    14
+   ],
+   "files": [],
+   "fp": "82853b899d0de48b8ce37623dd2061c3",
+   "fp_any": "82853b899d0de48b8ce37623dd2061c3",
+   "index": 1,
+   "messages": [
+    "Rows: 80 Columns: 14",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (1): name\ndbl (13): station_id, jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "tidy",
+   "values": {
+    "n_stations": "80"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    80,
+    14
+   ],
+   "files": [],
+   "fp": "82853b899d0de48b8ce37623dd2061c3",
+   "fp_any": "82853b899d0de48b8ce37623dd2061c3",
+   "index": 2,
+   "messages": [],
+   "output": "# A tibble: 80 × 14\n   station_id name                        jan   feb   mar   apr   may   jun   jul   aug   sep   oct   nov   dec\n        <dbl> <chr>                     <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>\n 1        101 Market Square               102   106   221   301   444   514   510   483   413   342   210   149\n 2        102 MARKET SQUARE NORTH          90    80   213   216   358   449   423   443   364   308   188   125\n 3        103 Town Hall                    67    70   134   161   291   321   360   313   275   240   135    93\n 4        104 Bridge St & Water St         67    82   152   180   331   361   377   336   297   238   131    93\n 5        105 Larkhaven Central Station   141   129   281   375   569   657   708   665   570   441   313   169\n 6        106 Corn Exchange                75    78   185   233   310   407   404   374   328   281   179   110\n 7        107 Library Plaza               115    83   193   289   451   486   476   482   382   317   216   132\n 8        108 Bellfounders Row             83    95   117   222   309   337   370   390   296   254   151   115\n 9        109 St. Agnes Square             60    64    89   147   234   253   239   235   197   156    97    74\n10        110 Guildhall Lane               90    92   165   223   331   386   353   405   308   239   144    99\n# ℹ 70 more rows",
+   "plot": false,
+   "step": "tidy",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "months |> pivot_longer(cols = !c(station_id, name), names_to = 'month', values_to = 'trips')",
+     "dim": [
+      960,
+      4
+     ],
+     "fp": "a5ba4813ae71bedd63571802aa7dcabc",
+     "fp_any": "7ec426750ed19a5c9f26405a2f90919b"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    960,
+    4
+   ],
+   "files": [],
+   "fp": "a5ba4813ae71bedd63571802aa7dcabc",
+   "fp_any": "7ec426750ed19a5c9f26405a2f90919b",
+   "index": 3,
+   "messages": [],
+   "output": "# A tibble: 960 × 4\n   station_id name          month trips\n        <dbl> <chr>         <chr> <dbl>\n 1        101 Market Square jan     102\n 2        101 Market Square feb     106\n 3        101 Market Square mar     221\n 4        101 Market Square apr     301\n 5        101 Market Square may     444\n 6        101 Market Square jun     514\n 7        101 Market Square jul     510\n 8        101 Market Square aug     483\n 9        101 Market Square sep     413\n10        101 Market Square oct     342\n# ℹ 950 more rows",
+   "plot": false,
+   "step": "longer",
+   "values": {
+    "n_long": "960",
+    "n_na": "24"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "monthly",
+     "class": "tbl_df",
+     "code": "monthly = months |> pivot_longer(jan:dec, names_to = 'month', values_to = 'trips') |> filter(!is.na(trips))",
+     "dim": [
+      936,
+      4
+     ],
+     "fp": "132109c2acb7a372420faa67f1ec8d5d",
+     "fp_any": "0367c4f5d5cdb35d7d2e20be8e443e25"
+    }
+   ],
+   "assigned": "monthly",
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    936,
+    4
+   ],
+   "files": [],
+   "fp": "132109c2acb7a372420faa67f1ec8d5d",
+   "fp_any": "0367c4f5d5cdb35d7d2e20be8e443e25",
+   "index": 4,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "longer",
+   "values": {
+    "n_monthly": "936"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "monthly |> group_by(month) |> summarize(trips = sum(trips))",
+     "dim": [
+      12,
+      2
+     ],
+     "fp": "506c17de5bfbdda902e77733bb3f928f",
+     "fp_any": "506c17de5bfbdda902e77733bb3f928f"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    12,
+    2
+   ],
+   "files": [],
+   "fp": "7ed537b83b826355eb5bf7f6c558ba44",
+   "fp_any": "506c17de5bfbdda902e77733bb3f928f",
+   "index": 5,
+   "messages": [],
+   "output": "# A tibble: 12 × 2\n   month trips\n   <chr> <dbl>\n 1 jan    4335\n 2 feb    4121\n 3 mar    8326\n 4 apr   11361\n 5 may   17791\n 6 jun   20098\n 7 jul   20106\n 8 aug   20084\n 9 sep   16408\n10 oct   13239\n11 nov    8247\n12 dec    5631",
+   "plot": false,
+   "step": "use",
+   "values": {
+    "low_month": "feb",
+    "low_trips": "4,121",
+    "peak_month": "jul",
+    "peak_trips": "20,106"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "monthly |> group_by(month) |> slice_max(trips) |> ungroup()",
+     "dim": [
+      12,
+      4
+     ],
+     "fp": "03509aa56c13b4cb340ab816fe9ccebe",
+     "fp_any": "03509aa56c13b4cb340ab816fe9ccebe"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    12,
+    4
+   ],
+   "files": [],
+   "fp": "057e30b4f7ff8bbc3c7716ab9c034708",
+   "fp_any": "03509aa56c13b4cb340ab816fe9ccebe",
+   "index": 6,
+   "messages": [],
+   "output": "# A tibble: 12 × 4\n   station_id name                      month trips\n        <dbl> <chr>                     <chr> <dbl>\n 1        105 Larkhaven Central Station jan     141\n 2        105 Larkhaven Central Station feb     129\n 3        105 Larkhaven Central Station mar     281\n 4        105 Larkhaven Central Station apr     375\n 5        105 Larkhaven Central Station may     569\n 6        105 Larkhaven Central Station jun     657\n 7        105 Larkhaven Central Station jul     708\n 8        105 Larkhaven Central Station aug     665\n 9        105 Larkhaven Central Station sep     570\n10        105 Larkhaven Central Station oct     441\n11        105 Larkhaven Central Station nov     313\n12        105 Larkhaven Central Station dec     169",
+   "plot": false,
+   "step": "use",
+   "values": {
+    "n_slices": "12",
+    "peak_top": "Larkhaven Central Station",
+    "peak_top_trips": "708"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "periods",
+     "class": "spec_tbl_df",
+     "code": "periods = read_csv('data/station-periods.csv', show_col_types = FALSE)",
+     "dim": [
+      78,
+      5
+     ],
+     "fp": "d42d05483cb853fdd4e2f2e87d9c43cb",
+     "fp_any": "d42d05483cb853fdd4e2f2e87d9c43cb"
+    }
+   ],
+   "assigned": "periods",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    78,
+    5
+   ],
+   "files": [],
+   "fp": "d42d05483cb853fdd4e2f2e87d9c43cb",
+   "fp_any": "d42d05483cb853fdd4e2f2e87d9c43cb",
+   "index": 7,
+   "messages": [
+    "Rows: 78 Columns: 5",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\ndbl (5): station_id, weekday_am, weekday_pm, weekend_am, weekend_pm",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "names-sep",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "periods |> pivot_longer(weekday_am:weekend_pm, names_to = c('day', 'half'), names_sep = '_', values_to = 'trips')",
+     "dim": [
+      312,
+      4
+     ],
+     "fp": "fc0dc8d9a76b87595d8ce39fc0a88360",
+     "fp_any": "fc0dc8d9a76b87595d8ce39fc0a88360"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    312,
+    4
+   ],
+   "files": [],
+   "fp": "fc0dc8d9a76b87595d8ce39fc0a88360",
+   "fp_any": "fc0dc8d9a76b87595d8ce39fc0a88360",
+   "index": 8,
+   "messages": [],
+   "output": "# A tibble: 312 × 4\n   station_id day     half  trips\n        <dbl> <chr>   <chr> <dbl>\n 1        101 weekday am      633\n 2        101 weekday pm     1993\n 3        101 weekend am      305\n 4        101 weekend pm      864\n 5        102 weekday am      547\n 6        102 weekday pm     1695\n 7        102 weekend am      264\n 8        102 weekend pm      751\n 9        103 weekday am      429\n10        103 weekday pm     1280\n# ℹ 302 more rows",
+   "plot": false,
+   "step": "names-sep",
+   "values": {
+    "first_am": "633",
+    "first_pm": "1,993"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "riders",
+     "class": "spec_tbl_df",
+     "code": "riders = read_csv('data/station-riders.csv', show_col_types = FALSE)",
+     "dim": [
+      78,
+      5
+     ],
+     "fp": "66eebe849308b0b4d4ae3d939bf2c4d0",
+     "fp_any": "66eebe849308b0b4d4ae3d939bf2c4d0"
+    }
+   ],
+   "assigned": "riders",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    78,
+    5
+   ],
+   "files": [],
+   "fp": "66eebe849308b0b4d4ae3d939bf2c4d0",
+   "fp_any": "66eebe849308b0b4d4ae3d939bf2c4d0",
+   "index": 9,
+   "messages": [
+    "Rows: 78 Columns: 5",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\ndbl (5): station_id, trips_member, trips_casual, minutes_member, minutes_casual",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "value",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "riders |> pivot_longer(trips_member:minutes_casual, names_to = c('.value', 'member_type'), names_sep = '_')",
+     "dim": [
+      156,
+      4
+     ],
+     "fp": "7948320ea8621f84da8a80e8cebc4010",
+     "fp_any": "38dfee565eedcebd9fa96646cba1caa3"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    156,
+    4
+   ],
+   "files": [],
+   "fp": "7948320ea8621f84da8a80e8cebc4010",
+   "fp_any": "38dfee565eedcebd9fa96646cba1caa3",
+   "index": 10,
+   "messages": [],
+   "output": "# A tibble: 156 × 4\n   station_id member_type trips minutes\n        <dbl> <chr>       <dbl>   <dbl>\n 1        101 member       2457     9  \n 2        101 casual       1334    13.8\n 3        102 member       2132     8.2\n 4        102 casual       1116    12.0\n 5        103 member       1611     9.2\n 6        103 casual        844    13.5\n 7        104 member       1746     8.4\n 8        104 casual        899    12.5\n 9        105 member       3306     8.2\n10        105 casual       1706    12.8\n# ℹ 146 more rows",
+   "plot": false,
+   "step": "value",
+   "values": {
+    "c_min": "13.8",
+    "c_trips": "1,334",
+    "m_min": "9",
+    "m_trips": "2,457",
+    "n_riders": "156"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "survey",
+     "class": "spec_tbl_df",
+     "code": "survey = read_csv('data/survey.csv', show_col_types = FALSE)",
+     "dim": [
+      1500,
+      16
+     ],
+     "fp": "2f3fafd247d2f4efd212c218f9a1a0af",
+     "fp_any": "2f3fafd247d2f4efd212c218f9a1a0af"
+    }
+   ],
+   "assigned": "survey",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    1500,
+    16
+   ],
+   "files": [],
+   "fp": "2f3fafd247d2f4efd212c218f9a1a0af",
+   "fp_any": "2f3fafd247d2f4efd212c218f9a1a0af",
+   "index": 11,
+   "messages": [
+    "Rows: 1500 Columns: 16",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (13): member_type, age_band, home_neighbourhood, satisfaction, agree_ebikes_worth_price, agree_feel_safe, agree_enough_docks, use_commuting, use_errands, use_leisure, use_exercise, use_visiti...\ndbl   (2): response_id, rides_per_week\ndttm  (1): submitted",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "answers",
+   "values": {
+    "n_survey": "1,500"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "uses",
+     "class": "tbl_df",
+     "code": "uses = survey |> pivot_longer(starts_with('use_'), names_to = 'use', names_prefix = 'use_') |> filter(!is.na(value))",
+     "dim": [
+      2945,
+      13
+     ],
+     "fp": "09138e76ee2f96dc57f6e5118e7e1735",
+     "fp_any": "b95517c383d3dd4346db68bda033cb6e"
+    }
+   ],
+   "assigned": "uses",
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    2945,
+    13
+   ],
+   "files": [],
+   "fp": "09138e76ee2f96dc57f6e5118e7e1735",
+   "fp_any": "b95517c383d3dd4346db68bda033cb6e",
+   "index": 12,
+   "messages": [],
+   "output": "",
+   "plot": false,
+   "step": "answers",
+   "values": {
+    "n_uses": "2,945"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "uses |> count(use) |> arrange(desc(n))",
+     "dim": [
+      5,
+      2
+     ],
+     "fp": "1b9d4eec5198585b792ff1535d13f89a",
+     "fp_any": "c6fe319359ff62cc7c060a2ba19aa1c3"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    5,
+    2
+   ],
+   "files": [],
+   "fp": "1b9d4eec5198585b792ff1535d13f89a",
+   "fp_any": "c6fe319359ff62cc7c060a2ba19aa1c3",
+   "index": 13,
+   "messages": [],
+   "output": "# A tibble: 5 × 2\n  use           n\n  <chr>     <int>\n1 leisure     848\n2 commuting   799\n3 errands     603\n4 exercise    458\n5 visiting    237",
+   "plot": false,
+   "step": "answers",
+   "values": {
+    "top_n": "848",
+    "top_use": "leisure"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "uses |> count(use, member_type) |> pivot_wider(names_from = 'member_type', values_from = 'n')",
+     "dim": [
+      5,
+      3
+     ],
+     "fp": "96146449faed429aa8a2faeb7bd44540",
+     "fp_any": "96146449faed429aa8a2faeb7bd44540"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    5,
+    3
+   ],
+   "files": [],
+   "fp": "96146449faed429aa8a2faeb7bd44540",
+   "fp_any": "96146449faed429aa8a2faeb7bd44540",
+   "index": 14,
+   "messages": [],
+   "output": "# A tibble: 5 × 3\n  use       casual member\n  <chr>      <int>  <int>\n1 commuting     97    702\n2 errands      195    408\n3 exercise     219    239\n4 leisure      479    369\n5 visiting     183     54",
+   "plot": false,
+   "step": "wider",
+   "values": {
+    "c_commute": "97",
+    "c_leisure": "479",
+    "m_commute": "702"
+   },
+   "visible": true,
+   "warnings": []
+  }
+ ],
+ "stamp": {
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "format": "1",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "17ab807e7dc5b3600ab62068c7a7dbe349801d551d905dd1ddc8e7eb792a5ec9",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
+ }
+}

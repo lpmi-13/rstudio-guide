@@ -1,0 +1,461 @@
+{
+ "lesson": "14-strings",
+ "r": "R version 4.6.2 (2026-10-29)",
+ "runs": [
+  {
+   "alternatives": [],
+   "attached": [
+    "lubridate",
+    "forcats",
+    "stringr",
+    "dplyr",
+    "purrr",
+    "readr",
+    "tidyr",
+    "tibble",
+    "ggplot2",
+    "tidyverse"
+   ],
+   "class": "character",
+   "dim": 17,
+   "files": [],
+   "fp": "48879e00ab874f36cc9a973c7ca84459",
+   "fp_any": null,
+   "index": 0,
+   "library": "tidyverse",
+   "messages": [
+    "── Attaching core tidyverse packages ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.4     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     ",
+    "── Conflicts ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter() masks stats::filter()\n✖ dplyr::lag()    masks stats::lag()\nℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors"
+   ],
+   "output": "",
+   "plot": false,
+   "step": "setup",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "character",
+   "dim": 3,
+   "files": [],
+   "fp": "31675e0d9fa8020558437b7881c1612f",
+   "fp_any": null,
+   "index": 1,
+   "messages": [],
+   "output": "[1] \"Cooper's Wharf\"      \"the \\\"Lido\\\"\"        \"C:\\\\data\\\\trips.csv\"",
+   "plot": false,
+   "step": "create",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "NULL",
+   "dim": 0,
+   "files": [],
+   "fp": "2c0a8a99dc147d5445c3b49d035665b2",
+   "fp_any": null,
+   "index": 2,
+   "messages": [],
+   "output": "Cooper's Wharf\nthe \"Lido\"\nC:\\data\\trips.csv",
+   "plot": false,
+   "step": "create",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "stations",
+     "class": "spec_tbl_df",
+     "code": "stations = read_csv('data/stations.csv', show_col_types = FALSE)",
+     "dim": [
+      81,
+      8
+     ],
+     "fp": "6d66718310fccdef241ea5ff39a0ec50",
+     "fp_any": "6d66718310fccdef241ea5ff39a0ec50"
+    }
+   ],
+   "assigned": "stations",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    81,
+    8
+   ],
+   "files": [],
+   "fp": "6d66718310fccdef241ea5ff39a0ec50",
+   "fp_any": "6d66718310fccdef241ea5ff39a0ec50",
+   "index": 3,
+   "messages": [
+    "Rows: 81 Columns: 8",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): name, neighbourhood, former_name\ndbl  (4): station_id, lat, lon, docks\ndate (1): opened",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "combine",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "stations |> transmute(name, docks, label = str_glue('{name}: {docks} docks'))",
+     "dim": [
+      81,
+      3
+     ],
+     "fp": "544de6d7110f1ccf451cfa6b3a1ec784",
+     "fp_any": "cf2f787cb15a1fd5e5762f309d201f76"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    81,
+    3
+   ],
+   "files": [],
+   "fp": "544de6d7110f1ccf451cfa6b3a1ec784",
+   "fp_any": "cf2f787cb15a1fd5e5762f309d201f76",
+   "index": 4,
+   "messages": [],
+   "output": "# A tibble: 81 × 3\n   name                      docks label                              \n   <chr>                     <dbl> <glue>                             \n 1 Market Square                24 Market Square: 24 docks            \n 2 MARKET SQUARE NORTH          23 MARKET SQUARE NORTH: 23 docks      \n 3 Town Hall                    34 Town Hall: 34 docks                \n 4 Bridge St & Water St         28 Bridge St & Water St: 28 docks     \n 5 Larkhaven Central Station    25 Larkhaven Central Station: 25 docks\n 6 Corn Exchange                22 Corn Exchange: 22 docks            \n 7 Library Plaza                27 Library Plaza: 27 docks            \n 8 Bellfounders Row             27 Bellfounders Row: 27 docks         \n 9 St. Agnes Square             23 St. Agnes Square: 23 docks         \n10 Guildhall Lane               28 Guildhall Lane: 28 docks           \n# ℹ 71 more rows",
+   "plot": false,
+   "step": "combine",
+   "values": {
+    "first_label": "Market Square: 24 docks"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "character",
+   "dim": 2,
+   "files": [],
+   "fp": "dfef0a719ca1dd520871820a7074c0c8",
+   "fp_any": null,
+   "index": 5,
+   "messages": [],
+   "output": "[1] \"Formerly Gasworks Lane\" NA                      ",
+   "plot": false,
+   "step": "combine",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "stations |> group_by(neighbourhood) |> summarize(names = str_flatten(name, ', ', last = ' and '))",
+     "dim": [
+      11,
+      2
+     ],
+     "fp": "2fadcff2b2b45483ac754893d3fcc9f6",
+     "fp_any": "2fadcff2b2b45483ac754893d3fcc9f6"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    11,
+    2
+   ],
+   "files": [],
+   "fp": "78f144539306b15f85155cf9a2790671",
+   "fp_any": "2fadcff2b2b45483ac754893d3fcc9f6",
+   "index": 6,
+   "messages": [],
+   "output": "# A tibble: 11 × 2\n   neighbourhood names                                                                                                                                                                                  \n   <chr>         <chr>                                                                                                                                                                                  \n 1 Market Square Market Square, MARKET SQUARE NORTH, Town Hall, Bridge St & Water St, Larkhaven Central Station, Corn Exchange, Library Plaza, Bellfounders Row, St. Agnes Square, Guildhall Lane, Thea…\n 2 Old Harbour   Harbour Front, Ferry Landing, Cooper’s Wharf, Harbour Master, Quay Street, Quay Street (temporary), Chandlers Court, Lighthouse Walk, Boatyard and Ropewalk                            \n 3 Castle Hill   Castle  Gate, Castle Hill Park, St Agnes Church, Keep Street, Barbican, Mill Rd and Kiln St, Tanner's Yard and Gasworks Yard                                                           \n 4 University    university library, Science Park, Student Union, University West, Engineering Quad, Medical School, Residences North, Sports Centre and Observatory Road                               \n 5 Millbrook     Millbrook Green, Millbrook Shops, Weir Lane, Ash Grove, Elm Terrace, Pinfold Street, Millbrook School and Orchard Close                                                                \n 6 Northgate     Northgate Library, Northgate Junction, Hospital, Foundry Road, Northgate Pool, Hatter's Lane, Ridgeway and Birch Avenue                                                                \n 7 Eastfield     Eastfield Shops, Eastfield Station, Brickworks, Cedar Road, Linden Way, Eastfield Community Centre, Maple Crescent and Rowan Street                                                    \n 8 Riverside     Riverside Walk, Boathouse, Willow Bank, Lock Keeper's Cottage, Riverside Market, Old Tannery, Canal Basin and Towpath North                                                            \n 9 Fenwick Park  Fenwick Park Gates, Lido, Bandstand and Rose Garden                                                                                                                                    \n10 Westmoor      Westmoor Road, Westmoor Farm Shop, Heathfield and Westmoor Commons                                                                                                                     \n11 Saltings      Saltings Wharf and Saltings Lane                                                                                                                                                       ",
+   "plot": false,
+   "step": "flatten",
+   "values": {
+    "n_hoods": "11"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "bikes",
+     "class": "spec_tbl_df",
+     "code": "bikes = read_csv('data/bikes.csv', show_col_types = FALSE)",
+     "dim": [
+      690,
+      4
+     ],
+     "fp": "cca59c39b3e0a2aeafeb5364d13b5a32",
+     "fp_any": "703c87d669608e422d526e85d29b3454"
+    }
+   ],
+   "assigned": "bikes",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    690,
+    4
+   ],
+   "files": [],
+   "fp": "cca59c39b3e0a2aeafeb5364d13b5a32",
+   "fp_any": "703c87d669608e422d526e85d29b3454",
+   "index": 7,
+   "messages": [
+    "Rows: 690 Columns: 4",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (3): bike_id, bike_type, model\ndate (1): in_service",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "columns",
+   "values": {},
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "bikes |> separate_wider_delim(cols = model, delim = ' ', names = c('family', 'version'))",
+     "dim": [
+      690,
+      5
+     ],
+     "fp": "f1601e768c9fec9c537cd3eb67e5d702",
+     "fp_any": "9623ef6098a8227fac63909c555805c5"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    690,
+    5
+   ],
+   "files": [],
+   "fp": "f1601e768c9fec9c537cd3eb67e5d702",
+   "fp_any": "9623ef6098a8227fac63909c555805c5",
+   "index": 8,
+   "messages": [],
+   "output": "# A tibble: 690 × 5\n   bike_id    bike_type family  version in_service\n   <chr>      <chr>     <chr>   <chr>   <date>    \n 1 LB-C-00001 classic   Kestrel 1       2021-04-01\n 2 LB-C-00002 classic   Kestrel 1       2021-04-01\n 3 LB00003    classic   Kestrel 1       2021-04-01\n 4 LB-C-00004 classic   Kestrel 1       2021-04-01\n 5 LB-C-00005 classic   Kestrel 1       2021-04-01\n 6 LB-C-00006 classic   Kestrel 1       2021-04-01\n 7 LB-C-00007 classic   Kestrel 1       2021-04-01\n 8 LB-C-00008 classic   Kestrel 1       2021-04-01\n 9 LB-C-00009 classic   Kestrel 1       2021-04-01\n10 LB-C-00010 classic   Kestrel 1       2021-04-01\n# ℹ 680 more rows",
+   "plot": false,
+   "step": "columns",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": "survey",
+     "class": "spec_tbl_df",
+     "code": "survey = read_csv('data/survey.csv', show_col_types = FALSE)",
+     "dim": [
+      1500,
+      16
+     ],
+     "fp": "2f3fafd247d2f4efd212c218f9a1a0af",
+     "fp_any": "2f3fafd247d2f4efd212c218f9a1a0af"
+    }
+   ],
+   "assigned": "survey",
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    1500,
+    16
+   ],
+   "files": [],
+   "fp": "2f3fafd247d2f4efd212c218f9a1a0af",
+   "fp_any": "2f3fafd247d2f4efd212c218f9a1a0af",
+   "index": 9,
+   "messages": [
+    "Rows: 1500 Columns: 16",
+    "── Column specification ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\nDelimiter: \",\"\nchr  (13): member_type, age_band, home_neighbourhood, satisfaction, agree_ebikes_worth_price, agree_feel_safe, agree_enough_docks, use_commuting, use_errands, use_leisure, use_exercise, use_visiti...\ndbl   (2): response_id, rides_per_week\ndttm  (1): submitted",
+    "\nℹ Use `spec()` to retrieve the full column specification for this data.\nℹ Specify the column types or set `show_col_types = FALSE` to quiet this message."
+   ],
+   "output": "",
+   "plot": false,
+   "step": "rows",
+   "values": {
+    "n_comments": "698"
+   },
+   "visible": false,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "survey |> drop_na(comment) |> separate_longer_delim(comment, '. ') |> count(comment) |> arrange(desc(n))",
+     "dim": [
+      374,
+      2
+     ],
+     "fp": "19420d1ed3783adacdd56621edaf8239",
+     "fp_any": "95de17dcf50c91209192286c9c255ad7"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    374,
+    2
+   ],
+   "files": [],
+   "fp": "19420d1ed3783adacdd56621edaf8239",
+   "fp_any": "95de17dcf50c91209192286c9c255ad7",
+   "index": 10,
+   "messages": [],
+   "output": "# A tibble: 374 × 2\n   comment                                              n\n   <chr>                                            <int>\n 1 Keep it up.                                         48\n 2 Would recommend.                                    43\n 3 Thanks!                                             42\n 4 Otherwise fine.                                     28\n 5 Could the app show how many e-bikes are charged?    23\n 6 My daughter Zoë uses it for school                  23\n 7 Thanks.                                             23\n 8 Took the kids to the Lido, they loved it            22\n 9 Great way to get to class                           19\n10 Saddles are too high and hard to lower              17\n# ℹ 364 more rows",
+   "plot": false,
+   "step": "rows",
+   "values": {
+    "n_sentences": "1,106",
+    "top_sentence": "Keep it up."
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "bikes |> mutate(length = str_length(bike_id)) |> count(length)",
+     "dim": [
+      2,
+      2
+     ],
+     "fp": "3bbf8d6f7fc30c4db36c9fc79b55032c",
+     "fp_any": "3bbf8d6f7fc30c4db36c9fc79b55032c"
+    }
+   ],
+   "attached": [],
+   "class": "spec_tbl_df",
+   "dim": [
+    2,
+    2
+   ],
+   "files": [],
+   "fp": "3bbf8d6f7fc30c4db36c9fc79b55032c",
+   "fp_any": "3bbf8d6f7fc30c4db36c9fc79b55032c",
+   "index": 11,
+   "messages": [],
+   "output": "# A tibble: 2 × 2\n  length     n\n   <int> <int>\n1      7    12\n2     10   678",
+   "plot": false,
+   "step": "substrings",
+   "values": {
+    "n_old": "12"
+   },
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "bikes |> transmute(bike_id, letter = str_sub(bike_id, 4, 4), number = str_sub(bike_id, -5, -1))",
+     "dim": [
+      690,
+      3
+     ],
+     "fp": "75b1e64f993c573fdab6e4cc8147a3f4",
+     "fp_any": "2aad597b98c4765f5fd147ab6d2f180e"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    690,
+    3
+   ],
+   "files": [],
+   "fp": "75b1e64f993c573fdab6e4cc8147a3f4",
+   "fp_any": "2aad597b98c4765f5fd147ab6d2f180e",
+   "index": 12,
+   "messages": [],
+   "output": "# A tibble: 690 × 3\n   bike_id    letter number\n   <chr>      <chr>  <chr> \n 1 LB-C-00001 C      00001 \n 2 LB-C-00002 C      00002 \n 3 LB00003    0      00003 \n 4 LB-C-00004 C      00004 \n 5 LB-C-00005 C      00005 \n 6 LB-C-00006 C      00006 \n 7 LB-C-00007 C      00007 \n 8 LB-C-00008 C      00008 \n 9 LB-C-00009 C      00009 \n10 LB-C-00010 C      00010 \n# ℹ 680 more rows",
+   "plot": false,
+   "step": "substrings",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [
+    {
+     "assigned": null,
+     "class": "tbl_df",
+     "code": "stations |> transmute(name, title = str_to_title(name)) |> filter(title != name)",
+     "dim": [
+      4,
+      2
+     ],
+     "fp": "39fe4b2beabf5186f1b881e544d0f9fb",
+     "fp_any": "5f868ce82f6b90d6cadabd61ea1a71ac"
+    }
+   ],
+   "attached": [],
+   "class": "tbl_df",
+   "dim": [
+    4,
+    2
+   ],
+   "files": [],
+   "fp": "39fe4b2beabf5186f1b881e544d0f9fb",
+   "fp_any": "5f868ce82f6b90d6cadabd61ea1a71ac",
+   "index": 13,
+   "messages": [],
+   "output": "# A tibble: 4 × 2\n  name                    title                  \n  <chr>                   <chr>                  \n1 MARKET SQUARE NORTH     Market Square North    \n2 Quay Street (temporary) Quay Street (Temporary)\n3 Mill Rd and Kiln St     Mill Rd And Kiln St    \n4 university library      University Library     ",
+   "plot": false,
+   "step": "case",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  },
+  {
+   "alternatives": [],
+   "attached": [],
+   "class": "character",
+   "dim": 1,
+   "files": [],
+   "fp": "6f33af4697b092d680009e0e6f3b8fc1",
+   "fp_any": null,
+   "index": 14,
+   "messages": [],
+   "output": "[1] \"İSTANBUL\"",
+   "plot": false,
+   "step": "case",
+   "values": {},
+   "visible": true,
+   "warnings": []
+  }
+ ],
+ "stamp": {
+  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "format": "1",
+  "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
+  "lesson": "9e3b5e15ff9dfde9e5b268e753235989bd2631c57e85d79fc516273dfd5a07d0",
+  "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
+ }
+}

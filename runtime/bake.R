@@ -56,9 +56,11 @@ local({
     c(pages, shown)
   }
 
+  # The project's files and when each changed, leaving out the data and RStudio's and Quarto's own
+  # folders (Quarto names some of its cache files at random).
   project_files <- function() {
     files <- list.files(".", recursive = TRUE, all.files = TRUE, no.. = TRUE)
-    files <- files[!startsWith(files, "data/") & !startsWith(files, ".Rproj.user")]
+    files <- files[!startsWith(files, "data/") & !startsWith(files, ".Rproj.user") & !grepl("(^|/)\\.quarto/", files)]
     stats::setNames(as.numeric(file.mtime(files)), files)
   }
 
@@ -165,6 +167,7 @@ local({
   if (isTRUE(plan$strict)) air_check(plan$runs)
 
   records <- list()
+  sourced <- character() # the script's statements so far, for a "source" action
   for (run in plan$runs) {
     if (length(failures)) break
     record <- list(index = run$index, step = run$step)
@@ -175,6 +178,17 @@ local({
     if (!is.null(run$action)) {
       # IDE actions change RStudio, not R, except these.
       if (identical(run$action, "menu") && identical(unlist(run$menu), c("Session", "Restart R"))) restart()
+      # Source runs the script from the top: every statement so far, as the coach typed them below
+      # their headings. A statement meant to fail would stop it there, so none may come before.
+      if (identical(run$action, "source")) {
+        for (code in sourced) {
+          res <- suppressWarnings(suppressMessages(console(code, print = FALSE)))
+          if (!res$ok) {
+            fail(run, sprintf("sourcing the script would stop at `%s`: %s", strsplit(code, "\n", fixed = TRUE)[[1]][[1]], res$error))
+            break
+          }
+        }
+      }
       if (identical(run$action, "type")) {
         lines <- readLines(plan$script, warn = FALSE)
         at <- if (is.null(run$after)) max(c(0L, which(nzchar(trimws(lines))))) else which(grepl(run$after, lines, perl = TRUE))[1]
@@ -226,6 +240,7 @@ local({
     }
 
     res <- console(run$code)
+    sourced <- c(sourced, run$code)
     record$output <- res$output
     record$warnings <- I(res$warnings)
     record$messages <- I(res$messages)
