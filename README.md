@@ -4,7 +4,7 @@ RStudio Server with an in-IDE coach, lessons modelled on R for Data Science that
 
 **Inspiration for the lessons.** The next set of lessons follows the chapters of [R for Data Science (2e)](https://r4ds.hadley.nz) by Hadley Wickham, Mine Çetinkaya-Rundel and Garrett Grolemund. There is one lesson for each of its 29 chapters, teaching the same concepts. The book guides what the lab teaches; it isn't a source of material. The lessons use their own code, data and explanations, built on current R packages. On 20 November 2026 the first four replaced the two article-based lessons the spike began with, `graphical-tools` and `statistical-tools`, and the other 25 followed on 21 November. This README keeps those lessons' audit records as history. The plan is `plan-docs/R4DS_CHAPTERS_PLAN.md`. The book is free to read online, and it is the best place to go deeper on any of these topics.
 
-**Try it in your browser:** [RStudio coach on iximiuz Labs](https://labs.iximiuz.com/playgrounds/rstudio-guide-16afe14e). It needs a free iximiuz account. Starting it takes about a minute. The **Terminal** tab then shows the RStudio password; open the **RStudio** tab and sign in. (Until the rootfs is republished, the playground still runs the article lessons, from before the mode picker.)
+**Try it in your browser:** [RStudio coach on iximiuz Labs](https://labs.iximiuz.com/playgrounds/rstudio-guide-16afe14e). It needs a free iximiuz account. Starting it takes about a minute. The **Terminal** tab then shows the RStudio password; open the **RStudio** tab and sign in. Since 22 November 2026 (rootfs v5) it offers all 29 lessons.
 
 | Question | Answer |
 | --- | --- |
@@ -19,7 +19,7 @@ One intermittent failure appeared earlier, before the fix in finding 7: Chromium
 
 ## Work ledger
 
-Where the work stands and what's left, so it can resume from here. Updated 21 November 2026. The plan for the new lessons is `~/projects/plan-docs/R4DS_CHAPTERS_PLAN.md` (its §6 lists the phases). Each finished phase has a decision record in this README, named below.
+Where the work stands and what's left, so it can resume from here. Updated 22 November 2026. The plan for the new lessons is `~/projects/plan-docs/R4DS_CHAPTERS_PLAN.md` (its §6 lists the phases). Each finished phase has a decision record in this README, named below.
 
 ### Done
 
@@ -31,24 +31,20 @@ Where the work stands and what's left, so it can resume from here. Updated 21 No
 | 20 Nov 2026 | arm64 dropped: the lab is built and tested for amd64 only. | Requirements |
 | 20 Nov 2026 | Phase 1: the Larkhaven Bikes data, the version 2 lesson format and its validator, the bake, the coach changes, two audit fixtures and two new audits. Committed as `072e01c` on `main`. | "Phase 1: engine and world" |
 | 20 Nov 2026 | Phase 2 pilots: lessons 1 Data visualization, 3 Data transformation, 7 Data import and 28 Quarto. Committed as `2cee0e5` (not pushed). | "Phase 2: the four pilot lessons" |
-| 20 Nov 2026 | The pilots' review: every claim checked against the data, four changes, and `check.R` asserting the facts they rely on. Not committed yet. | "Changes after the review", under Phase 2 |
-| 20 Nov 2026 | Phase 2, the swap: the pilots replace the article lessons, and `demo_mode.cjs` and `practice_modes.cjs` are ported to them. Not committed yet. | "Choosing a lesson and a mode" and "Demonstration mode" |
-| 21 Nov 2026 | Phase 3: the other 25 lessons, with what they needed (Alt+-, `source` and `new-project` actions, a fresh start that returns to the lessons' project and resets Help, the Viewer and `View()` tabs, fingerprints for databases, duckplyr, rvest and patchwork, a DuckDB file in the world, and new world checks), the default run of every lesson, `tools/format_lesson.py`, and parallel lesson audits. Not committed yet. | "Phase 3: the other 25 lessons" |
+| 20 Nov 2026 | The pilots' review: every claim checked against the data, four changes, and `check.R` asserting the facts they rely on. Committed as `0a42c38`. | "Changes after the review", under Phase 2 |
+| 20 Nov 2026 | Phase 2, the swap: the pilots replace the article lessons, and `demo_mode.cjs` and `practice_modes.cjs` are ported to them. Committed as `0a42c38`. | "Choosing a lesson and a mode" and "Demonstration mode" |
+| 21 Nov 2026 | Phase 3: the other 25 lessons, with what they needed (Alt+-, `source` and `new-project` actions, a fresh start that returns to the lessons' project and resets Help, the Viewer and `View()` tabs, fingerprints for databases, duckplyr, rvest and patchwork, a DuckDB file in the world, and new world checks), the default run of every lesson, `tools/format_lesson.py`, and parallel lesson audits. Committed as `0a42c38`. | "Phase 3: the other 25 lessons" |
+| 21–22 Nov 2026 | Phase 4, release, all automated (no manual review at this stage, the user's call): a security review of `/coach/api/evidence` (one fix, two hardenings), an automated learner-read review of the 25 new lessons (11 small text fixes), every Demonstration timed at the coach's own pace (4.9 to 10.6 minutes), every audit run again (all passed), and rootfs v5 published to the public playground (76 to 107 s from start to ready). The review and fixes are in `0a42c38`; the timings, audits and v5 aren't committed yet. | "Phase 4: release" |
 
 ### Outstanding, in order
 
-1. **Phase 4, release (in progress).** All automated; no manual review at this stage (the user's call, 21 November 2026).
-   1. Review the security of `/coach/api/evidence`.
-   2. An automated review of the 25 new lessons as a learner reads them (clarity, accuracy against the baked values, consistency), and every Demonstration timed at the coach's normal pace. They were checked against their concepts lists and the data as they were written (see Phase 3).
-   3. Republish the iximiuz rootfs with `iximiuz/publish-rootfs-image.sh` (never `create` again) and measure start-up, now that the default run holds 29 lessons and the image a database.
-   4. Update the decision records.
-2. **A manual review by the user**, last: the lessons read and the Demonstrations watched as a learner would, and the playground tried by hand (the RStudio tab signed in, which headless tests can't reach).
+1. **A manual review by the user**, last: the lessons read and the Demonstrations watched as a learner would, and the playground tried by hand (the RStudio tab signed in, which headless tests can't reach).
 
-Also open: the playground still runs rootfs v4, with the article lessons and from before the mode picker; the spikes in `spikes/phase0/` provision the retired `statistical-tools`; the coach's code for the older lesson format is no longer exercised by any audit; Guided says nothing when a Quarto render fails (the error shows only in RStudio's Background Jobs tab); a learner can pass a style lesson (4) with unstyled code, since checks see results; and the points under "Plan deviations and open points" at the end.
+Also open: lessons 9 and 11's Demonstrations run a little over the plan's 10 minutes (10.3 and 10.6); the spikes in `spikes/phase0/` provision the retired `statistical-tools`; the coach's code for the older lesson format is no longer exercised by any audit; Guided says nothing when a Quarto render fails (the error shows only in RStudio's Background Jobs tab); a learner can pass a style lesson (4) with unstyled code, since checks see results; and the points under "Plan deviations and open points" at the end.
 
 ### Picking up again
 
-- **Read first:** the plan's §6, then this README's "Phase 1", "Phase 2" and "Phase 3" sections. `scenarios/engine-check/scenario.json` shows each kind of evidence, and `scenarios/engine-actions/scenario.json` each IDE action; lessons 4 and 6 show the newer ones.
+- **Read first:** the plan's §6, then this README's "Phase 1" to "Phase 4" sections. `scenarios/engine-check/scenario.json` shows each kind of evidence, and `scenarios/engine-actions/scenario.json` each IDE action; lessons 4 and 6 show the newer ones.
 - **Checks, in the order they're useful:** `python3 -I tools/check_content.py` (seconds), `python3 -I tools/format_lesson.py rstudio-guide-runtime:local <lesson>` then `python3 -I tools/bake.py rstudio-guide-runtime:local <lesson>` (seconds per lesson), `NODE_PATH=$(npm root -g) node tests/lesson_modes.cjs <lesson> results/<lesson>` (a few minutes), or `tests/run_lesson_audits.py` for many lessons at once. Then the other audits under "Run it".
 - **Things that catch people out:**
   - `tests/coach_in_ide.cjs` expects `./run.sh up regional-revenue` first; run against any other run, most of its probes fail.
@@ -407,7 +403,7 @@ One run each on the final code, with no warnings or page errors:
 - **State a fresh start doesn't reset yet:** the Help and Viewer panes and `View()` tabs (lessons 8 and 23), and lesson 6's new project.
 - **The DuckDB database file for lesson 21** isn't generated yet.
 - **Parallel audits** (plan §7) aren't built; the lesson audit runs one lesson at a time.
-- **The iximiuz rootfs isn't republished.** It packs the committed tree, and nothing from Phase 1 is committed.
+- **The iximiuz rootfs isn't republished.** It packs the committed tree, and nothing from Phase 1 is committed. (Republished as v5 on 22 November 2026, in Phase 4.)
 
 Phase 2 did the Quarto lessons' typing, and Phase 3 the rest except the rootfs: the fresh start's resets, lesson 6's project, the database and parallel audits.
 
@@ -561,7 +557,7 @@ Every lesson's audit (`tests/lesson_modes.cjs`) was run after this phase's last 
 
 The older audits, after the last change, one run each, with no warnings or page errors: `lesson_switch.cjs` 6/6, `practice_modes.cjs` 20/20 (its default run now all 29 lessons), `demo_mode.cjs` 12/12 (whose page error, from stopping a step, is fixed) and `coach_in_ide.cjs` 21/21, AI-assistant lockout included. `tests/test_publish_rootfs_image.py` passes 9/9.
 
-## Phase 4: release (21 November 2026)
+## Phase 4: release (21–22 November 2026)
 
 Phase 4 of `plan-docs/R4DS_CHAPTERS_PLAN.md` prepares the release, with every check automated: the user chose to leave a manual review to the very end (the ledger's last step). It reviewed the security of the evidence endpoint, reviewed the 25 new lessons as a learner reads them, timed every Demonstration at the coach's own pace, ran every audit again, and republished the playground's rootfs.
 
@@ -608,7 +604,77 @@ Eleven changes, in eight lessons, all small; none changes code or results:
 - **20:** Excel's day numbers count from 30 December 1899 for dates after February 1900, not "since 1900".
 - **27:** "the solo task accepts either" became "this step's check accepts either", as Guided accepts it too.
 
-TIMINGS_AND_AUDITS_PLACEHOLDER
+### Demonstrations at the coach's own pace
+
+Every Demonstration was run from **Start** to its last step at the pace a learner gets (`LAB_PACE=normal` in `tests/lesson_modes.cjs`: typing at 70 ms a key, the pointer's movements and every reading countdown, with **Advance** never pressed), four at a time with `tests/run_lesson_audits.py`. All 29 finished: every step was explained, the script held every statement under its heading, and there were no warnings or page errors. A lesson's time runs from **Start** until the last step is explained, so it leaves out the time spent reading that last explanation. The four runs at once share an 8-core machine, but the coach's timers set the pace, not the machine.
+
+| Lesson | Steps | Demonstration | Longest step |
+| --- | --- | --- | --- |
+| 1 Data visualization | 9 | 10.0 min | 96 s |
+| 2 Workflow: basics | 7 | 7.5 min | 86 s |
+| 3 Data transformation | 8 | 8.4 min | 105 s |
+| 4 Workflow: code style | 6 | 5.6 min | 82 s |
+| 5 Data tidying | 8 | 9.4 min | 103 s |
+| 6 Workflow: scripts and projects | 6 | 5.5 min | 84 s |
+| 7 Data import | 8 | 9.3 min | 103 s |
+| 8 Workflow: getting help | 8 | 7.9 min | 81 s |
+| 9 Layers | 8 | 10.3 min | 118 s |
+| 10 Exploratory data analysis | 8 | 9.5 min | 104 s |
+| 11 Communication | 7 | 10.6 min | 116 s |
+| 12 Logical vectors | 7 | 6.8 min | 77 s |
+| 13 Numbers | 8 | 8.4 min | 85 s |
+| 14 Strings | 8 | 9.0 min | 89 s |
+| 15 Regular expressions | 7 | 8.0 min | 116 s |
+| 16 Factors | 7 | 8.0 min | 109 s |
+| 17 Dates and times | 7 | 7.5 min | 89 s |
+| 18 Missing values | 7 | 8.8 min | 105 s |
+| 19 Joins | 7 | 7.9 min | 103 s |
+| 20 Spreadsheets | 7 | 8.1 min | 108 s |
+| 21 Databases | 6 | 6.4 min | 81 s |
+| 22 Larger-than-memory data | 7 | 8.0 min | 93 s |
+| 23 Hierarchical data | 7 | 6.9 min | 81 s |
+| 24 Web scraping | 6 | 6.2 min | 105 s |
+| 25 Functions | 6 | 8.0 min | 103 s |
+| 26 Iteration | 6 | 6.5 min | 104 s |
+| 27 A field guide to base R | 6 | 6.4 min | 82 s |
+| 28 Quarto | 8 | 6.8 min | 77 s |
+| 29 Quarto formats | 6 | 4.9 min | 81 s |
+
+The median Demonstration takes 8.0 minutes, and all 29 take 3.8 hours between them. Steps take 20 to 118 s, with a median of 64 s. 26 lessons fall within the plan's estimate of 5 to 10 minutes. Lessons 9 (10.3 minutes) and 11 (10.6, with 17 statements, the most of any lesson) run a little over, and lesson 29 (4.9, mostly renders) a little under. The longest steps type three statements of 6 to 13 lines between them, such as lesson 9's stacked, filled and dodged bars, and lesson 11's labelled peaks. Nothing was changed for this: a reload already resumes a Demonstration where it was (plan §8, "Long Demonstrations").
+
+### Every audit again
+
+After this phase's last change (the evidence listing in `runtime/evidence.R`, with the image rebuilt), every audit was run again, one run each, from 21 to 22 November. All passed the first time, with no warnings or page errors:
+
+| Audit | Result | Time |
+| --- | --- | --- |
+| `tests/lesson_modes.cjs`, every lesson and both fixtures, three at a time with `tests/run_lesson_audits.py` | 31 of 31 lessons 5/5 | 20.5 minutes; 59 minutes of audits between them |
+| `tests/lesson_modes.cjs` at normal pace (above) | 29 of 29 lessons 3/3 | 60 minutes, four at a time |
+| `tests/demo_mode.cjs` | 12/12 | 12 minutes |
+| `tests/lesson_switch.cjs` | 6/6 | 50 s |
+| `tests/practice_modes.cjs` (the default run of 29 lessons) | 20/20 | 3 minutes |
+| `tests/coach_in_ide.cjs` (on `regional-revenue`), the AI-assistant lockout and the evidence endpoint's answers included | 22/22, with no console errors, HTTP errors or failed requests through the gateway | 48 s |
+| `tests/test_publish_rootfs_image.py` | 9/9 | 2 s |
+| `tools/check_content.py` | 32 lessons, 0 problems | seconds |
+
+An earlier run of `demo_mode.cjs` on 21 November was cut short when its session ended (Chromium closed during lesson 3's **Start over**); it isn't counted.
+
+### Rootfs v5 on the public playground
+
+Once every audit had passed, `bash iximiuz/publish-rootfs-image.sh` built and pushed `ghcr.io/lpmi-13/rstudio-guide-rootfs:v5` on 22 November 2026, then updated `iximiuz/versions.sh`, `iximiuz/manifest.yaml` and the public playground `rstudio-guide-16afe14e` (whose manifest now names v5). It was built from `0a42c38` plus this README's uncommitted edits, since the script packs the working tree's tracked files. v5 is 1.97 GB compressed (v4 was 1.67 GB). Inside, the image archive is 3.2 GB and the disk 12 of 20 GB used.
+
+Two sessions of the public playground, each started with `labctl playground start rstudio-guide-16afe14e`, the second as a free-tier user (`--as-free-tier-user`):
+
+| | First start of v5 | Second, as a free-tier user, 4 minutes later |
+| --- | --- | --- |
+| Start command to RStudio ready (the init task done) | **107 s** | **76 s** |
+| Before the VM booted (fetching the rootfs) | about 65 s | a few seconds |
+| Boot to ready (`docker load` of the archive, then `./run.sh up` of all 29 lessons) | 40 s | 70 s |
+| `/coach/api/steps` from the machine by name | 200, 29 lessons | 200, 29 lessons |
+
+Both starts were faster than v2's 144 and 149 s (19 November), despite the larger image, so the fallback the plan held in reserve, pulling the runtime image during init, isn't needed. Why the second start's init took longer wasn't measured.
+
+In the first session, through `labctl port-forward` and Playwright: signing in took 5 s; the picker opened on lesson 1 and the coach's lesson list held all 29; lesson 1's Demonstration (at the audits' fast pace) typed, ran and explained its first two steps with the bake's values (4,540 trips in `week`) in 12 s, with no page errors. The terminal banner gave the username and password and said to choose a lesson and a mode. With the learner signed in and two steps run, RStudio's container used 279 MiB and the VM had 3.3 of 3.9 GiB available. A free-tier session can't be stopped (`labctl` gets a 402), so it was destroyed.
 
 ## Remote playground (iximiuz Labs)
 
@@ -642,11 +708,11 @@ labctl playground start docker -f iximiuz/manifest.yaml   # throwaway session fr
 
 The public playground was created once with `labctl playground create --base docker -f iximiuz/manifest.yaml rstudio-guide`. iximiuz added the `-16afe14e` suffix, and `name:` in the manifest records it, so later publishes update that playground. Don't run `create` again: it would make a second playground with a new link.
 
-**What a learner sees:** the playground opens on **Terminal**, which prints the RStudio username and this run's password. If RStudio is still starting, the terminal waits and then prints them. A second tab, **RStudio**, shows the IDE inside the playground page with the coach docked. That makes one click plus sign-in. Every lesson in the default run is offered, so the learner picks one in the Coach pane, as the terminal banner and the playground's description say. Rootfs v4 and earlier hold the two article lessons; a republished rootfs holds all 29 lessons. `./run.sh up <lesson>` starts a one-lesson run; a new terminal then shows the new password.
+**What a learner sees:** the playground opens on **Terminal**, which prints the RStudio username and this run's password. If RStudio is still starting, the terminal waits and then prints them. A second tab, **RStudio**, shows the IDE inside the playground page with the coach docked. That makes one click plus sign-in. Every lesson in the default run is offered, so the learner picks one in the Coach pane, as the terminal banner and the playground's description say. Rootfs v5 holds all 29 lessons; v3 and v4 held the two article lessons. `./run.sh up <lesson>` starts a one-lesson run; a new terminal then shows the new password.
 
 ### How it works
 
-- **Init:** the manifest's single init task runs `iximiuz/start-lab.sh`. On first start it does `docker load` on `/opt/rstudio-guide/images.tar`, then runs `./run.sh up`, the default run: every lesson from the next rootfs version, the two article lessons in v3 and v4, and `graphical-tools` alone up to v2.
+- **Init:** the manifest's single init task runs `iximiuz/start-lab.sh`. On first start it does `docker load` on `/opt/rstudio-guide/images.tar`, then runs `./run.sh up`, the default run: all 29 lessons from v5, the two article lessons in v3 and v4, and `graphical-tools` alone up to v2.
 - **`lab.env`** is baked into the rootfs with `FRAME_ORIGIN=https://labs.iximiuz.com`, `GATEWAY_BIND=0.0.0.0` and `LAB_PREBUILT=1`. Every later `./run.sh up` keeps these, so switching scenario keeps the RStudio tab working and never rebuilds or pulls. Values set in the environment still win.
 - **The RStudio tab** is an `http-port` tab on 8788 with private access: only the person who started that session can open it, even though anyone can start the playground. RStudio allows `labs.iximiuz.com` to frame it via `www-frame-origin`, set at container start by `runtime/04_lab_frame_origin`. The coach skips only frames nested *inside* RStudio, so it runs when RStudio itself is framed.
 - **Earlier approach:** the first tests below packed the repository into the manifest as a startup file, because iximiuz allows at most 20 startup files. The rootfs image replaced that.
@@ -655,7 +721,7 @@ The public playground was created once with `labctl playground create --base doc
 
 Tested on 19 November 2026 with throwaway sessions from `iximiuz/manifest.yaml`. Each check below was driven through an SSH tunnel (`labctl port-forward`) with the Playwright CLI.
 
-| Check | v1 | v2 (current) |
+| Check | v1 | v2 |
 | --- | --- | --- |
 | Init task | **Failed, retrying every second.** `docker save` writes its archive as `0600`, so `laborant` couldn't read `/opt/rstudio-guide/images.tar`. With the file made readable by hand, everything below passed. | Passes unaided |
 | Start command to RStudio ready | n/a | **149 s and 144 s.** About 2 min of that passes before the VM boots, while iximiuz fetches the 1.66 GB rootfs; a second start was no faster. Boot to ready is 34 s (`docker load`, provisioning, RStudio start). |
@@ -670,7 +736,7 @@ Tested on 19 November 2026 with throwaway sessions from `iximiuz/manifest.yaml`.
 
 **The v2 fix:** the build script makes the archive `0644`, and the rootfs build now fails if `laborant` can't read the archive, run `start-lab.sh` or write the repository. That check caught a second bug before anything was pushed. `COPY --chmod=0644` also gives the directory it creates mode `0644`, which `laborant` can't enter, so the Dockerfile doesn't use it.
 
-**Start-up trade-off:** the earlier manifest-embedding version reached ready in 86–107 s. It booted iximiuz's cached Docker base and pulled 2.6 GB from Docker Hub during init. The rootfs version is about 45 s slower, because iximiuz downloads the custom rootfs before boot, but it no longer depends on Docker Hub or its rate limits. Faster alternatives to try if start-up matters: a smaller runtime image (rocker's image is most of the 1.66 GB), or pushing only the runtime image to GHCR and pulling it during init on the cached base.
+**Start-up trade-off:** the earlier manifest-embedding version reached ready in 86–107 s. It booted iximiuz's cached Docker base and pulled 2.6 GB from Docker Hub during init. The rootfs version is about 45 s slower, because iximiuz downloads the custom rootfs before boot, but it no longer depends on Docker Hub or its rate limits. Faster alternatives to try if start-up matters: a smaller runtime image (rocker's image is most of the 1.66 GB), or pushing only the runtime image to GHCR and pulling it during init on the cached base. v5 (22 November) reached ready in 107 s and 76 s despite being 1.97 GB, so neither is needed for now (see "Rootfs v5 on the public playground" under Phase 4).
 
 ### Results: earlier manifest-embedding version
 
@@ -688,7 +754,7 @@ From the version that packed the code into the manifest, on the official `docker
 
 ### Not done yet
 
-- The RStudio tab on v2, signed in by hand. The same mechanism was confirmed on the earlier version.
+- The RStudio tab on v5, signed in by hand inside the iximiuz page (part of the user's manual review, the ledger's last step). The same mechanism was confirmed on the earlier version, and v5's RStudio was checked through a port forward.
 
 ## Plan deviations and open points
 

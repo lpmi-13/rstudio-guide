@@ -22,7 +22,7 @@ playground:
             - name: laborant
               default: true
           drives:
-            - source: oci://ghcr.io/lpmi-13/rstudio-guide-rootfs:v4
+            - source: oci://ghcr.io/lpmi-13/rstudio-guide-rootfs:v5
               mount: /
               size: 20GiB
           network:
