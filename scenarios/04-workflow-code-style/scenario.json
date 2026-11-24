@@ -10,7 +10,7 @@
   ],
   "script": "04-workflow-code-style.R",
   "starter": "# Workflow: code style\n# Go deeper: https://r4ds.hadley.nz/workflow-style.html\n#\n# Write each step's code under its heading.\n# To run it, press Ctrl+Enter (or click Run).\n\n# Step 1. Setup: library(tidyverse)\n\n# Step 2. Reformat: Code › Reformat Document\n# Members' morning trips at each station, written in a hurry. It runs, but it's\n# hard to read.\nT<-read_csv(\"data/trips.csv\")\nx=T|>filter(hour(started_at)%in%7:9,member_type==\"member\")|>summarize(n=n(),med=median(duration_min),.by=start_station)|>arrange(desc(n))\nggplot(x,aes(n,med))+geom_point()\n\n# Step 3. Names that say what they hold\n\n# Step 4. One pipe step per line\n\n# Step 5. Charts: one layer per line\n\n# Step 6. Sections and the outline\n",
-  "summary": "Tidy up a script written in a hurry: reformat it with Air, give objects names that say what they hold, write one pipe step and one chart layer per line, and divide the script into sections you can jump between.",
+  "summary": "Make a rushed script easier to read. Format it with Air, give objects clear names, lay out pipes and chart layers, and split the script into sections.",
   "steps": [
     {
       "id": "setup",
@@ -39,7 +39,7 @@
           "task": "Reformat this script with Code › Reformat Document, and look at what changed in the code under Step 2."
         }
       ],
-      "explain": "Under Step 2 is code written in a hurry: it works, but with no spaces and a whole pipeline on one line it's hard to read. Code › Reformat Document runs Air, the formatter this lab's RStudio uses, over the whole script. Air put spaces around operators such as `<-`, `==` and `%in%`, and after each comma, turned `x=` into `x <-`, and broke the pipeline, which was too long for one line, into one step per line. It left the chart on one line, because it fits, and it doesn't touch comments or names: `T` and `x` still say nothing about what they hold."
+      "explain": "Under Step 2 is code written in a hurry: it works, but with no spaces and a whole pipeline on one line it's hard to read. Code › Reformat Document runs Air, the formatter this lab's RStudio uses, over the whole script.\n\nAir put spaces around operators such as `<-`, `==` and `%in%`, and after each comma, turned `x=` into `x <-`, and broke the pipeline, which was too long for one line, into one step per line.\n\nIt left the chart on one line, because it fits, and it doesn't touch comments or names: `T` and `x` still say nothing about what they hold."
     },
     {
       "id": "names",
@@ -64,10 +64,10 @@
             "n_morning": "format(nrow(morning_member_trips), big.mark = \",\")"
           },
           "purpose": "keep members' trips that started between 7:00 and 9:59, as `morning_member_trips`",
-          "task": "Keep the members' trips that started in hours 7, 8 or 9, as the hurried code does, and store them in a variable called `morning_member_trips`."
+          "task": "Keep members' trips that started in hours 7, 8 or 9. Store them in `morning_member_trips`, as the hurried code does."
         }
       ],
-      "explain": "A name should say what an object holds. `x` says nothing, and `T` is worse: R already uses `T` as a short form of `TRUE`, so a data frame called `T` changes what `T` means in any code that relied on that. These lessons name objects with nouns in snake_case, lower-case words joined by `_`. `morning_member_trips` is long, but it says what its {n_morning} rows are, and Tab completes it after the first few letters. Air formats code; choosing names is up to you."
+      "explain": "A name should say what an object holds. `x` says nothing, and `T` is worse: R already uses `T` as a short form of `TRUE`, so a data frame called `T` changes what `T` means in any code that relied on that. These lessons name objects with nouns in snake_case, lower-case words joined by `_`.\n\n`morning_member_trips` is long, but it says what its {n_morning} rows are, and Tab completes it after the first few letters. Air formats code; choosing names is up to you."
     },
     {
       "id": "pipes",
@@ -94,7 +94,7 @@
           "task": "Print `station_mornings`."
         }
       ],
-      "explain": "Each `|>` ends a line, and each step starts a new one, indented by two spaces, so a pipeline reads from top to bottom as a list of steps. A call whose arguments don't fit on one line gets one argument per line, as `summarize()` has here, with its closing bracket on a line of its own. The columns are named for what they hold: `trips` and `median_minutes`, not `n` and `med`. Station {top_station} had the most morning trips by members, {top_trips}, with a median of {top_median} minutes."
+      "explain": "Each `|>` ends a line, and each step starts a new one, indented by two spaces, so a pipeline reads from top to bottom as a list of steps.\n\nA call whose arguments don't fit on one line gets one argument per line, as `summarize()` has here, with its closing bracket on a line of its own. The columns are named for what they hold: `trips` and `median_minutes`, not `n` and `med`.\n\nStation {top_station} had the most morning trips by members, {top_trips}, with a median of {top_median} minutes."
     },
     {
       "id": "charts",
@@ -115,7 +115,7 @@
           }
         }
       ],
-      "explain": "ggplot2 joins layers with `+` the way a pipeline joins steps with `|>`, so it is written the same way: `+` at the end of a line, and each layer on the next, indented by two spaces. A chart with more layers, labels and scales then reads as a list. Each point is a station, and the points rise to the right. The {n_busy} stations with 400 or more morning trips have a median trip of {busy_mean} minutes on average, and the others {quiet_mean}."
+      "explain": "ggplot2 joins layers with `+` the way a pipeline joins steps with `|>`, so it is written the same way: `+` at the end of a line, and each layer on the next, indented by two spaces. A chart with more layers, labels and scales then reads as a list.\n\nEach point is a station, and the points rise to the right. The {n_busy} stations with 400 or more morning trips have a median trip of {busy_mean} minutes on average, and the others {quiet_mean}."
     },
     {
       "id": "sections",
@@ -158,7 +158,7 @@
           "task": "On a new line above `ggplot(x, …)`, add the comment `# Chart ----`."
         }
       ],
-      "explain": "A comment that ends in four or more dashes starts a section. RStudio lists each section in the menu at the bottom left of the editor, and in the outline, which the Outline button at the top right of the Source pane (or Ctrl+Shift+O) opens; choosing one jumps to it. A section can also be folded away with the small arrow beside its line number. Code › Insert Section… (Ctrl+Shift+R) asks for a name and writes the comment, dashes included. In a long script, sections are how you find your way around."
+      "explain": "A comment that ends in four or more dashes starts a section. RStudio lists each section in the menu at the bottom left of the editor, and in the outline, which the Outline button at the top right of the Source pane (or Ctrl+Shift+O) opens; choosing one jumps to it.\n\nA section can also be folded away with the small arrow beside its line number. Code › Insert Section… (Ctrl+Shift+R) asks for a name and writes the comment, dashes included. In a long script, sections are how you find your way around."
     }
   ]
 }

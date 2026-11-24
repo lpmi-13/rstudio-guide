@@ -9,7 +9,7 @@
     "solo"
   ],
   "script": "29-quarto-formats.R",
-  "summary": "Make one Quarto source into several outputs: an HTML report with a table of contents and folded code, the same report as Word and PDF, a slide show, a dashboard with an interactive table, and a small website.",
+  "summary": "Make several outputs from one Quarto source. Create HTML, Word and PDF reports, slides, a dashboard with a table, and a small website.",
   "steps": [
     {
       "id": "setup",
@@ -47,7 +47,7 @@
           "task": "Render `29-report.qmd` with the Render button above it."
         }
       ],
-      "explain": "The report's YAML header lists three formats under `format:`, each with its own options. For HTML, `toc: true` adds a table of contents built from the `##` headings, and `code-fold: true` hides each chunk's code behind a Code button, so readers see results first and code on request. The Render button renders the first format listed, HTML, and the Viewer shows it: the contents at the side, and the chart's and table's code folded away."
+      "explain": "The report's YAML header lists three formats under `format:`, each with its own options. For HTML, `toc: true` adds a table of contents built from the `##` headings, and `code-fold: true` hides each chunk's code behind a Code button, so readers see results first and code on request.\n\nThe Render button renders the first format listed, HTML, and the Viewer shows it: the contents at the side, and the chart's and table's code folded away."
     },
     {
       "id": "word-pdf",
@@ -68,7 +68,7 @@
           "task": "Render it again with `output_format = \"typst\"`, which makes a PDF."
         }
       ],
-      "explain": "The Render button ran Quarto in a Background Jobs tab, in front of the Console; the Console tab brings the Console back. `quarto_render()` renders a document from code, and `output_format` picks one of the formats in its header. From the same text and code came `29-report.docx`, which anyone with Word can edit, and `29-report.pdf`, typeset by Typst, which comes with Quarto. Each format leaves out what it can't show: the Word and PDF versions have no folded code or contents sidebar. Click a file in the Files pane, then Export or View, to look at it."
+      "explain": "The Render button ran Quarto in a Background Jobs tab, in front of the Console; the Console tab brings the Console back. `quarto_render()` renders a document from code, and `output_format` picks one of the formats in its header.\n\nFrom the same text and code came `29-report.docx`, which anyone with Word can edit, and `29-report.pdf`, typeset by Typst, which comes with Quarto. Each format leaves out what it can't show: the Word and PDF versions have no folded code or contents sidebar.\n\nClick a file in the Files pane, then Export or View, to look at it."
     },
     {
       "id": "slides",
@@ -93,7 +93,7 @@
           "task": "Render `29-slides.qmd` with the Render button."
         }
       ],
-      "explain": "With `format: revealjs`, each `##` heading starts a new slide, and the Viewer shows a slide show: click it, then press the arrow keys to move through. The chunks and inline code run as in a report, so the numbers on the slides come from the data, and a bullet list is written as a Markdown list. To change the slides, change the text and render again."
+      "explain": "With `format: revealjs`, each `##` heading starts a new slide, and the Viewer shows a slide show: click it, then press the arrow keys to move through.\n\nThe chunks and inline code run as in a report, so the numbers on the slides come from the data, and a bullet list is written as a Markdown list. To change the slides, change the text and render again."
     },
     {
       "id": "dashboard",
@@ -118,7 +118,7 @@
           "task": "Render `29-dashboard.qmd` with the Render button."
         }
       ],
-      "explain": "A dashboard lays out its chunks' output in cards instead of a page: each `##` heading makes a row, and each chunk a card, titled by its `#| title:` option. The table is a `reactable()` htmlwidget: in the Viewer you can search it, sort it by clicking a column's name, and page through it, all in the browser, with no R running. Interactive widgets need HTML, so they work in reports, slides and dashboards, but not in Word or PDF."
+      "explain": "A dashboard lays out its chunks' output in cards instead of a page: each `##` heading makes a row, and each chunk a card, titled by its `#| title:` option.\n\nThe table is a `reactable()` htmlwidget: in the Viewer you can search it, sort it by clicking a column's name, and page through it, all in the browser, with no R running. Interactive widgets need HTML, so they work in reports, slides and dashboards, but not in Word or PDF."
     },
     {
       "id": "website",
@@ -132,7 +132,7 @@
           "task": "Render the whole `29-website` folder with `quarto_render()`, adding `as_job = FALSE` so that it renders in the Console."
         }
       ],
-      "explain": "A folder with a `_quarto.yml` file is a Quarto project. `29-website/_quarto.yml` makes it a website and lists its pages in a navigation bar. Rendering the folder renders every page and writes the site to `29-website/_site`, ready to put on any web server. In RStudio, `quarto_render()` renders a project as a background job unless told otherwise; `as_job = FALSE` renders it in the Console, where you can watch. The website lives in its own folder because a `_quarto.yml` at the top of this project would make every lesson's document part of the site. Quarto projects can also be books, which number chapters and cross-references across files."
+      "explain": "A folder with a `_quarto.yml` file is a Quarto project. `29-website/_quarto.yml` makes it a website and lists its pages in a navigation bar. Rendering the folder renders every page and writes the site to `29-website/_site`, ready to put on any web server.\n\nIn RStudio, `quarto_render()` renders a project as a background job unless told otherwise; `as_job = FALSE` renders it in the Console, where you can watch. The website lives in its own folder because a `_quarto.yml` at the top of this project would make every lesson's document part of the site.\n\nQuarto projects can also be books, which number chapters and cross-references across files."
     }
   ]
 }

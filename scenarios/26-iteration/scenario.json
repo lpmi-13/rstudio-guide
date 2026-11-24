@@ -9,7 +9,7 @@
     "solo"
   ],
   "script": "26-iteration.R",
-  "summary": "Do the same thing many times without copying code: apply functions to many columns with across(), keep rows by many columns at once, read twelve files into one table with map(), and write a file for each neighbourhood with walk2().",
+  "summary": "Repeat work without copying code. Apply functions across columns, read many files with map(), and write one file per neighbourhood with walk2().",
   "steps": [
     {
       "id": "setup",
@@ -50,7 +50,7 @@
           "task": "Find the mean of every numeric column of `weather`, leaving out missing values, with `across(where(is.numeric), …)` in `summarize()`."
         }
       ],
-      "explain": "`across()` applies a function to each of several columns. Its first argument picks the columns, by name as in `c(temp_c, wind_kmh)` or by a test such as `where(is.numeric)`; its second is the function, here written `\\(x) …`, a short way of writing `function(x) …`. Lesson 18 fixed the -99 readings one column at a time; with `across()`, one line fixes both, and would fix ten. The year's mean temperature was {mean_temp} °C."
+      "explain": "`across()` applies a function to each of several columns. Its first argument picks the columns, by name as in `c(temp_c, wind_kmh)` or by a test such as `where(is.numeric)`; its second is the function, here written `\\(x) …`, a short way of writing `function(x) …`.\n\nLesson 18 fixed the -99 readings one column at a time; with `across()`, one line fixes both, and would fix ten. The year's mean temperature was {mean_temp} °C."
     },
     {
       "id": "names",
@@ -63,7 +63,7 @@
             "weather |> summarize(across(c(temp_c, wind_kmh), list(low = \\(x) min(x, na.rm = TRUE), high = \\(x) max(x, na.rm = TRUE))))"
           ],
           "purpose": "find the lowest and highest temperature and wind speed, naming each result",
-          "task": "Find the lowest and highest `temp_c` and `wind_kmh`: give `across()` a named list of two functions, `low` and `high`, and name the results with `.names = \"{.col}_{.fn}\"`."
+          "task": "Find the lowest and highest `temp_c` and `wind_kmh`. Give `across()` a named list of `low` and `high` functions. Name results with `.names = \"{.col}_{.fn}\"`."
         }
       ],
       "explain": "Given a named list of functions, `across()` applies each one to each column: two columns and two functions make four results. `.names` says how to name them, `{.col}` standing for the column's name and `{.fn}` for the function's, so the columns read `temp_c_low`, `temp_c_high` and so on. Without `.names`, `across()` names them the same way."
@@ -85,7 +85,7 @@
           "task": "Keep the rows of `weather` where any of `temp_c`, `rain_mm` and `wind_kmh` is missing, with `if_any()` and `is.na`."
         }
       ],
-      "explain": "`filter()` needs one `TRUE` or `FALSE` per row, while a test applied across columns gives one per column. `if_any()` combines them with or: a row is kept if the test holds in any of the columns. `if_all()` combines them with and. {n_any_na} hours have a reading missing, all of them from the -99 codes; the sensor gaps have no rows at all."
+      "explain": "`filter()` needs one `TRUE` or `FALSE` per row, while a test applied across columns gives one per column. `if_any()` combines them with or: a row is kept if the test holds in any of the columns. `if_all()` combines them with and.\n\n{n_any_na} hours have a reading missing, all of them from the -99 codes; the sensor gaps have no rows at all."
     },
     {
       "id": "map",
@@ -112,11 +112,11 @@
           "values": {
             "n_exports": "format(nrow(exports))"
           },
-          "purpose": "read each file the same way and stack them, with a column naming the file each row came from, as `exports`",
+          "purpose": "read and stack the files, recording each row's source file in `exports`",
           "task": "Read every file in `paths` with `map()` and `\\(path) read_csv(path, skip = 1, na = c(\"\", \"n/a\", \"-\"), show_col_types = FALSE)`, then stack the results with `list_rbind(names_to = \"file\")`. Store the result in `exports`."
         }
       ],
-      "explain": "`map()` calls a function once for each element of a vector and returns a list of the results: here, {n_paths} tibbles, one per month. `list_rbind()` stacks them into one, {n_exports} rows, and `names_to` keeps each element's name, the file's path, in a column. `show_col_types = FALSE` stops `read_csv()` reporting the columns of all twelve files. Lesson 7 read these files with one `read_csv()` call, which takes many files itself; `map()` works for any function that reads one thing at a time, such as `read_excel()` in lesson 20."
+      "explain": "`map()` calls a function once for each element of a vector and returns a list of the results: here, {n_paths} tibbles, one per month. `list_rbind()` stacks them into one, {n_exports} rows, and `names_to` keeps each element's name, the file's path, in a column. `show_col_types = FALSE` stops `read_csv()` reporting the columns of all twelve files.\n\nLesson 7 read these files with one `read_csv()` call, which takes many files itself; `map()` works for any function that reads one thing at a time, such as `read_excel()` in lesson 20."
     },
     {
       "id": "walk",
@@ -148,7 +148,7 @@
           "task": "Write each table in `by_area$data` to its file in `by_area$path`, with `walk2()` and `write_csv`."
         }
       ],
-      "explain": "`nest()` puts each neighbourhood's stations in a list-column, `data`, one table per row. `walk2()` walks along two vectors side by side, the tables and their paths, calling `write_csv()` with each pair. A `walk` function is a `map` for functions you call for what they do, here writing a file, rather than for what they return. The Files pane shows {n_areas} files in `neighbourhoods`."
+      "explain": "`nest()` puts each neighbourhood's stations in a list-column, `data`, one table per row. `walk2()` walks along two vectors side by side, the tables and their paths, calling `write_csv()` with each pair. A `walk` function is a `map` for functions you call for what they do, here writing a file, rather than for what they return.\n\nThe Files pane shows {n_areas} files in `neighbourhoods`."
     }
   ]
 }

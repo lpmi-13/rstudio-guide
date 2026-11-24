@@ -9,7 +9,7 @@
     "solo"
   ],
   "script": "23-hierarchical-data.R",
-  "summary": "Turn Larkhaven Bikes' live station feed, JSON with lists inside lists, into tidy tables: look inside a list with str(), $, [[ and View(), keep the stations in a list-column, then spread their fields into columns and their vehicle counts into rows, and pull out just the fields you need.",
+  "summary": "Turn a nested JSON station feed into tables. Inspect lists, keep stations in a list column, spread fields into columns, and expand vehicle counts into rows.",
   "steps": [
     {
       "id": "setup",
@@ -51,7 +51,7 @@
           "task": "Show the structure of `status`, two levels deep, with `str(status, max.level = 2)`."
         }
       ],
-      "explain": "A JSON object becomes a named list, and a JSON array an unnamed one, so `status` is lists inside lists. `str()` shows the structure: four items at the top, among them `last_updated` and `data`, and inside `data` a list of `stations`. `max.level = 2` stops `str()` from printing every station's every field, which would run to hundreds of lines."
+      "explain": "A JSON object becomes a named list, and a JSON array an unnamed one, so `status` is lists inside lists. `str()` shows the structure: four items at the top, among them `last_updated` and `data`, and inside `data` a list of `stations`.\n\n`max.level = 2` stops `str()` from printing every station's every field, which would run to hundreds of lines."
     },
     {
       "id": "subset",
@@ -80,7 +80,7 @@
           "task": "Open `status` in RStudio's viewer with `View()`."
         }
       ],
-      "explain": "`$` takes an item from a list by name, and `[[1]]` the first item by position; chained, they walk down the levels. Station {first_id} had {first_bikes} bikes available when the feed was made. `[[` returns the item itself, while `[` would return a smaller list holding it. `View()` opens a list in a Source tab where you can expand each level by clicking, and its button at the end of each row writes the code that reaches that item."
+      "explain": "`$` takes an item from a list by name, and `[[1]]` the first item by position; chained, they walk down the levels. Station {first_id} had {first_bikes} bikes available when the feed was made. `[[` returns the item itself, while `[` would return a smaller list holding it.\n\n`View()` opens a list in a Source tab where you can expand each level by clicking, and its button at the end of each row writes the code that reaches that item."
     },
     {
       "id": "listcol",
@@ -124,7 +124,7 @@
           "task": "Spread the fields in `station` into columns with `unnest_wider()`."
         }
       ],
-      "explain": "`unnest_wider()` makes a column of each named field. Most fields hold one value, so they become ordinary columns, typed as numbers, text and `TRUE`/`FALSE`. A field only some stations have, `num_docks_disabled`, is `NA` for the others: only {n_disabled} report it. `vehicle_types_available` is still a list-column, because each of its cells holds a list of vehicle types."
+      "explain": "`unnest_wider()` makes a column of each named field. Most fields hold one value, so they become ordinary columns, typed as numbers, text and `TRUE`/`FALSE`. A field only some stations have, `num_docks_disabled`, is `NA` for the others: only {n_disabled} report it.\n\n`vehicle_types_available` is still a list-column, because each of its cells holds a list of vehicle types."
     },
     {
       "id": "longer",
@@ -143,7 +143,7 @@
           "task": "After `unnest_wider(station)`, give each vehicle type its own row with `unnest_longer(vehicle_types_available)`, then spread its fields with `unnest_wider(vehicle_types_available)`."
         }
       ],
-      "explain": "`unnest_longer()` turns each element of a list into a row of its own, repeating the station's other columns. Stations with both classic bikes and e-bikes get two rows and the rest one: {n_rows} rows in all. Each element is itself a little list, a type and a count, so `unnest_wider()` spreads it into `vehicle_type_id` and `count`. Nested data comes apart one level at a time: wider for named fields, longer for unnamed lists."
+      "explain": "`unnest_longer()` turns each element of a list into a row of its own, repeating the station's other columns. Stations with both classic bikes and e-bikes get two rows and the rest one: {n_rows} rows in all.\n\nEach element is itself a little list, a type and a count, so `unnest_wider()` spreads it into `vehicle_type_id` and `count`. Nested data comes apart one level at a time: wider for named fields, longer for unnamed lists."
     },
     {
       "id": "hoist",
@@ -168,10 +168,10 @@
             "first_name": "info$data$stations[[1]]$name[[1]]$text"
           },
           "purpose": "pull each station's ID, its name in the first language, and its capacity out of the lists",
-          "task": "Put `info$data$stations` in a tibble's `station` column, then pull out `\"station_id\"`, `\"capacity\"` and `name`: the `\"text\"` of the `\"name\"` field's first item, `list(\"name\", 1, \"text\")`, with `hoist()`."
+          "task": "Put `info$data$stations` in a tibble's `station` column. Use `hoist()` to take `\"station_id\"`, `\"capacity\"` and `name` from `list(\"name\", 1, \"text\")`."
         }
       ],
-      "explain": "In this feed a station's name is a list of translations, each with a `text` and a `language`, as in the GBFS standard that real bike-share schemes publish. `hoist()` reaches into each cell and pulls out just the fields named, at any depth: `list(\"name\", 1, \"text\")` means the name field, its first item, its text, such as \"{first_name}\". Everything not pulled out stays behind in `station`, a smaller list, so nothing is lost."
+      "explain": "In this feed a station's name is a list of translations, each with a `text` and a `language`, as in the GBFS standard that real bike-share schemes publish.\n\n`hoist()` reaches into each cell and pulls out just the fields named, at any depth: `list(\"name\", 1, \"text\")` means the name field, its first item, its text, such as \"{first_name}\". Everything not pulled out stays behind in `station`, a smaller list, so nothing is lost."
     }
   ]
 }

@@ -9,7 +9,7 @@
     "solo"
   ],
   "script": "16-factors.R",
-  "summary": "Give the rider survey's answers an order that means something: make satisfaction a factor with its levels in order, sort bars by how often or how much, combine and lump levels, and compare answers with an ordered factor.",
+  "summary": "Give survey answers a useful order. Make factors, sort bars, combine rare answers, and compare ordered groups.",
   "steps": [
     {
       "id": "setup",
@@ -84,7 +84,7 @@
           "task": "Count `survey` by `satisfaction` again."
         }
       ],
-      "explain": "A factor is a variable with a fixed set of possible values, its levels, in an order you choose. `fct()` makes one, and stops with an error if a value isn't among the levels, so a typo can't quietly become `NA`. Now `count()` follows the levels, from very dissatisfied to very satisfied, and the counts read as a scale: {n_satisfied} of the riders are satisfied or very satisfied. The tibble shows the column as `<fct>`."
+      "explain": "A factor is a variable with a fixed set of possible values, its levels, in an order you choose. `fct()` makes one, and stops with an error if a value isn't among the levels, so a typo can't quietly become `NA`.\n\nNow `count()` follows the levels, from very dissatisfied to very satisfied, and the counts read as a scale: {n_satisfied} of the riders are satisfied or very satisfied. The tibble shows the column as `<fct>`."
     },
     {
       "id": "charts",
@@ -112,7 +112,7 @@
           "task": "Draw a bar chart with `home_neighbourhood` on the y axis, ordered by frequency with `fct_infreq()`."
         }
       ],
-      "explain": "ggplot2 draws a factor's bars in the order of its levels, so the satisfaction scale reads left to right. `home_neighbourhood` has no natural order, so the clearest one is by size: `fct_infreq()` puts the most common level first, {top_home}, which ggplot2 draws at the bottom of the y axis. Wrapping it in `fct_rev()` would turn it round. The neighbourhood names on the y axis can be read without turning your head."
+      "explain": "ggplot2 draws a factor's bars in the order of its levels, so the satisfaction scale reads left to right. `home_neighbourhood` has no natural order, so the clearest one is by size: `fct_infreq()` puts the most common level first, {top_home}, which ggplot2 draws at the bottom of the y axis.\n\nWrapping it in `fct_rev()` would turn it round. The neighbourhood names on the y axis can be read without turning your head."
     },
     {
       "id": "reorder",
@@ -129,10 +129,10 @@
             "most_rides": "local({s <- summarize(survey, rides = mean(rides_per_week, na.rm = TRUE), .by = home_neighbourhood); format(round(max(s$rides), 1))})"
           },
           "purpose": "plot the mean rides per week for each home neighbourhood, ordered by that mean",
-          "task": "Find the mean `rides_per_week` (`na.rm = TRUE`) for each `home_neighbourhood`, then plot it as points, with the neighbourhoods on the y axis ordered by it: `fct_reorder(home_neighbourhood, rides)`."
+          "task": "For each `home_neighbourhood`, find mean `rides_per_week` with `na.rm = TRUE`. Plot points with neighbourhoods on y, ordered by mean rides using `fct_reorder(home_neighbourhood, rides)`."
         }
       ],
-      "explain": "`fct_reorder()` orders a factor's levels by another variable, so the points form a line from fewest rides to most and the eye can compare neighbours. In alphabetical order, the same points would zigzag. Riders from {most_home} ride most, {most_rides} times a week on average. With several values per level, `fct_reorder()` orders by their median, or by the function given as `.fun`."
+      "explain": "`fct_reorder()` orders a factor's levels by another variable, so the points form a line from fewest rides to most and the eye can compare neighbours. In alphabetical order, the same points would zigzag. Riders from {most_home} ride most, {most_rides} times a week on average.\n\nWith several values per level, `fct_reorder()` orders by their median, or by the function given as `.fun`."
     },
     {
       "id": "change",
@@ -164,7 +164,7 @@
           "task": "Count `survey` by `home`: `home_neighbourhood` with all but the 6 most common lumped into \"Other\", using `fct_lump_n()`."
         }
       ],
-      "explain": "`fct_collapse()` gives several levels one new name: {n_agree} riders agree that they feel safe, {n_disagree} disagree. Levels not mentioned, such as \"Don't know\", stay as they are, and missing answers stay `NA`. `fct_recode()` renames single levels the same way. `fct_lump_n()` keeps the most common levels and puts the rest in \"Other\": here {n_other} riders from the six smaller neighbourhoods. A chart with a few bars and \"Other\" is easier to read than one with a dozen."
+      "explain": "`fct_collapse()` gives several levels one new name: {n_agree} riders agree that they feel safe, {n_disagree} disagree. Levels not mentioned, such as \"Don't know\", stay as they are, and missing answers stay `NA`. `fct_recode()` renames single levels the same way.\n\n`fct_lump_n()` keeps the most common levels and puts the rest in \"Other\": here {n_other} riders from the six smaller neighbourhoods. A chart with a few bars and \"Other\" is easier to read than one with a dozen."
     },
     {
       "id": "ordered",
@@ -180,7 +180,7 @@
           "task": "Make `satisfaction` an ordered factor with `ordered()` and `levels = satisfaction_levels`, then count the riders by `content = satisfaction >= \"Satisfied\"`."
         }
       ],
-      "explain": "An ordered factor's levels are ranked, so `>=` means \"this answer or a better one\": the count splits the riders into those at Satisfied or above and the rest, {n_satisfied} as before. With an ordinary factor, R would warn that `>=` isn't meaningful and give `NA`. Use an ordered factor when the order is part of what the answers mean, as on a scale; tibbles show it as `<ord>`."
+      "explain": "An ordered factor's levels are ranked, so `>=` means \"this answer or a better one\": the count splits the riders into those at Satisfied or above and the rest, {n_satisfied} as before. With an ordinary factor, R would warn that `>=` isn't meaningful and give `NA`.\n\nUse an ordered factor when the order is part of what the answers mean, as on a scale; tibbles show it as `<ord>`."
     }
   ]
 }

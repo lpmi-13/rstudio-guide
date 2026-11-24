@@ -9,7 +9,7 @@
     "solo"
   ],
   "script": "14-strings.R",
-  "summary": "Work with the text in Larkhaven Bikes' data: write strings with quotes and backslashes in them, build labels, join many names into one, split bike models into columns and comments into sentences, take substrings of bike IDs, and change case.",
+  "summary": "Work with text in bike trip data. Build and join labels, split text into parts, take pieces of bike IDs, and change letter case.",
   "steps": [
     {
       "id": "setup",
@@ -32,7 +32,7 @@
           "code": "c(\"Cooper's Wharf\", \"the \\\"Lido\\\"\", r\"(C:\\data\\trips.csv)\")",
           "evidence": "value",
           "purpose": "make three strings: one with an apostrophe, one with double quotes inside, and a Windows path as a raw string",
-          "task": "Make a vector of three strings with `c()`: `Cooper's Wharf`; `the \"Lido\"`, escaping each inner `\"` as `\\\"`; and the path `C:\\data\\trips.csv` written as a raw string, `r\"(…)\"`."
+          "task": "Make three strings with `c()`. Use `Cooper's Wharf` and `the \"Lido\"`; escape each inner quote as `\\\"`. Add `C:\\data\\trips.csv` as a raw string, `r\"(…)\"`."
         },
         {
           "code": "writeLines(c(\"Cooper's Wharf\", \"the \\\"Lido\\\"\", r\"(C:\\data\\trips.csv)\"))",
@@ -42,7 +42,7 @@
           "task": "Show the same three strings with `writeLines()`."
         }
       ],
-      "explain": "A string goes between double quotes, so an apostrophe needs nothing special. A double quote inside one is written `\\\"`: the backslash escapes it. A backslash itself must then be written `\\\\`, which makes Windows paths hard to read; a raw string, `r\"(…)\"`, takes everything between its brackets as it is. Printing a vector shows strings as you would type them, escapes included; `writeLines()` shows what they hold."
+      "explain": "A string goes between double quotes, so an apostrophe needs nothing special. A double quote inside one is written `\\\"`: the backslash escapes it. A backslash itself must then be written `\\\\`, which makes Windows paths hard to read; a raw string, `r\"(…)\"`, takes everything between its brackets as it is.\n\nPrinting a vector shows strings as you would type them, escapes included; `writeLines()` shows what they hold."
     },
     {
       "id": "combine",
@@ -76,7 +76,7 @@
           "task": "Join \"Formerly \" to each of `c(\"Gasworks Lane\", NA)` with `str_c()`."
         }
       ],
-      "explain": "`str_glue()` fills in each `{…}` with the value of the code inside it, row by row, so the first label is \"{first_label}\". `str_c()` joins its arguments end to end, like `paste0()`. A missing value gives a missing result, `NA`, rather than the text \"NA\": an unknown former name makes the whole label unknown. That is usually what you want, as it stops a label from claiming something the data doesn't know."
+      "explain": "`str_glue()` fills in each `{…}` with the value of the code inside it, row by row, so the first label is \"{first_label}\". `str_c()` joins its arguments end to end, like `paste0()`. A missing value gives a missing result, `NA`, rather than the text \"NA\": an unknown former name makes the whole label unknown.\n\nThat is usually what you want, as it stops a label from claiming something the data doesn't know."
     },
     {
       "id": "flatten",
@@ -93,10 +93,10 @@
             "n_hoods": "format(n_distinct(stations$neighbourhood))"
           },
           "purpose": "list each neighbourhood's stations in one string",
-          "task": "For each `neighbourhood`, join its station names into one string with `str_flatten()`, separated by \", \" and with \" and \" before the last."
+          "task": "For each `neighbourhood`, join station names with `str_flatten()`. Separate them with \", \" and put \" and \" before the last."
         }
       ],
-      "explain": "`str_flatten()` is a summary function for strings: it turns a column of names into one string, so it fits in `summarize()`, here once for each of the {n_hoods} neighbourhoods. `collapse` goes between the names and `last` before the final one. The names show the registry's messiness: capitals, a double space, \"St.\" and \"St\", which the next lesson tidies with regular expressions."
+      "explain": "`str_flatten()` is a summary function for strings: it turns a column of names into one string, so it fits in `summarize()`, here once for each of the {n_hoods} neighbourhoods. `collapse` goes between the names and `last` before the final one.\n\nThe names show the registry's messiness: capitals, a double space, \"St.\" and \"St\", which the next lesson tidies with regular expressions."
     },
     {
       "id": "columns",
@@ -121,7 +121,7 @@
           "task": "Split `model` at the space into two columns, `family` and `version`, with `separate_wider_delim()`."
         }
       ],
-      "explain": "Each model name, such as \"Kestrel 1\", holds two things: the family of bike and its version. `separate_wider_delim()` splits a column at a delimiter, here a space, into the columns named in `names`. Both new columns are text: `version` holds \"1\", not 1. If a value had more or fewer parts than `names`, the function would stop and say which rows, unless told what to do with them (`too_many`, `too_few`)."
+      "explain": "Each model name, such as \"Kestrel 1\", holds two things: the family of bike and its version. `separate_wider_delim()` splits a column at a delimiter, here a space, into the columns named in `names`. Both new columns are text: `version` holds \"1\", not 1.\n\nIf a value had more or fewer parts than `names`, the function would stop and say which rows, unless told what to do with them (`too_many`, `too_few`)."
     },
     {
       "id": "rows",
@@ -153,7 +153,7 @@
           "task": "Keep the responses with a `comment`, split each comment into rows at \". \" with `separate_longer_delim()`, and count the sentences, most common first."
         }
       ],
-      "explain": "Many of the {n_comments} comments are several sentences long. `separate_longer_delim()` splits a column at a delimiter into rows rather than columns, so each sentence gets a row of its own, {n_sentences} in all, with the rest of its response repeated. The most common is \"{top_sentence}\" Counting shows the text isn't consistent yet: \"Thanks!\" and \"Thanks.\" count separately, as would \"thanks.\"."
+      "explain": "Many of the {n_comments} comments are several sentences long. `separate_longer_delim()` splits a column at a delimiter into rows rather than columns, so each sentence gets a row of its own, {n_sentences} in all, with the rest of its response repeated.\n\nThe most common is \"{top_sentence}\" Counting shows the text isn't consistent yet: \"Thanks!\" and \"Thanks.\" count separately, as would \"thanks.\"."
     },
     {
       "id": "substrings",
@@ -181,7 +181,7 @@
           "task": "Add `letter`, the 4th character of `bike_id` (`str_sub(bike_id, 4, 4)`), and `number`, its last 5 characters (`str_sub(bike_id, -5)`). Keep only the columns used."
         }
       ],
-      "explain": "`str_length()` counts characters, so the IDs come in two lengths: most have 10, like LB-C-00001, and {n_old} have 7, like LB00003, an older format. `str_sub()` takes the characters from one position to another; negative positions count from the end, so `-5` means the last five. In the new format, the 4th character is the bike's type, C or E; in the old one it is a digit. Positions only work when every string has the same layout, which is what regular expressions, in the next lesson, get round."
+      "explain": "`str_length()` counts characters, so the IDs come in two lengths: most have 10, like LB-C-00001, and {n_old} have 7, like LB00003, an older format. `str_sub()` takes the characters from one position to another; negative positions count from the end, so `-5` means the last five.\n\nIn the new format, the 4th character is the bike's type, C or E; in the old one it is a digit. Positions only work when every string has the same layout, which is what regular expressions, in the next lesson, get round."
     },
     {
       "id": "case",
@@ -194,7 +194,7 @@
             "stations |> transmute(name, title = str_to_title(name)) |> filter(title != name)"
           ],
           "purpose": "put every station name in title case and show the ones that change",
-          "task": "Add `title`, each `name` in title case with `str_to_title()`, keeping only the columns used, then keep the rows where `name` and `title` differ."
+          "task": "Add `title` by changing each `name` to title case with `str_to_title()`. Keep only used columns, then rows where `name` and `title` differ."
         },
         {
           "code": "str_to_upper(\"istanbul\", locale = \"tr\")",
@@ -203,7 +203,7 @@
           "task": "Put \"istanbul\" in capitals with `str_to_upper()`, using the Turkish locale (`locale = \"tr\"`)."
         }
       ],
-      "explain": "`str_to_title()` capitalises the first letter of each word and lowers the rest, which fixes \"MARKET SQUARE NORTH\" and \"university library\". It also gives \"Mill Rd And Kiln St\" and \"(Temporary)\": a function knows letters, not which words a person would leave in lower case. Changing case depends on the language. In Turkish, a lower-case i has a dot in capitals too, İ; `locale = \"tr\"` follows that rule, and the default, English, doesn't."
+      "explain": "`str_to_title()` capitalises the first letter of each word and lowers the rest, which fixes \"MARKET SQUARE NORTH\" and \"university library\". It also gives \"Mill Rd And Kiln St\" and \"(Temporary)\": a function knows letters, not which words a person would leave in lower case. Changing case depends on the language.\n\nIn Turkish, a lower-case i has a dot in capitals too, İ; `locale = \"tr\"` follows that rule, and the default, English, doesn't."
     }
   ]
 }

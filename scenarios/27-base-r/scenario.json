@@ -9,7 +9,7 @@
     "solo"
   ],
   "script": "27-base-r.R",
-  "summary": "Read and write the base R you will meet in other people's code: subset vectors and data frames with [, take columns with $ and [[, apply a function to every column, loop with for, and draw quick charts with plot(), hist() and barplot().",
+  "summary": "Read and write base R code. Take pieces of vectors and data frames, apply functions across columns, use a for loop, and draw quick charts.",
   "steps": [
     {
       "id": "setup",
@@ -72,10 +72,10 @@
             "week |> filter(member_type == 'casual', duration_min > 60) |> select(start_station, end_station, duration_min)"
           ],
           "purpose": "keep casual riders' trips of over an hour, and three of their columns",
-          "task": "With `week[rows, columns]`, keep the rows where `member_type` is \"casual\" and `duration_min` is over 60, and the columns `start_station`, `end_station` and `duration_min`."
+          "task": "Use `week[rows, columns]` to keep casual trips longer than 60 minutes. Keep only `start_station`, `end_station` and `duration_min`."
         }
       ],
-      "explain": "A data frame takes two subscripts, `[rows, columns]`. Rows here are picked by a condition, and columns by name. Inside `[`, columns must be written as `week$member_type`, since base R doesn't look names up in the data the way dplyr does. Leave a subscript empty to keep everything: `week[, \"bike_type\"]` keeps all rows. The same result in dplyr is `filter()` then `select()`, and this step's check accepts either."
+      "explain": "A data frame takes two subscripts, `[rows, columns]`. Rows here are picked by a condition, and columns by name. Inside `[`, columns must be written as `week$member_type`, since base R doesn't look names up in the data the way dplyr does. Leave a subscript empty to keep everything: `week[, \"bike_type\"]` keeps all rows.\n\nThe same result in dplyr is `filter()` then `select()`, and this step's check accepts either."
     },
     {
       "id": "columns",
@@ -98,7 +98,7 @@
           "task": "Loop over `c(\"distance_km\", \"duration_min\")` with `for`, and for each `column` print its name and `mean(week[[column]])` with `cat()`, ending with `\"\\n\"`."
         }
       ],
-      "explain": "`$` and `[[` both take one column out of a data frame as a vector. `$` needs the name written out, `week$bike_type`; `[[` takes a string, so the name can be in a variable, which is what the loop needs. A `for` loop runs its body once for each element: `column` is \"distance_km\", then \"duration_min\". `cat()` prints without quotes or `[1]`, and `\"\\n\"` starts a new line. In the tidyverse, `across()` usually does the same job without a loop."
+      "explain": "`$` and `[[` both take one column out of a data frame as a vector. `$` needs the name written out, `week$bike_type`; `[[` takes a string, so the name can be in a variable, which is what the loop needs. A `for` loop runs its body once for each element: `column` is \"distance_km\", then \"duration_min\".\n\n`cat()` prints without quotes or `[1]`, and `\"\\n\"` starts a new line. In the tidyverse, `across()` usually does the same job without a loop."
     },
     {
       "id": "apply",
@@ -126,7 +126,7 @@
           "task": "Split `week$duration_min` by `week$member_type` with `split()`, then find each part's median with `lapply()`."
         }
       ],
-      "explain": "A data frame is a list of columns, so `vapply()` can call a function on each column: {n_numeric} of them are numeric. `logical(1)` promises one `TRUE` or `FALSE` from each, and `vapply()` stops if that's broken. `lapply()` returns a list, with no promise to keep. `split()` cuts a vector into a list of groups, so `lapply()` on it summarises each group: base R's `summarize(.by = )`. `map()` from purrr is the tidyverse's `lapply()`."
+      "explain": "A data frame is a list of columns, so `vapply()` can call a function on each column: {n_numeric} of them are numeric. `logical(1)` promises one `TRUE` or `FALSE` from each, and `vapply()` stops if that's broken. `lapply()` returns a list, with no promise to keep.\n\n`split()` cuts a vector into a list of groups, so `lapply()` on it summarises each group: base R's `summarize(.by = )`. `map()` from purrr is the tidyverse's `lapply()`."
     },
     {
       "id": "plots",
@@ -151,7 +151,7 @@
           "task": "Draw a bar chart of the counts in `table(week$bike_type)` with `barplot()`."
         }
       ],
-      "explain": "Base R's charts take vectors rather than a data frame and mappings, and draw straight away. `hist()` cuts the lengths into bins, about 40 of them here; `plot()` of two numeric vectors draws a scatter plot, x first; `barplot()` draws the counts from `table()`. They are quick for a first look, and you'll see them in older code and help pages, but ggplot2's layers, legends and facets take far less work for a finished chart."
+      "explain": "Base R's charts take vectors rather than a data frame and mappings, and draw straight away. `hist()` cuts the lengths into bins, about 40 of them here; `plot()` of two numeric vectors draws a scatter plot, x first; `barplot()` draws the counts from `table()`.\n\nThey are quick for a first look, and you'll see them in older code and help pages, but ggplot2's layers, legends and facets take far less work for a finished chart."
     }
   ]
 }

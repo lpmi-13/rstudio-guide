@@ -9,7 +9,7 @@
     "solo"
   ],
   "script": "15-regular-expressions.R",
-  "summary": "Describe text by its pattern rather than its position: find e-bikes and old-format IDs among the bike IDs, split IDs of two formats into parts, tidy station names, and pull promo codes and topics out of rider comments, whatever their case.",
+  "summary": "Find patterns in bike IDs, station names and rider comments. Match IDs in two formats, clean names, and pull out codes and topics.",
   "steps": [
     {
       "id": "setup",
@@ -45,7 +45,7 @@
           "pattern": "LB-C-<00001>[\\s\\S]*LB<00003>[\\s\\S]*LB-E-<00512>"
         }
       ],
-      "explain": "Most characters in a pattern match themselves, as `LB` would. `[0-9]` is a character class: any one character from 0 to 9. `+` is a quantifier: one or more of what comes before it, as many as there are. `str_view()` marks each match with `<>`: the number at the end of each ID, whatever its format. `?` (zero or one), `*` (zero or more) and `{{5}}` (exactly five) are the other quantifiers."
+      "explain": "Most characters in a pattern match themselves, as `LB` would. `[0-9]` is a character class: any one character from 0 to 9. `+` is a quantifier: one or more of what comes before it, as many as there are.\n\n`str_view()` marks each match with `<>`: the number at the end of each ID, whatever its format. `?` (zero or one), `*` (zero or more) and `{{5}}` (exactly five) are the other quantifiers."
     },
     {
       "id": "detect",
@@ -76,7 +76,7 @@
           "task": "Count the bikes by `old_format`: whether `bike_id` is LB followed by exactly five digits and nothing else, `\"^LB[0-9]{5}$\"`."
         }
       ],
-      "explain": "`str_detect()` answers `TRUE` or `FALSE` for each string, so it goes straight into `filter()` or `count()`. `^` anchors a pattern to the start of the string and `$` to its end. Without `^`, `LB-E-` would also match in the middle of a longer string. {n_e} bikes have IDs starting LB-E-. `^LB[0-9]{{5}}$` matches only an ID that is LB and five digits from start to end: the {n_old} bikes from before the IDs gained a type letter."
+      "explain": "`str_detect()` answers `TRUE` or `FALSE` for each string, so it goes straight into `filter()` or `count()`. `^` anchors a pattern to the start of the string and `$` to its end. Without `^`, `LB-E-` would also match in the middle of a longer string. {n_e} bikes have IDs starting LB-E-.\n\n`^LB[0-9]{{5}}$` matches only an ID that is LB and five digits from start to end: the {n_old} bikes from before the IDs gained a type letter."
     },
     {
       "id": "extract",
@@ -113,11 +113,11 @@
           "alternatives": [
             "stations |> mutate(clean = name |> str_replace_all('\\\\s+', ' ') |> str_replace_all('’', \"'\") |> str_replace_all(' & ', ' and ') |> str_replace_all('^St\\\\. ', 'St '), .keep = 'used') |> filter(clean != name)"
           ],
-          "purpose": "make the station names consistent: single spaces, straight apostrophes, \"and\" rather than \"&\", and \"St\" without a full stop, and show the names that change",
-          "task": "Add `clean`, `name` with four replacements made by `str_replace_all()` and a named vector: runs of white space (`\"\\\\s+\"`) to one space, `’` to `'`, `\" & \"` to `\" and \"`, and `\"^St\\\\. \"` to `\"St \"`. Keep only the columns used, then the rows where `clean` differs from `name`."
+          "purpose": "make station names consistent and show the names that change",
+          "task": "Add `clean` by changing `name` with `str_replace_all()` and a named vector. Replace runs of white space (`\"\\\\s+\"`) with one space, `’` with `'`, `\" & \"` with `\" and \"`, and `\"^St\\\\. \"` with `\"St \"`. Keep only used columns and rows where `clean` differs from `name`."
         }
       ],
-      "explain": "`str_replace_all()` replaces every match of a pattern. Given a named vector, it makes each replacement in turn: the names are patterns and the values what replaces them. `\\\\s` is any white space and `\\\\s+` a run of it, which mends the two spaces between \"Castle\" and \"Gate\". A `.` in a pattern matches any character, so a full stop has to be escaped as `\\.`, and in an R string the backslash itself needs escaping, which makes `\\\\.`. `^St\\\\. ` changes \"St. Agnes Square\" but no \"St\" later in a name."
+      "explain": "`str_replace_all()` replaces every match of a pattern. Given a named vector, it makes each replacement in turn: the names are patterns and the values what replaces them. `\\\\s` is any white space and `\\\\s+` a run of it, which mends the two spaces between \"Castle\" and \"Gate\".\n\nA `.` in a pattern matches any character, so a full stop has to be escaped as `\\.`, and in an R string the backslash itself needs escaping, which makes `\\\\.`. `^St\\\\. ` changes \"St. Agnes Square\" but no \"St\" later in a name."
     },
     {
       "id": "fixed",
@@ -148,7 +148,7 @@
           "task": "Do the same with `fixed(\".\")`."
         }
       ],
-      "explain": "As a regular expression, `.` matches any character, so every one of the {n_any} names has a match. `fixed()` turns pattern-matching off: the text is matched exactly as written, and {n_dot} name has a full stop. Use `fixed()` when you are looking for literal text full of characters that mean something in a pattern, such as `.`, `(`, `?` or `$`; it is faster, too."
+      "explain": "As a regular expression, `.` matches any character, so every one of the {n_any} names has a match. `fixed()` turns pattern-matching off: the text is matched exactly as written, and {n_dot} name has a full stop.\n\nUse `fixed()` when you are looking for literal text full of characters that mean something in a pattern, such as `.`, `(`, `?` or `$`; it is faster, too."
     },
     {
       "id": "codes",
@@ -173,7 +173,7 @@
             "n_codes": "format(sum(!is.na(str_extract(survey$comment, \"code ([A-Z0-9-]+)\", group = 1))))"
           },
           "purpose": "pull out the promo code that follows the word \"code\" in each comment, and count the codes",
-          "task": "Add `code`: the run of capitals, digits and hyphens after \"code \" in `comment`, with `str_extract()`, the pattern `\"code ([A-Z0-9-]+)\"` and `group = 1`. Count the codes, most first."
+          "task": "Add `code` from the capitals, digits and hyphens after \"code \" in `comment`. Use `str_extract()`, `\"code ([A-Z0-9-]+)\"` and `group = 1`. Count the codes, most first."
         },
         {
           "code": "survey |>\n  mutate(\n    code = str_extract(\n      comment,\n      regex(\"code ([a-z0-9-]+)\", ignore_case = TRUE),\n      group = 1\n    )\n  ) |>\n  count(code = str_to_upper(code), sort = TRUE)",
@@ -188,7 +188,7 @@
           "task": "Do the same with the pattern wrapped in `regex(…, ignore_case = TRUE)`, and count the codes made upper case with `str_to_upper()`."
         }
       ],
-      "explain": "Brackets make a group, and `group = 1` asks `str_extract()` for what the first group matched rather than the whole match, so \"code \" is left out. Matching is case-sensitive by default, so the first count finds {n_codes} codes typed in capitals. `regex(…, ignore_case = TRUE)` matches any case and finds {n_codes_any}: some riders typed codes in lower case. `str_to_upper()` then counts welcome10 and WELCOME10 as the same code. `|` (or) offers alternatives inside a pattern, as in `\"brake|saddle\"`."
+      "explain": "Brackets make a group, and `group = 1` asks `str_extract()` for what the first group matched rather than the whole match, so \"code \" is left out. Matching is case-sensitive by default, so the first count finds {n_codes} codes typed in capitals. `regex(…, ignore_case = TRUE)` matches any case and finds {n_codes_any}: some riders typed codes in lower case.\n\n`str_to_upper()` then counts welcome10 and WELCOME10 as the same code. `|` (or) offers alternatives inside a pattern, as in `\"brake|saddle\"`."
     }
   ]
 }

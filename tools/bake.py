@@ -8,8 +8,9 @@ none is expected or the reverse, missing evidence, an alternative that gives a d
 code Air would format differently (lessons with "version": 2), or any difference between the two
 runs (a statement that needs set.seed() or "pattern" evidence).
 
-Results go to content/lessons/baked/<lesson>.json with a stamp: hashes of everything they depend
-on (the lesson, the world's data, the package lock, evidence.R, bake.R and the runtime Dockerfile).
+Results go to content/lessons/baked/<lesson>.json with a stamp: hashes of the executable
+lesson plan, project files, world's data, package lock, evidence.R, bake.R and Dockerfile.
+Changes to a summary, task or explanation do not re-run R during playground startup.
 They are committed, so a package upgrade shows up as a reviewable diff. provision.py uses a baked
 file whose stamp matches and bakes again otherwise, so a run's start-up runs nothing.
 
@@ -52,9 +53,16 @@ def sha_tree(path):
 
 
 def stamp(root, scenario_id, scenario):
+    # Provision adds generated scripts and expected values to `scenario` in memory. Hash the
+    # source file's bake inputs so the same stamp works in both provision and a standalone bake.
+    source = json.loads((root / "scenarios" / scenario_id / "scenario.json").read_text())
+    plan = {"runs": statements(source), "version": source.get("version"), "script": source.get("script"),
+            "starter": source.get("starter"), "world": source.get("world"), "bake": source.get("bake")}
+    project = root / "scenarios" / scenario_id / "project"
     parts = {
         "format": str(BAKE_FORMAT),
-        "lesson": sha_tree(root / "scenarios" / scenario_id),
+        "lesson": hashlib.sha256(json.dumps(plan, sort_keys=True, ensure_ascii=False).encode()).hexdigest(),
+        "project": sha_tree(project) if project.is_dir() else "",
         "packages": sha_file(root / "runtime" / "packages.lock"),
         "evidence": sha_file(root / "runtime" / "evidence.R"),
         "runner": sha_file(root / "runtime" / "bake.R"),

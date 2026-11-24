@@ -9,7 +9,7 @@
     "solo"
   ],
   "script": "25-functions.R",
-  "summary": "Write your own functions for Larkhaven Bikes' trips: one that converts units, one that works on columns inside mutate(), a summary function, a data frame function that takes column names with {{ }}, and a plot function that writes its own title.",
+  "summary": "Write functions for bike trip analysis. Convert units, work inside mutate(), summarise trips, accept column names, and build a chart with its own title.",
   "steps": [
     {
       "id": "setup",
@@ -45,7 +45,7 @@
           "task": "Call `km_to_miles()` on `c(1, 2.5, 10)`."
         }
       ],
-      "explain": "A function has a name, arguments, and a body: `function(km) { … }` makes one, and `<-` keeps it under a name, as for any other value. Its body uses its argument, and the last value it works out is what it returns. The rule of thumb is to write a function once you have copied and pasted the same code three times: the conversion factor then lives in one place, and the name says what the code is for. Arithmetic works on vectors, so `km_to_miles()` converts all three distances at once."
+      "explain": "A function has a name, arguments, and a body: `function(km) { … }` makes one, and `<-` keeps it under a name, as for any other value. Its body uses its argument, and the last value it works out is what it returns.\n\nThe rule of thumb is to write a function once you have copied and pasted the same code three times: the conversion factor then lives in one place, and the name says what the code is for. Arithmetic works on vectors, so `km_to_miles()` converts all three distances at once."
     },
     {
       "id": "vector",
@@ -82,7 +82,7 @@
           "task": "Add `speed`, made with `speed_kmh(distance_km, duration_min)`, keeping only the columns used."
         }
       ],
-      "explain": "A vector function takes vectors and returns one of the same length, so it fits in `mutate()`, where each argument is a whole column: the first trip's speed is {first_speed} km/h. Inside the function, `km` and `minutes` are just names for whatever was passed in, here `distance_km` and `duration_min`. Arguments match by position, as here, or by name, `speed_kmh(km = …, minutes = …)`."
+      "explain": "A vector function takes vectors and returns one of the same length, so it fits in `mutate()`, where each argument is a whole column: the first trip's speed is {first_speed} km/h. Inside the function, `km` and `minutes` are just names for whatever was passed in, here `distance_km` and `duration_min`.\n\nArguments match by position, as here, or by name, `speed_kmh(km = …, minutes = …)`."
     },
     {
       "id": "summary",
@@ -108,7 +108,7 @@
           "task": "For each `member_type`, find the share of trips with `bike_type` \"electric\", using `share_of()` in `summarize()`."
         }
       ],
-      "explain": "A summary function turns a vector into a single value, so it fits in `summarize()`. `share_of()` packs lesson 12's trick, the mean of a condition, behind a name that says what it means. A function that needs a default for a rarely changed argument gets one in its definition: `function(x, value, na.rm = TRUE)` would let a caller turn off the dropping of missing values."
+      "explain": "A summary function turns a vector into a single value, so it fits in `summarize()`. `share_of()` packs lesson 12's trick, the mean of a condition, behind a name that says what it means.\n\nA function that needs a default for a rarely changed argument gets one in its definition: `function(x, value, na.rm = TRUE)` would let a caller turn off the dropping of missing values."
     },
     {
       "id": "dataframe",
@@ -138,7 +138,7 @@
           "task": "Call it again, grouping by `c(member_type, bike_type)`."
         }
       ],
-      "explain": "dplyr lets you write column names bare, `.by = member_type`, because it looks them up in the data. Inside a function, though, `group` is the function's argument, and `.by = group` would look for a column called group. Embracing it, `{{ group }}`, tells dplyr to use whatever the caller wrote in its place, here `member_type`, or `c(member_type, bike_type)`. Embrace every argument that names columns."
+      "explain": "dplyr lets you write column names bare, `.by = member_type`, because it looks them up in the data. Inside a function, though, `group` is the function's argument, and `.by = group` would look for a column called group. Embracing it, `{{ group }}`, tells dplyr to use whatever the caller wrote in its place, here `member_type`, or `c(member_type, bike_type)`.\n\nEmbrace every argument that names columns."
     },
     {
       "id": "plot",
@@ -151,7 +151,7 @@
             "duration_histogram = function(df, binwidth = 2) ggplot(df, aes(duration_min)) + geom_histogram(binwidth = binwidth) + labs(title = str_glue('{nrow(df)} trips'))"
           ],
           "purpose": "write `duration_histogram()`, which draws a histogram of trip lengths titled with how many trips it shows",
-          "task": "Write `duration_histogram`, a function of `df` and `binwidth` (default 2), that draws a histogram of `duration_min` with that `binwidth`, titled with `str_glue(\"{nrow(df)} trips\")`."
+          "task": "Write `duration_histogram(df, binwidth = 2)`. It draws a histogram of `duration_min` with that bin width, titled with `str_glue(\"{nrow(df)} trips\")`."
         },
         {
           "code": "trips |>\n  filter(member_type == \"casual\", duration_min > 0, duration_min < 120) |>\n  duration_histogram()",
@@ -166,7 +166,7 @@
           "task": "Keep casual riders' trips longer than 0 and shorter than 120 minutes, then pipe them into `duration_histogram()`."
         }
       ],
-      "explain": "A function can return a chart as easily as a number. `binwidth = 2` gives the argument a default, so a caller can leave it out. The title is worked out from the data, so it always says how many trips are drawn: {n_casual}. Name functions with verbs or descriptions of what they return, and arguments with nouns, data first, so that functions work with the pipe."
+      "explain": "A function can return a chart as easily as a number. `binwidth = 2` gives the argument a default, so a caller can leave it out. The title is worked out from the data, so it always says how many trips are drawn: {n_casual}.\n\nName functions with verbs or descriptions of what they return, and arguments with nouns, data first, so that functions work with the pipe."
     }
   ]
 }

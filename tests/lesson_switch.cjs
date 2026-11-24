@@ -125,6 +125,7 @@ const evidence = page => page.evaluate(() => fetch('/coach/api/evidence', {cache
     await coachEl(page, 'button.mode-card[data-mode="guided"]').click();
     const {last} = await waitForFreshStart(page, ++fresh);
     await wait(page, () => window.__rsCoach.guided);
+    await coachEl(page, 'button.begin').click();
     const after = await wait(page, session => fetch('/coach/api/evidence', {cache: 'no-store'}).then(r => r.json())
       .then(e => (e.session !== session && e.state ? e : null)), before.session, 20000).then(h => h.jsonValue());
     assert(last.restarted && !after.state.attached.includes('dplyr'), `restarted: ${last.restarted}, attached: ${after.state.attached}`);

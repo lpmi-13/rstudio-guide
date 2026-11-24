@@ -9,7 +9,7 @@
     "solo"
   ],
   "script": "22-larger-than-memory-data.R",
-  "summary": "Query five years of trips without loading them: compare a CSV with columnar Parquet files split by year and month, open the archive with duckplyr, let DuckDB read only the files a question needs, bring home just the answer with collect(), and write partitioned Parquet of your own.",
+  "summary": "Query five years of trips without loading every row. Compare CSV and Parquet, let DuckDB read the files needed, collect the answer, and write Parquet files.",
   "steps": [
     {
       "id": "setup",
@@ -51,10 +51,10 @@
             "parquet_mb": "format(round(as.numeric(sum(fs::dir_info(\"data/archive\", recurse = TRUE, glob = \"*.parquet\")$size)) / 1e6, 1))"
           },
           "purpose": "count the archive's Parquet files and add up their size",
-          "task": "List the `.parquet` files in `data/archive` and its folders with `fs::dir_info(recurse = TRUE, glob = \"*.parquet\")`, then count them and add up their `size` in megabytes."
+          "task": "List `.parquet` files in `data/archive` and its folders with `fs::dir_info(recurse = TRUE, glob = \"*.parquet\")`. Count them and add their sizes in megabytes."
         }
       ],
-      "explain": "One year of trips as CSV takes {csv_mb} MB. The archive holds every trip since the scheme opened, five years, in {n_files} Parquet files of {parquet_mb} MB in all. CSV stores text, row after row; Parquet stores each column together, compressed and with its type, so the files are smaller and a program can read just the columns it needs. A dataset can outgrow your computer's memory long before it outgrows its disk."
+      "explain": "One year of trips as CSV takes {csv_mb} MB. The archive holds every trip since the scheme opened, five years, in {n_files} Parquet files of {parquet_mb} MB in all.\n\nCSV stores text, row after row; Parquet stores each column together, compressed and with its type, so the files are smaller and a program can read just the columns it needs. A dataset can outgrow your computer's memory long before it outgrows its disk."
     },
     {
       "id": "partitions",
@@ -73,7 +73,7 @@
           "task": "List the folders in `data/archive/year=2025`."
         }
       ],
-      "explain": "The archive is partitioned: one folder per year, `year=2021` to `year=2025`, and inside each, one folder per month with its file. The folder names hold values, `year=2025` and `month=7`, so the files don't need those columns. A question about one year only has to open that year's files; this layout is called Hive partitioning, after the system that made it common."
+      "explain": "The archive is partitioned: one folder per year, `year=2021` to `year=2025`, and inside each, one folder per month with its file. The folder names hold values, `year=2025` and `month=7`, so the files don't need those columns.\n\nA question about one year only has to open that year's files; this layout is called Hive partitioning, after the system that made it common."
     },
     {
       "id": "open",
@@ -101,7 +101,7 @@
           "task": "Count the rows of `archive` with `count()`."
         }
       ],
-      "explain": "`read_parquet_duckdb()` returned at once, because it read nothing: `archive` is a description of the files, and DuckDB reads from them only when asked for a result. `**` matches folders at any depth, and `hive_partitioning = TRUE` turns the folder names into `year` and `month` columns. The count ran inside DuckDB, which read only what counting needs, and sent back one number: {n_archive} trips."
+      "explain": "`read_parquet_duckdb()` returned at once, because it read nothing: `archive` is a description of the files, and DuckDB reads from them only when asked for a result. `**` matches folders at any depth, and `hive_partitioning = TRUE` turns the folder names into `year` and `month` columns.\n\nThe count ran inside DuckDB, which read only what counting needs, and sent back one number: {n_archive} trips."
     },
     {
       "id": "pushdown",
@@ -124,7 +124,7 @@
           "task": "Add `explain()` to the end of the same pipeline, to see DuckDB's plan."
         }
       ],
-      "explain": "The pipeline is ordinary dplyr, but DuckDB runs it. `explain()` shows its plan, read from the bottom up: Read Parquet, with the filter on `year` applied to the files themselves (File Filters), so it scans only the 12 files of 2025 out of {n_files}, and reads only the `month` column from them. Then it counts by month. Filtering on a partition column is the quickest filter of all, since whole files are skipped."
+      "explain": "The pipeline is ordinary dplyr, but DuckDB runs it. `explain()` shows its plan, read from the bottom up: Read Parquet, with the filter on `year` applied to the files themselves (File Filters), so it scans only the 12 files of 2025 out of {n_files}, and reads only the `month` column from them.\n\nThen it counts by month. Filtering on a partition column is the quickest filter of all, since whole files are skipped."
     },
     {
       "id": "collect",
@@ -141,7 +141,7 @@
             "last_year_trips": "format(sum(by_year$trips[by_year$year == max(by_year$year)]), big.mark = \",\")"
           },
           "purpose": "summarise each year's trips by rider type in DuckDB, and bring the small result into R as `by_year`",
-          "task": "For each `year` and `member_type`, count the trips and find their median `duration_min`; sort by `year` and `member_type`, then `collect()` the result into a tibble called `by_year`."
+          "task": "For each `year` and `member_type`, count trips and find median `duration_min`. Sort by `year` and `member_type`, then `collect()` into `by_year`."
         },
         {
           "code": "ggplot(by_year, aes(x = year, y = trips, fill = member_type)) +\n  geom_col()",
@@ -153,7 +153,7 @@
           "task": "Draw `trips` by `year` from `by_year` as stacked bars filled by `member_type`, with `geom_col()`."
         }
       ],
-      "explain": "DuckDB summarised half a million trips into ten rows, and `collect()` brought just those into R's memory, as an ordinary tibble that ggplot2 can draw. duckplyr won't quietly pull a large result into memory: asking for every row of `archive` would stop with a message to use `collect()` on purpose. Trips grew from {first_year_trips} in 2021, the scheme's first, part year, to {last_year_trips} in 2025."
+      "explain": "DuckDB summarised half a million trips into ten rows, and `collect()` brought just those into R's memory, as an ordinary tibble that ggplot2 can draw. duckplyr won't quietly pull a large result into memory: asking for every row of `archive` would stop with a message to use `collect()` on purpose.\n\nTrips grew from {first_year_trips} in 2021, the scheme's first, part year, to {last_year_trips} in 2025."
     },
     {
       "id": "write",
@@ -167,7 +167,7 @@
           "task": "Count `archive` by `year`, `month` and `start_station`, and write the result with `compute_parquet()` to `station-months`, with `options = list(partition_by = \"year\", overwrite = TRUE)`."
         }
       ],
-      "explain": "`compute_parquet()` runs the query in DuckDB and writes the result straight to Parquet, without bringing it into R. `partition_by = \"year\"` makes a `year=` folder for each year, as in the archive, and `overwrite = TRUE` replaces what an earlier run wrote. The Files pane shows `station-months`. Read and write Parquet with duckplyr, or with arrow, which works the same way, whenever data is too big to read comfortably."
+      "explain": "`compute_parquet()` runs the query in DuckDB and writes the result straight to Parquet, without bringing it into R. `partition_by = \"year\"` makes a `year=` folder for each year, as in the archive, and `overwrite = TRUE` replaces what an earlier run wrote. The Files pane shows `station-months`.\n\nRead and write Parquet with duckplyr, or with arrow, which works the same way, whenever data is too big to read comfortably."
     }
   ]
 }

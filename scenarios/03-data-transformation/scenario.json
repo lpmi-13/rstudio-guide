@@ -5,7 +5,7 @@
   "title": "Data transformation",
   "modes": ["demonstration", "guided", "solo"],
   "script": "03-data-transformation.R",
-  "summary": "Work through a year of Larkhaven Bikes trips with dplyr and the pipe: keep, sort and de-duplicate rows; add, pick, rename and move columns; count and summarise groups, and see why a small group's average can't be trusted.",
+  "summary": "Use dplyr and the pipe to explore a year of bike trips. Keep and sort rows, change columns, count groups, and see when an average can mislead.",
   "steps": [
     {
       "id": "setup",
@@ -44,7 +44,7 @@
          "purpose": "keep the trips that started or ended at station 101",
          "task": "Keep the trips that started or ended at station 101: `start_station` or `end_station` is 101."}
       ],
-      "explain": "The pipe, `|>`, hands what's on its left to the function on its right as its first argument: `trips |> filter(…)` means `filter(trips, …)`. Ctrl+Shift+M types it. `filter()` keeps the rows where the conditions are `TRUE`. Conditions separated by commas must all hold: casual riders made {n_casual_e} trips on e-bikes. `|` means or: {n_101} trips started or ended at station 101. Equality is tested with `==`; a single `=` inside `filter()` is an error, and R's message says so."
+      "explain": "The pipe, `|>`, hands what's on its left to the function on its right as its first argument: `trips |> filter(…)` means `filter(trips, …)`. Ctrl+Shift+M types it. `filter()` keeps the rows where the conditions are `TRUE`. Conditions separated by commas must all hold: casual riders made {n_casual_e} trips on e-bikes.\n\n`|` means or: {n_101} trips started or ended at station 101. Equality is tested with `==`; a single `=` inside `filter()` is an error, and R's message says so."
     },
     {
       "id": "order",
@@ -61,7 +61,7 @@
          "purpose": "list each pair of start and end stations once",
          "task": "List each combination of `start_station` and `end_station` once, with `distinct()`."}
       ],
-      "explain": "`arrange()` sorts the rows by a column, smallest first, and `desc()` reverses that. The longest trip lasted {longest_days} days: a lost bike, found more than a week later, which is why its `end_station` is `NA`. `distinct()` keeps one row for each combination of the columns it's given: {n_routes} pairs of start and end stations, with `NA` counted as an end."
+      "explain": "`arrange()` sorts the rows by a column, smallest first, and `desc()` reverses that. The longest trip lasted {longest_days} days: a lost bike, found more than a week later, which is why its `end_station` is `NA`.\n\n`distinct()` keeps one row for each combination of the columns it's given: {n_routes} pairs of start and end stations, with `NA` counted as an end."
     },
     {
       "id": "mutate",
@@ -92,7 +92,7 @@
          "purpose": "rename `duration_min` to `minutes` and move it next to `trip_id`",
          "task": "Rename `duration_min` to `minutes` with `rename()`, then move it just after `trip_id` with `relocate()`."}
       ],
-      "explain": "`select()` keeps only the columns you name, in that order. `starts_with(\"end\")` picks every column whose name starts with end: `ended_at` and `end_station`. `rename()` gives a column a new name, new name first: `minutes = duration_min`. `relocate()` moves columns without dropping any, and `.after = trip_id` puts `minutes` second. Each `|>` hands one verb's result to the next, so a pipeline reads from top to bottom, one step per line."
+      "explain": "`select()` keeps only the columns you name, in that order. `starts_with(\"end\")` picks every column whose name starts with end: `ended_at` and `end_station`. `rename()` gives a column a new name, new name first: `minutes = duration_min`. `relocate()` moves columns without dropping any, and `.after = trip_id` puts `minutes` second.\n\nEach `|>` hands one verb's result to the next, so a pipeline reads from top to bottom, one step per line."
     },
     {
       "id": "groups",
@@ -113,9 +113,9 @@
            "med_member_electric": "format(median(trips$duration_min[trips$member_type == \"member\" & trips$bike_type == \"electric\"]))"
          },
          "purpose": "count the trips and find their median length for each member type and bike type",
-         "task": "For each combination of `member_type` and `bike_type`, count the trips with `n()` and find the median `duration_min`, with `summarize()` and `.by`."}
+         "task": "Group by `member_type` and `bike_type`. Count trips with `n()` and find median `duration_min` with `summarize()` and `.by`."}
       ],
-      "explain": "`count()` counts the rows for each value of a column, and `sort = TRUE` puts the largest count first: station {top_station} was the busiest start, with {top_n} trips. `summarize()` turns each group into one row. `.by` says what makes a group, here each pair of member type and bike type, and `n()` counts the rows in it. The median casual trip on a classic bike took {med_casual_classic} minutes; a member's on an e-bike took {med_member_electric}."
+      "explain": "`count()` counts the rows for each value of a column, and `sort = TRUE` puts the largest count first: station {top_station} was the busiest start, with {top_n} trips. `summarize()` turns each group into one row. `.by` says what makes a group, here each pair of member type and bike type, and `n()` counts the rows in it.\n\nThe median casual trip on a classic bike took {med_casual_classic} minutes; a member's on an e-bike took {med_member_electric}."
     },
     {
       "id": "small",
@@ -124,7 +124,7 @@
         {"code": "routes <- trips |>\n  summarize(\n    trips = n(),\n    mean_minutes = mean(duration_min),\n    .by = c(start_station, end_station)\n  )", "evidence": "assign",
          "alternatives": ["routes = trips |> summarize(trips = n(), mean_minutes = mean(duration_min), .by = c(start_station, end_station))"],
          "purpose": "count the trips and find their mean length for each pair of stations, in `routes`",
-         "task": "Store in `routes` the number of trips and their mean `duration_min` for each pair of `start_station` and `end_station`, with `summarize()` and `.by`."},
+         "task": "For each start and end station pair, count trips and find mean `duration_min`. Store the result in `routes`."},
         {"code": "routes |> arrange(desc(mean_minutes))", "evidence": "value",
          "alternatives": ["arrange(routes, desc(mean_minutes))"],
          "values": {
@@ -140,7 +140,7 @@
          "purpose": "show the 5 longest routes on average, among those with at least 50 trips",
          "task": "Keep the routes with at least 50 trips, then show the 5 with the highest `mean_minutes`, with `slice_max()`."}
       ],
-      "explain": "`routes` has one row for each pair of stations. Sorted by their mean, the top routes have only a few trips each: the first has {top_trips} and a mean of {top_mean} minutes, because one lost bike pulls a small group's mean a long way. (An `NA` end station groups the trips no dock recorded the end of.) Leaving out the `NA` ends wouldn't fix this: among the routes that end at a station, the five with the longest mean have at most {real_top_trips} trips each. Among the routes with at least 50 trips, `slice_max()` shows the 5 with the longest mean, the first at {big_top_mean} minutes, a believable ride. Before trusting a group's average, check how many rows it has."
+      "explain": "`routes` has one row for each pair of stations. Sorted by their mean, the top routes have only a few trips each: the first has {top_trips} and a mean of {top_mean} minutes, because one lost bike pulls a small group's mean a long way.\n\n(An `NA` end station groups the trips no dock recorded the end of.) Leaving out the `NA` ends wouldn't fix this: among the routes that end at a station, the five with the longest mean have at most {real_top_trips} trips each.\n\nAmong the routes with at least 50 trips, `slice_max()` shows the 5 with the longest mean, the first at {big_top_mean} minutes, a believable ride. Before trusting a group's average, check how many rows it has."
     }
   ]
 }

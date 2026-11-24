@@ -9,7 +9,7 @@
     "solo"
   ],
   "script": "24-web-scraping.R",
-  "summary": "Read data out of Larkhaven Bikes' web pages with rvest: select elements with CSS selectors, take their text and attributes, build a table with one row per station card even where a card lacks a field, and read an HTML table in one go.",
+  "summary": "Read bike station web pages with rvest. Select elements, extract text and attributes, build a table from station cards, and read an HTML table.",
   "steps": [
     {
       "id": "setup",
@@ -53,7 +53,7 @@
           "task": "Find the page's `h1` elements with `html_elements()`."
         }
       ],
-      "explain": "HTML marks up a page with elements: a start tag such as `<h1>`, content, and an end tag, `</h1>`. Elements nest, and a start tag can carry attributes, such as `class=\"station\"` or `href=\"…\"`. `read_html()` parses the page, and `html_elements()` finds every element matching a CSS selector; the simplest selector is a tag's name, `h1`. To see the markup, click `stations.html` in the Files pane and choose Open in Editor."
+      "explain": "HTML marks up a page with elements: a start tag such as `<h1>`, content, and an end tag, `</h1>`. Elements nest, and a start tag can carry attributes, such as `class=\"station\"` or `href=\"…\"`. `read_html()` parses the page, and `html_elements()` finds every element matching a CSS selector; the simplest selector is a tag's name, `h1`.\n\nTo see the markup, click `stations.html` in the Files pane and choose Open in Editor."
     },
     {
       "id": "select",
@@ -122,7 +122,7 @@
             "stations = tibble(name = html_text2(html_element(cards, '.name')), docks = parse_integer(html_text2(html_element(cards, '.count'))), note = html_text2(html_element(cards, '.note')))"
           ],
           "purpose": "build a table with one row per card: its name, docks and note, as `stations`",
-          "task": "Make a tibble called `stations` with one row per card: `name` (the `.name` text), `docks` (the `.count` text, as a whole number with `parse_integer()`) and `note` (the `.note` text), each with `html_element()`."
+          "task": "Make a tibble `stations` with one row per card. Use `html_element()` for `.name` text, `.count` text as a whole number with `parse_integer()`, and `.note` text."
         },
         {
           "code": "stations |> filter(!is.na(note))",
@@ -134,7 +134,7 @@
           "task": "Keep the rows of `stations` that have a `note`."
         }
       ],
-      "explain": "Only {n_notes} cards have a note, so `html_elements()` returns {n_notes} notes with no way of telling which card each belongs to. `html_element()`, singular, returns exactly one result for each card, `NA` where the card has no note, so every column of `stations` lines up, row by row, with the cards. Always select the repeated unit first, here the cards, then one element inside each."
+      "explain": "Only {n_notes} cards have a note, so `html_elements()` returns {n_notes} notes with no way of telling which card each belongs to. `html_element()`, singular, returns exactly one result for each card, `NA` where the card has no note, so every column of `stations` lines up, row by row, with the cards.\n\nAlways select the repeated unit first, here the cards, then one element inside each."
     },
     {
       "id": "table",
@@ -150,7 +150,7 @@
           "task": "Read `data/site/fares.html`, find its `table` element and turn it into a tibble with `html_table()`."
         }
       ],
-      "explain": "An HTML table already has rows and columns, so `html_table()` turns it into a tibble in one step, with the header row as column names. The prices are text, such as $1.50, for `parse_number()` to turn into numbers. Before scraping a real site, read its terms of use and its `robots.txt`, keep your requests slow, and don't collect personal data; if the site offers a download or an API, use that instead."
+      "explain": "An HTML table already has rows and columns, so `html_table()` turns it into a tibble in one step, with the header row as column names. The prices are text, such as $1.50, for `parse_number()` to turn into numbers.\n\nBefore scraping a real site, read its terms of use and its `robots.txt`, keep your requests slow, and don't collect personal data; if the site offers a download or an API, use that instead."
     }
   ]
 }

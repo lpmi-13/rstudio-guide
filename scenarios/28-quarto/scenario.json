@@ -9,7 +9,7 @@
     "solo"
   ],
   "script": "28-quarto.qmd",
-  "summary": "Write a short report on a week of Larkhaven Bikes trips in a Quarto document: prose, code chunks and their options, inline code, a chart, a table and the YAML header, rendered to a web page after each step; then the visual editor, and starting a document of your own.",
+  "summary": "Write a Quarto report on bike trips. Add prose, code, a chart and a table; render it as a web page; then try the visual editor.",
   "starter": "---\ntitle: \"A week of Larkhaven Bikes\"\nformat: html\n---\n\n```{r}\n#| label: setup\n#| include: false\n# Step 1. Setup: library(tidyverse) and library(gt)\n```\n\nA short report on the trips Larkhaven Bikes riders made from Monday 2 to Sunday 8 June 2025.\n",
   "steps": [
     {
@@ -29,7 +29,7 @@
           "task": "Below it, load gt with `library()`, and run that line too."
         }
       ],
-      "explain": "R code in a Quarto document goes in chunks: blocks that open with three backticks and `r` in curly brackets, and close with three backticks. Run › Run Selected Line(s) sent each line to the Console, as in a script, so both packages are attached there too. The `#|` lines at the top of the chunk are its options: `label: setup` names the chunk, and `include: false` keeps its code and output out of the report."
+      "explain": "R code in a Quarto document goes in chunks: blocks that open with three backticks and `r` in curly brackets, and close with three backticks. Run › Run Selected Line(s) sent each line to the Console, as in a script, so both packages are attached there too.\n\nThe `#|` lines at the top of the chunk are its options: `label: setup` names the chunk, and `include: false` keeps its code and output out of the report."
     },
     {
       "id": "render",
@@ -44,7 +44,7 @@
           "task": "Render `28-quarto.qmd` with the Render button above it."
         }
       ],
-      "explain": "Render saved the document, ran its chunks in a new R session, and turned the result into a web page, `28-quarto.html`, which the Viewer shows. The header between the `---` lines set its title and its format, `html`. The new R session knows only what the document itself loads: the setup chunk's `library()` calls count, but what you ran in the Console doesn't. That's what makes a document reproducible."
+      "explain": "Render saved the document, ran its chunks in a new R session, and turned the result into a web page, `28-quarto.html`, which the Viewer shows. The header between the `---` lines set its title and its format, `html`.\n\nThe new R session knows only what the document itself loads: the setup chunk's `library()` calls count, but what you ran in the Console doesn't. That's what makes a document reproducible."
     },
     {
       "id": "prose",
@@ -58,7 +58,7 @@
             "editor_match": "^(?=[\\s\\S]*^## The week in numbers\\s*$)(?=[\\s\\S]*read_csv\\([^)]*trips-week\\.csv)"
           },
           "purpose": "a heading and a chunk that reads the week's trips",
-          "task": "At the end of the document, add a heading `## The week in numbers`, then a chunk with `#| label: data` and `#| include: false` that reads `data/trips-week.csv` into `week` with `read_csv()`."
+          "task": "At the end of the document, add `## The week in numbers`. Add a chunk with `#| label: data` and `#| include: false`. Read `data/trips-week.csv` into `week` with `read_csv()`."
         },
         {
           "action": "type",
@@ -79,7 +79,7 @@
           "task": "Render the document again."
         }
       ],
-      "explain": "A line starting with `##` is a heading in Markdown, the language of a Quarto document's text. The new chunk reads the week's trips into `week`, and `include: false` keeps it out of the report. Inline code, the `r nrow(week)` between backticks in the sentence, runs as the document renders and puts its result into the sentence, so the report gives the number of trips. Render again after the data changes, and the number changes with it."
+      "explain": "A line starting with `##` is a heading in Markdown, the language of a Quarto document's text. The new chunk reads the week's trips into `week`, and `include: false` keeps it out of the report.\n\nInline code, the `r nrow(week)` between backticks in the sentence, runs as the document renders and puts its result into the sentence, so the report gives the number of trips. Render again after the data changes, and the number changes with it."
     },
     {
       "id": "chart",
@@ -93,7 +93,7 @@
             "editor_match": "^(?=[\\s\\S]*^## Trips by day\\s*$)(?=[\\s\\S]*#\\| echo: false)(?=[\\s\\S]*#\\| fig-width: 7)(?=[\\s\\S]*#\\| fig-height: 3)(?=[\\s\\S]*geom_bar\\()"
           },
           "purpose": "a chunk that draws the trips by day, without showing its code",
-          "task": "Add a heading `## Trips by day` and a chunk that draws a bar chart of `week` with `x = as_date(started_at)` and `fill = member_type`, with the options `#| echo: false`, `#| fig-width: 7` and `#| fig-height: 3`."
+          "task": "Add `## Trips by day` and a chart chunk. Use `x = as_date(started_at)` and `fill = member_type`. Set `#| echo: false`, `#| fig-width: 7` and `#| fig-height: 3`."
         },
         {
           "action": "render",
@@ -104,7 +104,7 @@
           "task": "Render the document again."
         }
       ],
-      "explain": "`echo: false` shows the chart but not the code that drew it, which suits readers who don't use R. `fig-width` and `fig-height` set the chart's size in inches. `label` names a chunk, and Quarto's messages use the name: a chunk that fails is reported as `[trips-by-day]`, say. One more option to know: `cache: true` keeps a slow chunk's results between renders until its code changes."
+      "explain": "`echo: false` shows the chart but not the code that drew it, which suits readers who don't use R. `fig-width` and `fig-height` set the chart's size in inches. `label` names a chunk, and Quarto's messages use the name: a chunk that fails is reported as `[trips-by-day]`, say.\n\nOne more option to know: `cache: true` keeps a slow chunk's results between renders until its code changes."
     },
     {
       "id": "table",
@@ -118,7 +118,7 @@
             "editor_match": "^(?=[\\s\\S]*^## Riders and bikes\\s*$)(?=[\\s\\S]*count\\([^)]*member_type)(?=[\\s\\S]*gt\\(\\))"
           },
           "purpose": "a chunk that counts the trips by member type and bike type, as a table",
-          "task": "Add a heading `## Riders and bikes` and a chunk with `#| echo: false` that counts `week` by `member_type` and `bike_type` with `count()`, then passes the result to `gt()`."
+          "task": "Add `## Riders and bikes` and a chunk with `#| echo: false`. Count `week` by `member_type` and `bike_type` with `count()`, then pass it to `gt()`."
         },
         {
           "action": "render",
@@ -183,7 +183,7 @@
           "task": "Switch back to the source editor with the Source button."
         }
       ],
-      "explain": "The visual editor shows the document much as the report will look, with headings, tables and inline code, and its toolbar formats text like a word processor. RStudio asks once before the first switch, because the visual editor rewrites the Markdown in its own standard way. The source editor shows the Markdown as typed, which is how this lesson wrote it. Both edit the same file."
+      "explain": "The visual editor shows the document much as the report will look, with headings, tables and inline code, and its toolbar formats text like a word processor. RStudio asks once before the first switch, because the visual editor rewrites the Markdown in its own standard way.\n\nThe source editor shows the Markdown as typed, which is how this lesson wrote it. Both edit the same file."
     },
     {
       "id": "new",

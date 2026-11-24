@@ -5,7 +5,7 @@
   "title": "Workflow: getting help",
   "modes": ["demonstration", "guided", "solo"],
   "script": "08-workflow-getting-help.R",
-  "summary": "Get unstuck the way experienced R users do: read what an error says, cut a puzzling result down to a small example and render it with reprex, find the answer on a help page, share data as code, and record your versions.",
+  "summary": "Learn ways to get unstuck in R. Read errors, make small examples with reprex, use help pages, share data as code, and record package versions.",
   "steps": [
     {
       "id": "setup",
@@ -38,7 +38,7 @@
          "purpose": "do the same with `==`, as the error suggests",
          "task": "Do the same with `==`, as R's error suggests."}
       ],
-      "explain": "Read an error from the top. `Error in filter()` says which function stopped. The line starting `!` says what went wrong: a named input, `start_station = 101`, where `filter()` expects a condition. The lines starting `ℹ` suggest a cause and a fix: `=` gives a name, `==` tests equality. With `==`, `filter()` keeps the {n_101} trips that started at station 101. When a message isn't this helpful, searching for its `!` line, without your own names in it, usually finds others who met it."
+      "explain": "Read an error from the top. `Error in filter()` says which function stopped. The line starting `!` says what went wrong: a named input, `start_station = 101`, where `filter()` expects a condition. The lines starting `ℹ` suggest a cause and a fix: `=` gives a name, `==` tests equality.\n\nWith `==`, `filter()` keeps the {n_101} trips that started at station 101. When a message isn't this helpful, searching for its `!` line, without your own names in it, usually finds others who met it."
     },
     {
       "id": "puzzle",
@@ -64,7 +64,7 @@
          "purpose": "find its mean distance the same way",
          "task": "Find the mean of `km` in `rides`, the same way as before."}
       ],
-      "explain": "Three rows show the same problem as all {n_trips} trips: one `NA` makes the mean `NA`. That points at the cause, missing distances. In `trips`, those are lost bikes, which ended at no station. A small example like this, with its data typed into the code, is what to share when you ask for help: anyone can run it, and it shows the problem and nothing else."
+      "explain": "Three rows show the same problem as all {n_trips} trips: one `NA` makes the mean `NA`. That points at the cause, missing distances. In `trips`, those are lost bikes, which ended at no station.\n\nA small example like this, with its data typed into the code, is what to share when you ask for help: anyone can run it, and it shows the problem and nothing else."
     },
     {
       "id": "reprex",
@@ -72,9 +72,9 @@
       "runs": [
         {"code": "reprex({\n  library(tidyverse)\n  rides <- tibble(km = c(2.4, NA, 3.1))\n  rides |> summarize(mean_km = mean(km))\n})", "evidence": "ide", "ide": {"viewer": true},
          "purpose": "render the small example, with its output, ready to share",
-         "task": "Render the example with `reprex()`: inside `reprex({ })`, put `library(tidyverse)`, the line that makes `rides`, and the line that finds its mean."}
+         "task": "Render the example with `reprex()`. Inside `reprex({ })`, put `library(tidyverse)`, the line that makes `rides`, and the line that finds its mean."}
       ],
-      "explain": "`reprex()` ran the example in a new, empty R session, so an example has to load its own packages and make its own data, as this one does. If it works in reprex, it will work for whoever reads it. The Viewer shows the result: the code, with its output below each line as comments starting `#>`. reprex wrote the same as Markdown, which forums and GitHub show this way. On a desktop, reprex puts it on the clipboard; RStudio on a server has none, so reprex opened the Markdown file in the Source pane, to copy from there. The Console's `[WARNING] Deprecated` line comes from Pandoc, the program that made the Viewer's page, and doesn't affect the result."
+      "explain": "`reprex()` ran the example in a new, empty R session, so an example has to load its own packages and make its own data, as this one does. If it works in reprex, it will work for whoever reads it.\n\nThe Viewer shows the result: the code, with its output below each line as comments starting `#>`. reprex wrote the same as Markdown, which forums and GitHub show this way.\n\nOn a desktop, reprex puts it on the clipboard; RStudio on a server has none, so reprex opened the Markdown file in the Source pane, to copy from there. The Console's `[WARNING] Deprecated` line comes from Pandoc, the program that made the Viewer's page, and doesn't affect the result."
     },
     {
       "id": "help",
@@ -89,7 +89,7 @@
          "purpose": "find the mean distance again, leaving out the missing values",
          "task": "Find the mean of `distance_km` again, adding `na.rm = TRUE` to `mean()`."}
       ],
-      "explain": "`?mean` opens the help page for `mean()` in the Help pane. Its Usage section lists the arguments with their defaults, among them `na.rm = FALSE`, and Arguments explains it: whether to strip `NA` values before computing. With `na.rm = TRUE`, the mean distance is {mean_km} km. Most help pages end with Examples, code you can run with `example()`, which is often the quickest way to see what a function does."
+      "explain": "`?mean` opens the help page for `mean()` in the Help pane. Its Usage section lists the arguments with their defaults, among them `na.rm = FALSE`, and Arguments explains it: whether to strip `NA` values before computing. With `na.rm = TRUE`, the mean distance is {mean_km} km.\n\nMost help pages end with Examples, code you can run with `example()`, which is often the quickest way to see what a function does."
     },
     {
       "id": "dput",

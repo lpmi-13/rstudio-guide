@@ -9,7 +9,7 @@
     "solo"
   ],
   "script": "19-joins.R",
-  "summary": "Bring Larkhaven Bikes' tables together: check a key is unique, see what a duplicate does to a join, join trips to stations, keep trips by where they started, give each trip its hour's weather, and price each trip at the fare in force on its day.",
+  "summary": "Bring bike trip tables together. Check keys, see what duplicate keys do, join trips to stations and weather, and match each trip to its fare.",
   "steps": [
     {
       "id": "setup",
@@ -51,7 +51,7 @@
           "task": "Count the rows for each `station_id` and keep the IDs with more than one."
         }
       ],
-      "explain": "A primary key is a column whose value identifies each row: `station_id` should name one station. The trips refer to it as `start_station` and `end_station`, foreign keys pointing into this table. Check a key before relying on it: ID {dup_id} appears twice, for {dup_names}. The second, a temporary station that opened in May, was given the same number."
+      "explain": "A primary key is a column whose value identifies each row: `station_id` should name one station. The trips refer to it as `start_station` and `end_station`, foreign keys pointing into this table. Check a key before relying on it: ID {dup_id} appears twice, for {dup_names}.\n\nThe second, a temporary station that opened in May, was given the same number."
     },
     {
       "id": "duplicate",
@@ -84,7 +84,7 @@
           "task": "Add the station details to each trip with `left_join()`, matching `start_station` in `trips` to `station_id` in `stations` with `join_by()`."
         }
       ],
-      "explain": "`left_join()` keeps every row of `trips` and adds the columns of the matching station. `join_by(start_station == station_id)` matches columns with different names. The result has {n_joined} rows, not {n_trips}: each of the {n_extra} trips from the duplicated station matched both of its rows, so it now appears twice. dplyr warns that it found many-to-many matches, which is almost never what a join means. A join that quietly adds rows would inflate every count after it."
+      "explain": "`left_join()` keeps every row of `trips` and adds the columns of the matching station. `join_by(start_station == station_id)` matches columns with different names.\n\nThe result has {n_joined} rows, not {n_trips}: each of the {n_extra} trips from the duplicated station matched both of its rows, so it now appears twice. dplyr warns that it found many-to-many matches, which is almost never what a join means. A join that quietly adds rows would inflate every count after it."
     },
     {
       "id": "fix",
@@ -109,7 +109,7 @@
           "task": "Join the stations to `trips` again, adding `relationship = \"many-to-one\"`."
         }
       ],
-      "explain": "With the temporary station's row gone, the join gives one row per trip again, {n_trips}. `relationship = \"many-to-one\"` states what the join should do: many trips to one station. If a duplicate came back, the join would stop with an error instead of a warning. Which row to keep is a decision about the data, not about code: here, the permanent station."
+      "explain": "With the temporary station's row gone, the join gives one row per trip again, {n_trips}. `relationship = \"many-to-one\"` states what the join should do: many trips to one station. If a duplicate came back, the join would stop with an error instead of a warning.\n\nWhich row to keep is a decision about the data, not about code: here, the permanent station."
     },
     {
       "id": "filtering",
@@ -164,11 +164,11 @@
             "rain_rate": "local({w <- filter(weather, time >= ymd(\"2025-06-02\"), time < ymd(\"2025-06-09\")); j <- left_join(mutate(week, hour = floor_date(started_at, \"hour\")), weather, join_by(hour == time)); format(round(sum(j$rain_mm > 0) / sum(w$rain_mm > 0)))})",
             "dry_rate": "local({w <- filter(weather, time >= ymd(\"2025-06-02\"), time < ymd(\"2025-06-09\")); j <- left_join(mutate(week, hour = floor_date(started_at, \"hour\")), weather, join_by(hour == time)); format(round(sum(j$rain_mm == 0) / sum(w$rain_mm == 0)))})"
           },
-          "purpose": "give each of the week's trips the weather of the hour it started in, and count the trips taken in rain",
+          "purpose": "match weekly trips to their start-hour weather and count trips in rain",
           "task": "Add `hour`, each trip's `started_at` rounded down to the hour, join `weather` with `join_by(hour == time)`, and count the trips by `raining = rain_mm > 0`."
         }
       ],
-      "explain": "The weather is recorded once an hour, so each trip's start is rounded down to its hour first, and then the two tables share a key. Rain fell in {rain_hours} of the week's 168 hours, and {rain_trips} trips started in them: about {rain_rate} trips an hour, against {dry_rate} in dry hours. Joining on a computed key is common: make the column, then join on it."
+      "explain": "The weather is recorded once an hour, so each trip's start is rounded down to its hour first, and then the two tables share a key. Rain fell in {rain_hours} of the week's 168 hours, and {rain_trips} trips started in them: about {rain_rate} trips an hour, against {dry_rate} in dry hours.\n\nJoining on a computed key is common: make the column, then join on it."
     },
     {
       "id": "fares",
@@ -192,11 +192,11 @@
           "values": {
             "n_old_fares": "format(sum(as_date(trips$started_at) < ymd(\"2025-04-01\")), big.mark = \",\")"
           },
-          "purpose": "match each trip to the fare that applied on its day, for its rider and bike type, and count the trips at each fare",
-          "task": "Add `date` (`as_date(started_at)`), then join `fares` matching `member_type`, `bike_type` and the latest `valid_from` on or before `date`, with `closest(date >= valid_from)` in `join_by()`. Count the trips by `fare_id`."
+          "purpose": "match trips to the fare for their day, rider and bike type, then count trips at each fare",
+          "task": "Add `date` with `as_date(started_at)`. Join `fares` by `member_type`, `bike_type` and the latest `valid_from` on or before `date`, using `closest(date >= valid_from)` in `join_by()`. Count by `fare_id`."
         }
       ],
-      "explain": "Fares change over time, so a trip's fare depends on its date: the one whose period had begun by then. `closest(date >= valid_from)` is a rolling join: of the fares with `valid_from` on or before the trip's date, it picks the latest. The {n_old_fares} trips from January to March got the old fares, 5 to 8, and the rest the fares from 1 April, 9 to 12. `between(date, valid_from, valid_to)` would match on both ends of each period, but the current fares have no end date, `NA`, which matches nothing."
+      "explain": "Fares change over time, so a trip's fare depends on its date: the one whose period had begun by then. `closest(date >= valid_from)` is a rolling join: of the fares with `valid_from` on or before the trip's date, it picks the latest.\n\nThe {n_old_fares} trips from January to March got the old fares, 5 to 8, and the rest the fares from 1 April, 9 to 12. `between(date, valid_from, valid_to)` would match on both ends of each period, but the current fares have no end date, `NA`, which matches nothing."
     }
   ]
 }

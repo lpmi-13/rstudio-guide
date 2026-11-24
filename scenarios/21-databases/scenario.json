@@ -9,7 +9,7 @@
     "solo"
   ],
   "script": "21-databases.R",
-  "summary": "Work with Larkhaven Bikes' trips in a DuckDB database: connect with DBI, list its tables, ask a question in SQL, then ask it in dplyr and let dbplyr write the SQL, run the query in the database, and bring only the answer into R.",
+  "summary": "Work with bike trips in DuckDB. Connect and query with SQL, use dplyr through dbplyr, and bring only the answer into R.",
   "steps": [
     {
       "id": "setup",
@@ -56,7 +56,7 @@
           "task": "List the tables in the database with `dbListTables()`."
         }
       ],
-      "explain": "`con` is a connection: everything you ask the database goes through it. DuckDB keeps a whole database in one file, and `read_only = TRUE` opens it without permission to change it, which is all a lesson about reading needs. The database holds four tables, the same as four of the CSV files in `data/`. A database at work would usually be a server, and `dbConnect()` would take its address and your login instead of a file."
+      "explain": "`con` is a connection: everything you ask the database goes through it. DuckDB keeps a whole database in one file, and `read_only = TRUE` opens it without permission to change it, which is all a lesson about reading needs. The database holds four tables, the same as four of the CSV files in `data/`.\n\nA database at work would usually be a server, and `dbConnect()` would take its address and your login instead of a file."
     },
     {
       "id": "sql",
@@ -73,7 +73,7 @@
           "task": "Count the trips for each `member_type` with `dbGetQuery()` and the SQL `\"SELECT member_type, COUNT(*) AS trips FROM trips GROUP BY member_type\"`."
         }
       ],
-      "explain": "SQL is the language databases speak. This query selects two columns from the `trips` table, `member_type` and a count of rows named `trips`, with one row for each value of `member_type`. `dbGetQuery()` sends the text to the database, which does the work, and returns the result as a data frame. SQL's order is `SELECT` first, then `FROM`, then `GROUP BY`, though the database reads the table first."
+      "explain": "SQL is the language databases speak. This query selects two columns from the `trips` table, `member_type` and a count of rows named `trips`, with one row for each value of `member_type`. `dbGetQuery()` sends the text to the database, which does the work, and returns the result as a data frame.\n\nSQL's order is `SELECT` first, then `FROM`, then `GROUP BY`, though the database reads the table first."
     },
     {
       "id": "dbplyr",
@@ -98,7 +98,7 @@
           "task": "Keep the casual riders' trips in `trips_db` and count them by `start_station`, busiest first. Store the query in `casual_starts`."
         }
       ],
-      "explain": "`tbl()` gives a table that stays in the database: R holds only a description of it. dplyr verbs on it don't run straight away; they add to a query, so `casual_starts` returned at once without touching a row. This is lazy evaluation: the database runs the query only when you ask for its result, and then runs all of it in one go, however many verbs it took to write."
+      "explain": "`tbl()` gives a table that stays in the database: R holds only a description of it. dplyr verbs on it don't run straight away; they add to a query, so `casual_starts` returned at once without touching a row.\n\nThis is lazy evaluation: the database runs the query only when you ask for its result, and then runs all of it in one go, however many verbs it took to write."
     },
     {
       "id": "show",
@@ -118,7 +118,7 @@
           "task": "Print `casual_starts`."
         }
       ],
-      "explain": "dbplyr translated the pipeline into one SQL query: `filter()` became `WHERE`, and `count(sort = TRUE)` became `COUNT(*)` with `GROUP BY` and `ORDER BY … DESC`. Printing `casual_starts` runs the query and shows its first rows; its header calls it a query of `??` rows, because the database hasn't been asked how many there are. Writing dplyr lets you use one language for data in R and data in a database."
+      "explain": "dbplyr translated the pipeline into one SQL query: `filter()` became `WHERE`, and `count(sort = TRUE)` became `COUNT(*)` with `GROUP BY` and `ORDER BY … DESC`. Printing `casual_starts` runs the query and shows its first rows; its header calls it a query of `??` rows, because the database hasn't been asked how many there are.\n\nWriting dplyr lets you use one language for data in R and data in a database."
     },
     {
       "id": "collect",
@@ -145,7 +145,7 @@
           "task": "Close the connection with `dbDisconnect()`."
         }
       ],
-      "explain": "`collect()` runs the query and turns its result into an ordinary tibble in R's memory: {n_rows} stations, station {top_station} the busiest for casual riders. Do the filtering and summarising in the database and collect only the answer, since a database table can be far bigger than R's memory. `dbDisconnect()` closes the connection; a server would otherwise keep it open."
+      "explain": "`collect()` runs the query and turns its result into an ordinary tibble in R's memory: {n_rows} stations, station {top_station} the busiest for casual riders. Do the filtering and summarising in the database and collect only the answer, since a database table can be far bigger than R's memory.\n\n`dbDisconnect()` closes the connection; a server would otherwise keep it open."
     }
   ]
 }

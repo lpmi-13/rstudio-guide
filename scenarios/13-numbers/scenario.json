@@ -5,7 +5,7 @@
   "title": "Numbers",
   "modes": ["demonstration", "guided", "solo"],
   "script": "13-numbers.R",
-  "summary": "Work with the numbers in a year of trips: parse and count, split the day into 15-minute slots, round and cut lengths into bands, keep running totals and day-to-day changes, rank stations, and summarise a distribution's centre and spread.",
+  "summary": "Work with trip numbers. Parse and round them, make time slots and length bands, calculate running totals and changes, rank stations, and describe a distribution.",
   "steps": [
     {
       "id": "setup",
@@ -56,7 +56,7 @@
          "purpose": "turn minute 1020 of the day back into hours and minutes",
          "task": "Turn 1020 minutes into whole hours with `%/%` and the minutes left over with `%%`, in one vector with `c()`."}
       ],
-      "explain": "`%/%` divides and drops the remainder, and `%%` gives the remainder. So `minute_of_day %/% 15` numbers each 15-minute slot, and multiplying by 15 turns that back into the minute the slot starts. `* 15` multiplies every value by one number, which R recycles. The busiest slot starts at minute {top_slot}, with {top_slot_n} trips: `1020 %/% 60` is 17 hours and `1020 %% 60` is 0 minutes left over, so {top_slot_time}."
+      "explain": "`%/%` divides and drops the remainder, and `%%` gives the remainder. So `minute_of_day %/% 15` numbers each 15-minute slot, and multiplying by 15 turns that back into the minute the slot starts. `* 15` multiplies every value by one number, which R recycles.\n\nThe busiest slot starts at minute {top_slot}, with {top_slot_n} trips: `1020 %/% 60` is 17 hours and `1020 %% 60` is 0 minutes left over, so {top_slot_time}."
     },
     {
       "id": "cut",
@@ -71,10 +71,10 @@
            "n_short": "format(sum(trips$duration_min > 0 & trips$duration_min <= 10), big.mark = \",\")",
            "n_cut_na": "format(sum(trips$duration_min <= 0))"
          },
-         "purpose": "put each trip's length in a band, from 10 minutes or less to more than an hour, and count the bands",
-         "task": "Count the trips by `band`, made by cutting `duration_min` with `cut()` at the breaks 0, 10, 20, 30, 60 and `Inf`."}
+         "purpose": "put trip lengths in bands and count trips in each band",
+         "task": "Count trips by `band`. Make bands by cutting `duration_min` with `cut()` at 0, 10, 20, 30, 60 and `Inf`."}
       ],
-      "explain": "`round()` rounds a number ending in .5 to the even neighbour, so 0.5 and 2.5 round down and 1.5 up: over many values, the rounding errors cancel out. `floor()` always rounds down, `ceiling()` up, and `round(x, digits = -2)` to the nearest hundred. `cut()` turns numbers into bands: `(0,10]` means above 0 and up to 10, and holds {n_short} trips. The {n_cut_na} trips of 0 minutes or less fall outside every band, so their band is `NA`."
+      "explain": "`round()` rounds a number ending in .5 to the even neighbour, so 0.5 and 2.5 round down and 1.5 up: over many values, the rounding errors cancel out. `floor()` always rounds down, `ceiling()` up, and `round(x, digits = -2)` to the nearest hundred.\n\n`cut()` turns numbers into bands: `(0,10]` means above 0 and up to 10, and holds {n_short} trips. The {n_cut_na} trips of 0 minutes or less fall outside every band, so their band is `NA`."
     },
     {
       "id": "cumulative",
@@ -116,9 +116,9 @@
         {"code": "trips |>\n  count(start_station, bike_type) |>\n  mutate(rank = min_rank(desc(n)), .by = bike_type) |>\n  filter(rank <= 3)", "evidence": "value", "order": "any",
          "alternatives": ["trips |> count(start_station, bike_type) |> group_by(bike_type) |> mutate(rank = min_rank(desc(n))) |> ungroup() |> filter(rank <= 3)"],
          "purpose": "rank the stations by trips for each bike type, and keep the top three of each",
-         "task": "Count the trips by `start_station` and `bike_type`, then rank the stations within each `bike_type` with `min_rank(desc(n))` (`.by` in `mutate()`), and keep ranks 1 to 3."}
+         "task": "Count trips by `start_station` and `bike_type`. Within each bike type, rank stations with `min_rank(desc(n))` using `.by` in `mutate()`. Keep ranks 1 to 3."}
       ],
-      "explain": "`min_rank()` numbers values from smallest to largest; `desc()` turns that round, so the busiest station is 1. Tied values share a rank, and the next rank is skipped, as in a race. With `.by`, `mutate()` ranks within each bike type separately, so each has its own top three. `dense_rank()` doesn't skip ranks after a tie, and `row_number()` breaks ties by position."
+      "explain": "`min_rank()` numbers values from smallest to largest; `desc()` turns that round, so the busiest station is 1. Tied values share a rank, and the next rank is skipped, as in a race. With `.by`, `mutate()` ranks within each bike type separately, so each has its own top three.\n\n`dense_rank()` doesn't skip ranks after a tie, and `row_number()` breaks ties by position."
     },
     {
       "id": "summaries",
@@ -138,9 +138,9 @@
            "q90_casual": "format(quantile(trips$duration_min[trips$member_type == \"casual\" & trips$duration_min > 0 & trips$duration_min <= 1440], 0.9))"
          },
          "purpose": "summarise plausible trip lengths for each rider type: mean, median, standard deviation and 90th percentile",
-         "task": "Keep the trips longer than 0 and no longer than a day, then find for each `member_type`: the `mean`, `median`, standard deviation (`sd()`) and 90th percentile (`quantile(duration_min, 0.9)`) of `duration_min`."}
+         "task": "Keep trips longer than 0 and at most one day. For each `member_type`, find mean, median, standard deviation (`sd()`) and 90th percentile (`quantile(duration_min, 0.9)`) of `duration_min`."}
       ],
-      "explain": "`summary()` gives a number's minimum, quartiles, median, mean and maximum in one go. The mean, {mean_all} minutes, is well above the median, {median_all}: a few lost bikes' trips of days pull the mean up, while the median, the middle value, doesn't move. Without the implausible trips, the summaries describe real rides. The mean and median measure the centre; the standard deviation, `sd`, the spread around the mean; and `quantile()` a position: 90% of members' trips last {q90_member} minutes or less, and 90% of casual riders' {q90_casual}."
+      "explain": "`summary()` gives a number's minimum, quartiles, median, mean and maximum in one go. The mean, {mean_all} minutes, is well above the median, {median_all}: a few lost bikes' trips of days pull the mean up, while the median, the middle value, doesn't move. Without the implausible trips, the summaries describe real rides.\n\nThe mean and median measure the centre; the standard deviation, `sd`, the spread around the mean; and `quantile()` a position: 90% of members' trips last {q90_member} minutes or less, and 90% of casual riders' {q90_casual}."
     }
   ]
 }

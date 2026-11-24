@@ -9,7 +9,7 @@
 //   a time, then run with RStudio's Run button (not saved: nothing needs the file
 //   on disk). It waits until the Console or Plots pane shows the result, checks it
 //   against the reference output, and only then explains it, using the values
-//   RStudio displayed. Auto-advance (on unless the learner turns it off) moves on
+//   RStudio displayed. Auto-advance (off unless the learner turns it on) moves on
 //   to the next step once the explanation has been read.
 // - Guided gives one step at a time. The learner types and runs each line; the
 //   coach ticks it once RStudio shows the reference result, and offers hints and
@@ -33,6 +33,202 @@
   })();
   if (insideRStudio) return;
   if (window.__rsCoach) return; // idempotent if the script is loaded twice
+  const FUNCTION_DOCS = /* function docs:start */ {
+  "View": "https://search.r-project.org/R/refmans/utils/html/View.html",
+  "across": "https://search.r-project.org/CRAN/refmans/dplyr/html/across.html",
+  "aes": "https://search.r-project.org/CRAN/refmans/ggplot2/html/aes.html",
+  "after_stat": "https://search.r-project.org/CRAN/refmans/ggplot2/html/aes_eval.html",
+  "all": "https://search.r-project.org/R/refmans/base/html/all.html",
+  "anti_join": "https://search.r-project.org/CRAN/refmans/dplyr/html/filter-joins.html",
+  "any": "https://search.r-project.org/R/refmans/base/html/any.html",
+  "arrange": "https://search.r-project.org/CRAN/refmans/dplyr/html/arrange.html",
+  "as.numeric": "https://search.r-project.org/R/refmans/base/html/numeric.html",
+  "barplot": "https://search.r-project.org/R/refmans/graphics/html/barplot.html",
+  "c": "https://search.r-project.org/R/refmans/base/html/c.html",
+  "case_when": "https://search.r-project.org/CRAN/refmans/dplyr/html/case_when.html",
+  "cat": "https://search.r-project.org/R/refmans/base/html/cat.html",
+  "ceiling": "https://search.r-project.org/R/refmans/base/html/Round.html",
+  "ceiling_date": "https://search.r-project.org/CRAN/refmans/lubridate/html/round_date.html",
+  "clean_names": "https://search.r-project.org/CRAN/refmans/janitor/html/clean_names.html",
+  "closest": "https://search.r-project.org/CRAN/refmans/dplyr/html/join_by.html",
+  "coalesce": "https://search.r-project.org/CRAN/refmans/dplyr/html/coalesce.html",
+  "col_integer": "https://search.r-project.org/CRAN/refmans/readr/html/parse_atomic.html",
+  "collect": "https://search.r-project.org/CRAN/refmans/dplyr/html/compute.html",
+  "complete": "https://search.r-project.org/CRAN/refmans/tidyr/html/complete.html",
+  "coord_cartesian": "https://search.r-project.org/CRAN/refmans/ggplot2/html/coord_cartesian.html",
+  "coord_quickmap": "https://search.r-project.org/CRAN/refmans/ggplot2/html/coord_map.html",
+  "count": "https://search.r-project.org/CRAN/refmans/dplyr/html/count.html",
+  "cummax": "https://search.r-project.org/R/refmans/base/html/cumsum.html",
+  "cummean": "https://search.r-project.org/CRAN/refmans/dplyr/html/cumall.html",
+  "cummin": "https://search.r-project.org/R/refmans/base/html/cumsum.html",
+  "cumsum": "https://search.r-project.org/R/refmans/base/html/cumsum.html",
+  "cut": "https://search.r-project.org/R/refmans/base/html/cut.html",
+  "day": "https://search.r-project.org/CRAN/refmans/lubridate/html/day.html",
+  "dbConnect": "https://search.r-project.org/CRAN/refmans/DBI/html/dbConnect.html",
+  "dbDisconnect": "https://search.r-project.org/CRAN/refmans/DBI/html/dbDisconnect.html",
+  "dbGetQuery": "https://search.r-project.org/CRAN/refmans/DBI/html/dbGetQuery.html",
+  "dbListTables": "https://search.r-project.org/CRAN/refmans/DBI/html/dbListTables.html",
+  "dense_rank": "https://search.r-project.org/CRAN/refmans/dplyr/html/row_number.html",
+  "desc": "https://search.r-project.org/CRAN/refmans/dplyr/html/desc.html",
+  "dir_create": "https://search.r-project.org/CRAN/refmans/fs/html/create.html",
+  "dir_ls": "https://search.r-project.org/CRAN/refmans/fs/html/dir_ls.html",
+  "distinct": "https://search.r-project.org/CRAN/refmans/dplyr/html/distinct.html",
+  "dput": "https://search.r-project.org/R/refmans/base/html/dput.html",
+  "duckdb": "https://search.r-project.org/CRAN/refmans/duckdb/html/duckdb.html",
+  "example": "https://search.r-project.org/R/refmans/utils/html/example.html",
+  "excel_sheets": "https://search.r-project.org/CRAN/refmans/readxl/html/excel_sheets.html",
+  "explain": "https://search.r-project.org/CRAN/refmans/dplyr/html/explain.html",
+  "facet_grid": "https://search.r-project.org/CRAN/refmans/ggplot2/html/facet_grid.html",
+  "facet_wrap": "https://search.r-project.org/CRAN/refmans/ggplot2/html/facet_wrap.html",
+  "fct": "https://search.r-project.org/CRAN/refmans/forcats/html/fct.html",
+  "fct_collapse": "https://search.r-project.org/CRAN/refmans/forcats/html/fct_collapse.html",
+  "fct_infreq": "https://search.r-project.org/CRAN/refmans/forcats/html/fct_inorder.html",
+  "fct_lump_n": "https://search.r-project.org/CRAN/refmans/forcats/html/fct_lump.html",
+  "fct_recode": "https://search.r-project.org/CRAN/refmans/forcats/html/fct_recode.html",
+  "fct_reorder": "https://search.r-project.org/CRAN/refmans/forcats/html/fct_reorder.html",
+  "fct_rev": "https://search.r-project.org/CRAN/refmans/forcats/html/fct_rev.html",
+  "file.size": "https://search.r-project.org/R/refmans/base/html/file.info.html",
+  "fill": "https://search.r-project.org/CRAN/refmans/tidyr/html/fill.html",
+  "filter": "https://search.r-project.org/CRAN/refmans/dplyr/html/filter.html",
+  "fixed": "https://search.r-project.org/CRAN/refmans/stringr/html/modifiers.html",
+  "floor": "https://search.r-project.org/R/refmans/base/html/Round.html",
+  "floor_date": "https://search.r-project.org/CRAN/refmans/lubridate/html/round_date.html",
+  "force_tz": "https://search.r-project.org/CRAN/refmans/lubridate/html/force_tz.html",
+  "geom_bar": "https://search.r-project.org/CRAN/refmans/ggplot2/html/geom_bar.html",
+  "geom_bin_2d": "https://search.r-project.org/CRAN/refmans/ggplot2/html/geom_bin_2d.html",
+  "geom_boxplot": "https://search.r-project.org/CRAN/refmans/ggplot2/html/geom_boxplot.html",
+  "geom_col": "https://search.r-project.org/CRAN/refmans/ggplot2/html/geom_bar.html",
+  "geom_density": "https://search.r-project.org/CRAN/refmans/ggplot2/html/geom_density.html",
+  "geom_histogram": "https://search.r-project.org/CRAN/refmans/ggplot2/html/geom_histogram.html",
+  "geom_label_repel": "https://search.r-project.org/CRAN/refmans/ggrepel/html/geom_text_repel.html",
+  "geom_line": "https://search.r-project.org/CRAN/refmans/ggplot2/html/geom_path.html",
+  "geom_point": "https://search.r-project.org/CRAN/refmans/ggplot2/html/geom_point.html",
+  "geom_smooth": "https://search.r-project.org/CRAN/refmans/ggplot2/html/geom_smooth.html",
+  "geom_tile": "https://search.r-project.org/CRAN/refmans/ggplot2/html/geom_tile.html",
+  "getwd": "https://search.r-project.org/R/refmans/base/html/getwd.html",
+  "ggplot": "https://search.r-project.org/CRAN/refmans/ggplot2/html/ggplot.html",
+  "ggsave": "https://search.r-project.org/CRAN/refmans/ggplot2/html/ggsave.html",
+  "glimpse": "https://search.r-project.org/CRAN/refmans/dplyr/html/glimpse.html",
+  "gt": "https://search.r-project.org/CRAN/refmans/gt/html/gt.html",
+  "hist": "https://search.r-project.org/R/refmans/graphics/html/hist.html",
+  "hoist": "https://search.r-project.org/CRAN/refmans/tidyr/html/hoist.html",
+  "hour": "https://search.r-project.org/CRAN/refmans/lubridate/html/hour.html",
+  "html_attr": "https://search.r-project.org/CRAN/refmans/rvest/html/html_attr.html",
+  "html_element": "https://search.r-project.org/CRAN/refmans/rvest/html/html_element.html",
+  "html_elements": "https://search.r-project.org/CRAN/refmans/rvest/html/html_element.html",
+  "html_table": "https://search.r-project.org/CRAN/refmans/rvest/html/html_table.html",
+  "html_text2": "https://search.r-project.org/CRAN/refmans/rvest/html/html_text.html",
+  "if_all": "https://search.r-project.org/CRAN/refmans/dplyr/html/across.html",
+  "if_any": "https://search.r-project.org/CRAN/refmans/dplyr/html/across.html",
+  "if_else": "https://search.r-project.org/CRAN/refmans/dplyr/html/if_else.html",
+  "is.na": "https://search.r-project.org/R/refmans/base/html/NA.html",
+  "is.nan": "https://search.r-project.org/R/refmans/base/html/is.finite.html",
+  "join_by": "https://search.r-project.org/CRAN/refmans/dplyr/html/join_by.html",
+  "label_comma": "https://search.r-project.org/CRAN/refmans/scales/html/label_number.html",
+  "labs": "https://search.r-project.org/CRAN/refmans/ggplot2/html/labs.html",
+  "lag": "https://search.r-project.org/CRAN/refmans/dplyr/html/lead-lag.html",
+  "lapply": "https://search.r-project.org/R/refmans/base/html/lapply.html",
+  "lead": "https://search.r-project.org/CRAN/refmans/dplyr/html/lead-lag.html",
+  "left_join": "https://search.r-project.org/CRAN/refmans/dplyr/html/mutate-joins.html",
+  "library": "https://search.r-project.org/R/refmans/base/html/library.html",
+  "list.files": "https://search.r-project.org/R/refmans/base/html/list.files.html",
+  "list_rbind": "https://search.r-project.org/CRAN/refmans/purrr/html/list_c.html",
+  "lm": "https://search.r-project.org/R/refmans/stats/html/lm.html",
+  "make_date": "https://search.r-project.org/CRAN/refmans/lubridate/html/make_datetime.html",
+  "make_datetime": "https://search.r-project.org/CRAN/refmans/lubridate/html/make_datetime.html",
+  "map": "https://search.r-project.org/CRAN/refmans/purrr/html/map.html",
+  "mdy": "https://search.r-project.org/CRAN/refmans/lubridate/html/ymd.html",
+  "mean": "https://search.r-project.org/R/refmans/base/html/mean.html",
+  "min": "https://search.r-project.org/R/refmans/base/html/Extremes.html",
+  "min_rank": "https://search.r-project.org/CRAN/refmans/dplyr/html/row_number.html",
+  "minute": "https://search.r-project.org/CRAN/refmans/lubridate/html/minute.html",
+  "month": "https://search.r-project.org/CRAN/refmans/lubridate/html/month.html",
+  "mutate": "https://search.r-project.org/CRAN/refmans/dplyr/html/mutate.html",
+  "n": "https://search.r-project.org/CRAN/refmans/dplyr/html/context.html",
+  "na_if": "https://search.r-project.org/CRAN/refmans/dplyr/html/na_if.html",
+  "near": "https://search.r-project.org/CRAN/refmans/dplyr/html/near.html",
+  "nest": "https://search.r-project.org/CRAN/refmans/tidyr/html/nest.html",
+  "now": "https://search.r-project.org/CRAN/refmans/lubridate/html/now.html",
+  "ordered": "https://search.r-project.org/R/refmans/base/html/factor.html",
+  "packageVersion": "https://search.r-project.org/R/refmans/utils/html/packageDescription.html",
+  "parse_integer": "https://search.r-project.org/CRAN/refmans/readr/html/parse_atomic.html",
+  "parse_number": "https://search.r-project.org/CRAN/refmans/readr/html/parse_number.html",
+  "paste0": "https://search.r-project.org/R/refmans/base/html/paste.html",
+  "pivot_longer": "https://search.r-project.org/CRAN/refmans/tidyr/html/pivot_longer.html",
+  "pivot_wider": "https://search.r-project.org/CRAN/refmans/tidyr/html/pivot_wider.html",
+  "plot": "https://search.r-project.org/R/refmans/base/html/plot.html",
+  "plot_layout": "https://search.r-project.org/CRAN/refmans/patchwork/html/plot_layout.html",
+  "position_jitter": "https://search.r-project.org/CRAN/refmans/ggplot2/html/position_jitter.html",
+  "problems": "https://search.r-project.org/CRAN/refmans/readr/html/problems.html",
+  "quantile": "https://search.r-project.org/R/refmans/stats/html/quantile.html",
+  "quarto_render": "https://search.r-project.org/CRAN/refmans/quarto/html/quarto_render.html",
+  "reactable": "https://search.r-project.org/CRAN/refmans/reactable/html/reactable.html",
+  "read_csv": "https://search.r-project.org/CRAN/refmans/readr/html/read_delim.html",
+  "read_excel": "https://search.r-project.org/CRAN/refmans/readxl/html/read_excel.html",
+  "read_html": "https://search.r-project.org/CRAN/refmans/rvest/html/read_html.html",
+  "read_json": "https://search.r-project.org/CRAN/refmans/jsonlite/html/read_json.html",
+  "read_rds": "https://search.r-project.org/CRAN/refmans/readr/html/read_rds.html",
+  "relocate": "https://search.r-project.org/CRAN/refmans/dplyr/html/relocate.html",
+  "rename": "https://search.r-project.org/CRAN/refmans/dplyr/html/rename.html",
+  "reprex": "https://search.r-project.org/CRAN/refmans/reprex/html/reprex.html",
+  "round": "https://search.r-project.org/R/refmans/base/html/Round.html",
+  "round_date": "https://search.r-project.org/CRAN/refmans/lubridate/html/round_date.html",
+  "row_number": "https://search.r-project.org/CRAN/refmans/dplyr/html/row_number.html",
+  "scale_colour_viridis_d": "https://search.r-project.org/CRAN/refmans/ggplot2/html/scale_viridis.html",
+  "scale_x_log10": "https://search.r-project.org/CRAN/refmans/ggplot2/html/scale_continuous.html",
+  "scale_y_log10": "https://search.r-project.org/CRAN/refmans/ggplot2/html/scale_continuous.html",
+  "sd": "https://search.r-project.org/R/refmans/stats/html/sd.html",
+  "select": "https://search.r-project.org/CRAN/refmans/dplyr/html/select.html",
+  "semi_join": "https://search.r-project.org/CRAN/refmans/dplyr/html/filter-joins.html",
+  "separate_longer_delim": "https://search.r-project.org/CRAN/refmans/tidyr/html/separate_longer_delim.html",
+  "separate_wider_delim": "https://search.r-project.org/CRAN/refmans/tidyr/html/separate_wider_delim.html",
+  "separate_wider_regex": "https://search.r-project.org/CRAN/refmans/tidyr/html/separate_wider_delim.html",
+  "seq": "https://search.r-project.org/R/refmans/base/html/seq.html",
+  "sessionInfo": "https://search.r-project.org/R/refmans/utils/html/sessionInfo.html",
+  "set_names": "https://search.r-project.org/CRAN/refmans/rlang/html/set_names.html",
+  "setwd": "https://search.r-project.org/R/refmans/base/html/getwd.html",
+  "show_query": "https://search.r-project.org/CRAN/refmans/dplyr/html/explain.html",
+  "slice_max": "https://search.r-project.org/CRAN/refmans/dplyr/html/slice.html",
+  "source": "https://search.r-project.org/R/refmans/base/html/source.html",
+  "split": "https://search.r-project.org/R/refmans/base/html/split.html",
+  "starts_with": "https://search.r-project.org/CRAN/refmans/tidyselect/html/starts_with.html",
+  "stat_count": "https://search.r-project.org/CRAN/refmans/ggplot2/html/geom_bar.html",
+  "str": "https://search.r-project.org/R/refmans/utils/html/str.html",
+  "str_c": "https://search.r-project.org/CRAN/refmans/stringr/html/str_c.html",
+  "str_detect": "https://search.r-project.org/CRAN/refmans/stringr/html/str_detect.html",
+  "str_extract": "https://search.r-project.org/CRAN/refmans/stringr/html/str_extract.html",
+  "str_flatten": "https://search.r-project.org/CRAN/refmans/stringr/html/str_flatten.html",
+  "str_glue": "https://search.r-project.org/CRAN/refmans/stringr/html/str_glue.html",
+  "str_length": "https://search.r-project.org/CRAN/refmans/stringr/html/str_length.html",
+  "str_replace_all": "https://search.r-project.org/CRAN/refmans/stringr/html/str_replace.html",
+  "str_sub": "https://search.r-project.org/CRAN/refmans/stringr/html/str_sub.html",
+  "str_to_title": "https://search.r-project.org/CRAN/refmans/stringr/html/case.html",
+  "str_to_upper": "https://search.r-project.org/CRAN/refmans/stringr/html/case.html",
+  "str_view": "https://search.r-project.org/CRAN/refmans/stringr/html/str_view.html",
+  "sum": "https://search.r-project.org/R/refmans/base/html/sum.html",
+  "summarize": "https://search.r-project.org/CRAN/refmans/dplyr/html/summarise.html",
+  "summary": "https://search.r-project.org/R/refmans/base/html/summary.html",
+  "table": "https://search.r-project.org/R/refmans/base/html/table.html",
+  "tbl": "https://search.r-project.org/CRAN/refmans/dplyr/html/tbl.html",
+  "theme": "https://search.r-project.org/CRAN/refmans/ggplot2/html/theme.html",
+  "theme_minimal": "https://search.r-project.org/CRAN/refmans/ggplot2/html/ggtheme.html",
+  "tibble": "https://search.r-project.org/CRAN/refmans/tibble/html/tibble.html",
+  "today": "https://search.r-project.org/CRAN/refmans/lubridate/html/now.html",
+  "tribble": "https://search.r-project.org/CRAN/refmans/tibble/html/tribble.html",
+  "unnest_longer": "https://search.r-project.org/CRAN/refmans/tidyr/html/unnest_longer.html",
+  "unnest_wider": "https://search.r-project.org/CRAN/refmans/tidyr/html/unnest_wider.html",
+  "vapply": "https://search.r-project.org/R/refmans/base/html/lapply.html",
+  "walk": "https://search.r-project.org/CRAN/refmans/purrr/html/map.html",
+  "walk2": "https://search.r-project.org/CRAN/refmans/purrr/html/map2.html",
+  "wday": "https://search.r-project.org/CRAN/refmans/lubridate/html/day.html",
+  "with_tz": "https://search.r-project.org/CRAN/refmans/lubridate/html/with_tz.html",
+  "writeLines": "https://search.r-project.org/R/refmans/base/html/writeLines.html",
+  "write_csv": "https://search.r-project.org/CRAN/refmans/readr/html/write_delim.html",
+  "write_rds": "https://search.r-project.org/CRAN/refmans/readr/html/read_rds.html",
+  "write_xlsx": "https://search.r-project.org/CRAN/refmans/writexl/html/write_xlsx.html",
+  "year": "https://search.r-project.org/CRAN/refmans/lubridate/html/year.html",
+  "ymd_hms": "https://search.r-project.org/CRAN/refmans/lubridate/html/ymd_hms.html"
+} /* function docs:end */;
 
   const coach = (window.__rsCoach = {
     loadedAt: Date.now(),
@@ -440,10 +636,14 @@
     header button:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
     .body { padding: 14px; overflow: auto; display: grid; gap: 14px; align-content: start; flex: 1; }
     .content, .overview { display: grid; gap: 12px; }
+    .lesson-work { display: grid; gap: 14px; }
+    .lesson-work[hidden], .lesson-preview[hidden] { display: none; }
+    .lesson-preview { display: grid; gap: 12px; }
     h2 { margin: 0; font-size: 19px; line-height: 1.3; }
     h3 { margin: 0; font-size: 16px; line-height: 1.35; }
     p { margin: 0; }
     a { color: #0b5cad; }
+    a.doc-link { text-decoration: underline; text-underline-offset: 2px; }
     a:focus-visible { outline: 2px solid #0b5cad; outline-offset: 2px; border-radius: 2px; }
     .muted { color: #57606a; font-size: 14px; }
     code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: max(.9em, 13px); background: #f0f3f6; padding: 1px 4px; border-radius: 4px; overflow-wrap: anywhere; }
@@ -542,7 +742,7 @@
     details.steps-box > summary { color: #0b5cad; font-size: 14px; min-height: 24px; }
     details.steps-box[open] > summary { margin-bottom: 6px; }
     h4 { margin: 10px 0 4px; font-size: 15px; }
-    /* Auto-advance: a switch, on by default, beside Stop. */
+    /* Auto-advance: a switch, off by default, beside Stop. */
     .row.controls button.stop { margin-left: auto; }
     .row button.auto { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; min-height: 30px;
       padding: 0 2px; cursor: pointer; font-size: 14px; color: #1f2328; border-radius: 6px; }
@@ -786,6 +986,7 @@
       };
       teardown = render({content, session, lesson, status, restored, autostart, storeKey, switchLabel, changeMode,
         startOver: () => start(mode, {autostart: true}), finish, next: nextAfter(lesson)}) || teardown;
+      if (mode !== 'demonstration' && !restored && !autostart) showStartOverview(content, lesson, mode, changeMode, switchLabel);
     }
 
     // A mode chosen on the picker, or Start over: reset RStudio, then open the mode from scratch.
@@ -997,21 +1198,75 @@
   // lines. The list of steps folds away (`stepsBox`), so the controls stay in view.
   const lessonHeader = (lesson, howto) => `
     <h2>${escapeHtml(lesson.title)}</h2>
+    <h3>What you'll learn</h3>
     <div class="intro prose">${format(lesson.summary, {})}</div>
     <p class="howto">${inline(howto)}</p>`;
+  // Guided and Solo show the same brief before the task list. The learner can reopen it later.
+  function showStartOverview(content, lesson, mode, changeMode, switchLabel) {
+    const work = document.createElement('div');
+    work.className = 'lesson-work';
+    work.hidden = true;
+    while (content.firstChild) work.append(content.firstChild);
+    const preview = document.createElement('section');
+    preview.className = 'lesson-preview';
+    preview.innerHTML = `
+      <h2>${escapeHtml(lesson.title)}</h2>
+      <h3>What you'll learn</h3>
+      <div class="intro prose">${format(lesson.summary, {})}</div>
+      <p>${escapeHtml(MODES[mode].what)}</p>
+      <p class="muted">You'll work in <code>${escapeHtml(lesson.script)}</code>.</p>
+      ${stepsBox(lesson.steps)}
+      <div class="row"><button class="primary begin">Start ${escapeHtml(MODES[mode].label)}</button><button class="preview-switch">${switchLabel}</button></div>
+      ${sourceLine(lesson)}`;
+    content.append(preview, work);
+    const reopen = document.createElement('div');
+    reopen.className = 'row';
+    reopen.innerHTML = '<button class="link reopen-overview">Lesson overview</button>';
+    work.append(reopen);
+    const showWork = () => {
+      preview.hidden = true;
+      work.hidden = false;
+      (work.querySelector('.card h3, .solo-steps') || work.querySelector('button')).setAttribute('tabindex', '-1');
+      (work.querySelector('.card h3, .solo-steps') || work.querySelector('button')).focus();
+    };
+    preview.querySelector('.begin').addEventListener('click', showWork);
+    preview.querySelector('.preview-switch').addEventListener('click', () => changeMode(false));
+    reopen.querySelector('button').addEventListener('click', () => {
+      work.hidden = true;
+      preview.hidden = false;
+      preview.querySelector('.begin').focus();
+    });
+  }
   const sourceLine = lesson => (lesson.chapter
     ? `<p class="muted source">To go deeper, read <a href="${escapeHtml(lesson.chapter)}" target="_blank" rel="noopener">this topic in R for Data Science</a>.</p>`
     : `<p class="muted source">${escapeHtml(lesson.source)}</p>`);
   // What the lesson's checklist counts: lines in the older lessons; tasks (statements and IDE
   // actions) in those modelled on the book.
   const unitOf = lesson => (lesson.version === 2 ? 'task' : 'line');
-  const stepList = steps => `<ol class="steps">${steps.map((s, i) => `<li data-step="${i}">${escapeHtml(s.title)}</li>`).join('')}</ol>`;
+  const stepList = steps => `<ol class="steps">${steps.map((s, i) => `<li data-step="${i}">${linkedTitle(s.title)}</li>`).join('')}</ol>`;
   const stepsBox = (steps, open = false) => `<details class="steps-box"${open ? ' open' : ''}><summary>The ${steps.length} steps</summary>${stepList(steps)}</details>`;
   // R's message after library(tidyverse) ends with red "Conflicts" lines that look like errors.
   const attachesTidyverse = run => run.evidence === 'attached' && /^tidyverse$/.test(run.expected?.library || '');
-  const CONFLICTS_NOTE = '<p class="note"><strong>Red ✖ lines under “Conflicts”?</strong> They are normal, not errors. They say that two tidyverse functions, <code>filter()</code> and <code>lag()</code>, are used instead of base R functions with the same names. You can ignore them.</p>';
+  const conflictsNote = () => `<p class="note"><strong>Red ✖ lines under “Conflicts”?</strong> They are normal, not errors. They say that two tidyverse functions, <code>${functionLink('filter')}()</code> and <code>${functionLink('lag')}()</code>, are used instead of base R functions with the same names. You can ignore them.</p>`;
   const CONFLICTS_NOTE_SHORT = '<p class="note">Red ✖ lines under “Conflicts” after this are normal, not errors. You can ignore them.</p>';
-  const stepNotes = step => (step.runs.some(attachesTidyverse) ? CONFLICTS_NOTE : '');
+  const PLOT_HISTORY_NOTE = '<p class="note"><strong>Where will the earlier chart go?</strong> When you run this chart, the newest chart appears in Plots. The earlier chart stays in this session\'s plot history. Use the left and right arrows above Plots to move between charts. Its code stays in the script, so you can run it again. <a href="https://docs.posit.co/ide/user/ide/guide/ui/ui-panes.html#plots-pane" target="_blank" rel="noopener">About the Plots pane</a>.</p>';
+  const drawsChart = run => ['plot', 'ggplot'].includes(run.evidence);
+  function firstReplacementChart(lesson) {
+    let sawChart = false;
+    for (const [s, step] of lesson.steps.entries()) {
+      for (const [r, run] of step.runs.entries()) {
+        if (!drawsChart(run)) continue;
+        if (sawChart) return {s, r};
+        sawChart = true;
+      }
+    }
+    return null;
+  }
+  const chartTaskNote = (lesson, s, r) => {
+    const first = firstReplacementChart(lesson);
+    return first && first.s === s && first.r === r ? PLOT_HISTORY_NOTE : '';
+  };
+  const stepNotes = step => (step.runs.some(attachesTidyverse) ? conflictsNote() : '');
   // A step's explanation, with any note about what RStudio showed.
   const explainHtml = (step, values) => format(step.explain, values) + stepNotes(step);
   function endedView(content, text, changeMode, switchLabel) {
@@ -1417,7 +1672,7 @@
   // once, and otherwise the coach moves on when the countdown ends, into the next step after an
   // explanation. Advance pressed while the coach is acting ends the next wait as soon as it starts.
   //
-  // Auto-advance (a switch, on by default, kept in localStorage) is the learner's pause: turned
+  // Auto-advance (a switch, off by default, kept in localStorage) is the learner's pause: turned
   // off, the coach still works through a step by itself, but after the explanation it waits for
   // Next however long the learner takes. Turned off during an explanation's countdown, it stops
   // that countdown; turned on again, the countdown carries on from where it was.
@@ -1444,7 +1699,7 @@
         ${next ? `<button class="primary next-lesson" hidden>${escapeHtml(next.label)}</button>` : ''}
       </div>
       <div class="row controls">
-        <button class="auto" role="switch" aria-checked="true" aria-describedby="auto-off"><span class="track" aria-hidden="true"></span>Auto-advance</button>
+        <button class="auto" role="switch" aria-checked="false" aria-describedby="auto-off"><span class="track" aria-hidden="true"></span>Auto-advance</button>
         <button class="stop">Stop</button>
       </div>
       <p class="muted auto-off" id="auto-off" hidden>Auto-advance is off. After each step, the coach waits until you press <strong>Next</strong>.</p>
@@ -1458,7 +1713,7 @@
     const restart = $('.restart');
     const autoBtn = $('.auto');
     const AUTO_KEY = 'rsCoachAutoAdvance';
-    let auto = (() => { try { return localStorage.getItem(AUTO_KEY) !== '0'; } catch (_error) { return true; } })(); // storage blocked
+    let auto = (() => { try { return localStorage.getItem(AUTO_KEY) === '1'; } catch (_error) { return false; } })(); // storage blocked
     let held = null; // {i, ms}: step i's explanation, waiting for Next while Auto-advance is off
 
     const storeKey = keyFor('Demo');
@@ -1625,7 +1880,7 @@
       held = null;
       started += 1;
       card.hidden = false;
-      $('.card h3').textContent = `Step ${i + 1} of ${steps.length}: ${step.title}`;
+      $('.card h3').innerHTML = `Step ${i + 1} of ${steps.length}: ${linkedTitle(step.title)}`;
       explainEl.replaceChildren();
       bar('working');
       renderControls();
@@ -1660,7 +1915,7 @@
       const charts = step.runs.some(r => ['plot', 'ggplot'].includes(r.evidence));
       const pane = step.runs.some(r => r.ide?.viewer) ? ide.viewer : step.runs.some(r => r.ide?.help) ? ide.help : null;
       highlight(charts ? ide.plots : pane || (firstEcho >= 0 ? () => consoleRangeRect(firstEcho) : ide.console), Infinity);
-      explainEl.innerHTML = explainHtml(step, demo.values);
+      explainEl.innerHTML = explainHtml(step, demo.values) + (firstReplacementChart(manifest)?.s === i ? PLOT_HISTORY_NOTE : '');
       demo.completed = [...new Set([...demo.completed, i])];
       demo.state = 'waiting';
       demo.reloadAt = null;
@@ -2436,9 +2691,9 @@
       }
       const step = steps[g.step];
       const r = current();
-      $('.card h3').textContent = `Step ${g.step + 1} of ${steps.length}: ${step.title}`;
+      $('.card h3').innerHTML = `Step ${g.step + 1} of ${steps.length}: ${linkedTitle(step.title)}`;
       $('.tasks').innerHTML = step.runs.map((run, k) =>
-        `<li class="${g.done[key(g.step, k)] ? 'done' : k === r ? 'active' : ''}">${inline(run.task)}</li>`).join('');
+        `<li class="${g.done[key(g.step, k)] ? 'done' : k === r ? 'active' : ''}">${inline(run.task)}${chartTaskNote(lesson, g.step, k)}</li>`).join('');
       const read = r < 0 ? 0 : g.hints[key(g.step, r)] || 0;
       const hints = r < 0 ? [] : hintsFor(g.step, r);
       $('.hints').innerHTML = hints.slice(0, read).map(h => `<p class="hint-text">${h}</p>`).join('');
@@ -2645,9 +2900,9 @@
       ${lessonHeader(lesson, `Work through the list on your own in \`${lesson.script}\`. Write each ${lesson.version === 2 ? 'statement' : 'line'} under its step heading and run it. The coach checks nothing until you press **Check my work**.`)}
       ${sourceLine(lesson)}
       <ol class="solo-steps">${steps.map((step, s) => `
-        <li><strong>${escapeHtml(step.title)}</strong>
+        <li><strong>${linkedTitle(step.title)}</strong>
           <ul class="tasks">${step.runs.map((run, r) => `
-            <li data-line="${s}.${r}">${inline(run.task)}
+            <li data-line="${s}.${r}">${inline(run.task)}${chartTaskNote(lesson, s, r)}
               <button class="link hint" data-line="${s}.${r}" title="Hints are counted in your results">Hint</button>
               <span class="hint-text"></span>${attachesTidyverse(run) ? CONFLICTS_NOTE_SHORT : ''}</li>`).join('')}
           </ul></li>`).join('')}
@@ -2679,7 +2934,7 @@
         results.innerHTML = `<h3>All ${lines.length} ${unit}s done</h3>
           <p>Every ${unit} gave the right result in R. Hints used: <strong>${hints}</strong>.</p>
           <details><summary>What each step showed</summary>
-            <div class="prose">${steps.map(step => `<h4>${escapeHtml(step.title)}</h4>${explainHtml(step, values)}`).join('')}</div>
+            <div class="prose">${steps.map(step => `<h4>${linkedTitle(step.title)}</h4>${explainHtml(step, values)}`).join('')}</div>
           </details>
           ${next ? `<div class="row"><button class="primary next-lesson">${escapeHtml(next.label)}</button></div>` : ''}`;
         results.querySelector('.next-lesson')?.addEventListener('click', () => next.go());
@@ -2891,10 +3146,15 @@
   }
   // Lesson text, one line of it: `code` becomes <code>, **bold** <strong> and *italic* <em>.
   // Code spans are left alone, so `x * y` stays as it is.
+  const functionLink = name => FUNCTION_DOCS[name]
+    ? `<a class="doc-link" href="${escapeHtml(FUNCTION_DOCS[name])}" target="_blank" rel="noopener noreferrer" aria-label="Documentation for ${escapeHtml(name)}()">${escapeHtml(name)}</a>`
+    : escapeHtml(name);
+  const linkCalls = text => text.replace(/\b([A-Za-z][\w.]*)(?=\()/g, (_match, name) => functionLink(name));
+  const linkedTitle = text => linkCalls(escapeHtml(text));
   const inline = text => escapeHtml(text).split(/(`[^`]+`)/).map(part => (/^`[^`]+`$/.test(part)
-    ? `<code>${part.slice(1, -1)}</code>`
-    : part.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      .replace(/(^|[^\w*])\*([^*\s](?:[^*]*[^*\s])?)\*(?![\w*])/g, '$1<em>$2</em>'))).join('');
+    ? `<code>${linkCalls(part.slice(1, -1))}</code>`
+    : linkCalls(part.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/(^|[^\w*])\*([^*\s](?:[^*]*[^*\s])?)\*(?![\w*])/g, '$1<em>$2</em>')))).join('');
   // A whole text: a blank line starts a new paragraph, and lines starting "- " make a list.
   // {name} becomes a value RStudio displayed in this run.
   function format(text, values) {

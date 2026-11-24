@@ -9,7 +9,7 @@
     "solo"
   ],
   "script": "11-communication.R",
-  "summary": "Turn a chart made for exploring into one that explains itself to others: a title that states the finding, labelled peaks, readable axes, a theme, and a second chart beside it with patchwork.",
+  "summary": "Make a chart that explains its finding to others. Add a clear title, labels and readable axes. Use patchwork to place a second chart beside it.",
   "steps": [
     {
       "id": "setup",
@@ -59,7 +59,7 @@
             "base = ggplot(by_hour, aes(hour, n, colour = member_type)) + geom_line()"
           ],
           "purpose": "make a line chart of trips by hour, one line per member type, and keep it as `base`",
-          "task": "Make a line chart of `n` against `hour` for `by_hour`, coloured by `member_type`, and store it in `base` without printing it."
+          "task": "Make a line chart of `n` against `hour` for `by_hour`, coloured by `member_type`. Store it in `base` without printing it."
         },
         {
           "code": "base",
@@ -68,7 +68,7 @@
           "task": "Print `base` to draw it."
         }
       ],
-      "explain": "A ggplot is an object like any other: `base <- …` keeps the chart without drawing it, and printing `base` draws it. Each step of this lesson adds to the last step's chart and keeps the result under a new name, so a step can be run again without adding anything twice. `base` is fine for exploring {n_weekday} weekday trips, but someone else would have to work out what `n` is, which hour is which, and what the chart is telling them."
+      "explain": "A ggplot is an object like any other: `base <- …` keeps the chart without drawing it, and printing `base` draws it. Each step of this lesson adds to the last step's chart and keeps the result under a new name, so a step can be run again without adding anything twice.\n\n`base` is fine for exploring {n_weekday} weekday trips, but someone else would have to work out what `n` is, which hour is which, and what the chart is telling them."
     },
     {
       "id": "labels",
@@ -81,7 +81,7 @@
             "labelled = base + labs(title = 'Members ride at the rush hours, casual riders all afternoon', subtitle = 'Trips started in each hour of a weekday, 2025', x = 'Hour of the day', y = 'Trips', colour = 'Rider', caption = 'Data: Larkhaven Bikes')"
           ],
           "purpose": "add a title that states the finding, a subtitle, a caption and plain axis and legend titles, as `labelled`",
-          "task": "Add to `base`, with `labs()`: the title \"Members ride at the rush hours, casual riders all afternoon\", the subtitle \"Trips started in each hour of a weekday, 2025\", the axis titles \"Hour of the day\" and \"Trips\", the legend title \"Rider\" (`colour =`) and the caption \"Data: Larkhaven Bikes\". Store the result in `labelled`."
+          "task": "Add labels to `base` with `labs()`. Set the title to \"Members ride at the rush hours, casual riders all afternoon\". Set the subtitle to \"Trips started in each hour of a weekday, 2025\". Name the x and y axes \"Hour of the day\" and \"Trips\". Name the colour legend \"Rider\" with `colour =` and add the caption \"Data: Larkhaven Bikes\". Store the result in `labelled`."
         },
         {
           "code": "labelled",
@@ -90,7 +90,7 @@
           "task": "Print `labelled`."
         }
       ],
-      "explain": "`labs()` replaces the variable names ggplot2 used as titles. The title says what the chart shows rather than what it is: a reader should get the point before looking at the lines. The subtitle adds what was counted, the caption says where the data came from, and `colour =` names the legend after the aesthetic it explains."
+      "explain": "`labs()` replaces the variable names ggplot2 used as titles. The title says what the chart shows rather than what it is: a reader should get the point before looking at the lines.\n\nThe subtitle adds what was counted, the caption says where the data came from, and `colour =` names the legend after the aesthetic it explains."
     },
     {
       "id": "annotate",
@@ -107,7 +107,7 @@
             "casual_peak": "peaks$label[peaks$member_type == \"casual\"]"
           },
           "purpose": "find each rider type's busiest hour and write a label for it, as `peaks`",
-          "task": "Keep the busiest hour for each `member_type` with `slice_max()`, and add a column `label` such as \"9,672 trips at 8:00\", made with `paste0()` and `scales::comma(n)`. Store the result in `peaks`."
+          "task": "Keep the busiest hour for each `member_type` with `slice_max()`. Add `label`, such as \"9,672 trips at 8:00\", using `paste0()` and `scales::comma(n)`. Store the result in `peaks`."
         },
         {
           "code": "annotated <- labelled +\n  geom_point(data = peaks) +\n  geom_label_repel(\n    aes(label = label),\n    data = peaks,\n    seed = 1,\n    show.legend = FALSE\n  )",
@@ -116,7 +116,7 @@
             "annotated = labelled + geom_point(data = peaks) + geom_label_repel(data = peaks, mapping = aes(label = label), seed = 1, show.legend = FALSE)"
           ],
           "purpose": "mark each peak with a point and a label, as `annotated`",
-          "task": "Add to `labelled` a point at each of the `peaks` (`geom_point(data = peaks)`) and a label from its `label` column with `geom_label_repel()`, using `seed = 1` and `show.legend = FALSE`. Store the result in `annotated`."
+          "task": "Add a point at each `peaks` row to `labelled` with `geom_point(data = peaks)`. Add a label from `label` with `geom_label_repel()`, `seed = 1` and `show.legend = FALSE`. Store the result in `annotated`."
         },
         {
           "code": "annotated",
@@ -125,7 +125,7 @@
           "task": "Print `annotated`."
         }
       ],
-      "explain": "A layer can draw a different data frame from the chart's: `data = peaks` gives these two layers just the two busiest hours, which inherit the chart's mappings, colour included. The labels state the numbers a reader would otherwise estimate from the axis: {member_peak} for members, {casual_peak} for casual riders. `geom_label_repel()` moves each label away from the data and from the other labels; `seed = 1` makes it place them the same way every time, and `show.legend = FALSE` keeps a letter out of the legend."
+      "explain": "A layer can draw a different data frame from the chart's: `data = peaks` gives these two layers just the two busiest hours, which inherit the chart's mappings, colour included. The labels state the numbers a reader would otherwise estimate from the axis: {member_peak} for members, {casual_peak} for casual riders.\n\n`geom_label_repel()` moves each label away from the data and from the other labels; `seed = 1` makes it place them the same way every time, and `show.legend = FALSE` keeps a letter out of the legend."
     },
     {
       "id": "scales",
@@ -138,7 +138,7 @@
             "scaled = annotated + scale_x_continuous(breaks = c(0, 3, 6, 9, 12, 15, 18, 21, 24), labels = scales::label_number(suffix = ':00')) + scale_y_continuous(labels = scales::label_comma())"
           ],
           "purpose": "mark the hours every three hours, written as times, and put commas in the trip counts, as `scaled`",
-          "task": "Add to `annotated` an x scale with breaks every 3 hours from 0 to 24 (`seq(0, 24, by = 3)`), labelled with `scales::label_number(suffix = \":00\")`, and a y scale labelled with `scales::label_comma()`. Store the result in `scaled`."
+          "task": "Add an x scale to `annotated` with breaks every 3 hours from 0 to 24 (`seq(0, 24, by = 3)`). Format those labels with `scales::label_number(suffix = \":00\")`. Format the y labels with `scales::label_comma()`. Store the result in `scaled`."
         },
         {
           "code": "scaled",
@@ -147,7 +147,7 @@
           "task": "Print `scaled`."
         }
       ],
-      "explain": "Every aesthetic has a scale, which ggplot2 adds with defaults: here, x breaks every 5 hours and plain numbers. `breaks` chooses where the ticks go, every 3 hours, and `labels` how they read: `scales::label_number(suffix = \":00\")` turns 18 into 18:00, and `scales::label_comma()` writes 9,000 rather than 9000. The `scales` package has a `label_` function for most formats: percentages, money, dates."
+      "explain": "Every aesthetic has a scale, which ggplot2 adds with defaults: here, x breaks every 5 hours and plain numbers. `breaks` chooses where the ticks go, every 3 hours, and `labels` how they read: `scales::label_number(suffix = \":00\")` turns 18 into 18:00, and `scales::label_comma()` writes 9,000 rather than 9000.\n\nThe `scales` package has a `label_` function for most formats: percentages, money, dates."
     },
     {
       "id": "theme",
@@ -169,7 +169,7 @@
           "task": "Print `polished`."
         }
       ],
-      "explain": "A theme controls everything not drawn from the data: background, grid lines, fonts, the legend's place. `theme_minimal()` drops the grey background, so the lines stand out. `theme()` then changes single elements: with the legend at the top, the lines get the chart's full width. A complete theme such as `theme_minimal()` resets every element, so it comes before the changes made with `theme()`."
+      "explain": "A theme controls everything not drawn from the data: background, grid lines, fonts, the legend's place. `theme_minimal()` drops the grey background, so the lines stand out. `theme()` then changes single elements: with the legend at the top, the lines get the chart's full width.\n\nA complete theme such as `theme_minimal()` resets every element, so it comes before the changes made with `theme()`."
     },
     {
       "id": "patchwork",
@@ -186,7 +186,7 @@
             "casual_total": "format(sum(by_hour$n[by_hour$member_type == \"casual\"]), big.mark = \",\")"
           },
           "purpose": "make a bar chart of each rider type's total weekday trips, as `totals`",
-          "task": "Make a bar chart of the total `n` for each `member_type` in `by_hour` with `geom_col(show.legend = FALSE)`, filled by `member_type`, with commas on the y axis, the y title \"Weekday trips\", no x title and `theme_minimal()`. Store it in `totals`."
+          "task": "Make a bar chart of total `n` by `member_type` in `by_hour`, filled by `member_type`. Use `geom_col(show.legend = FALSE)` and comma y labels. Set the y title to \"Weekday trips\", leave the x title empty, and add `theme_minimal()`. Store it in `totals`."
         },
         {
           "code": "polished + totals + plot_layout(widths = c(3, 1))",
@@ -198,7 +198,7 @@
           "task": "Put `polished` and `totals` side by side with `+`, the first three times as wide, with `plot_layout(widths = c(3, 1))`."
         }
       ],
-      "explain": "With patchwork attached, `+` between two charts puts them side by side (`/` would stack them), and `plot_layout()` sets their widths. The bar chart answers the question the lines raise: how many trips each kind of rider makes in all. `geom_col()` stacks each rider type's 24 hourly counts into one bar: {member_total} weekday trips by members and {casual_total} by casual riders. Two charts that share a style, colours included, read as one figure."
+      "explain": "With patchwork attached, `+` between two charts puts them side by side (`/` would stack them), and `plot_layout()` sets their widths. The bar chart answers the question the lines raise: how many trips each kind of rider makes in all.\n\n`geom_col()` stacks each rider type's 24 hourly counts into one bar: {member_total} weekday trips by members and {casual_total} by casual riders. Two charts that share a style, colours included, read as one figure."
     }
   ]
 }

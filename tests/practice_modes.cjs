@@ -174,6 +174,7 @@ async function guidedStep(page, lesson, s, from = 0) {
       await coachEl(page, 'button.mode-card[data-mode="guided"]').click();
       await waitForFreshStart(page, 1);
       await waitFor(page, () => window.__rsCoach.guided);
+      await coachEl(page, 'button.begin').click();
       const start = await guidedView(page);
       const pending = lesson.steps.slice(1).map(() => 'pending').join();
       assert(start.mode === 'guided' && start.steps.join() === `active,${pending}` && start.tasks.join() === 'active', JSON.stringify(start));
@@ -307,6 +308,7 @@ async function guidedStep(page, lesson, s, from = 0) {
       await coachEl(page, 'button.mode-card[data-mode="solo"]').click();
       const {last} = await waitForFreshStart(page, fresh + 1);
       await waitFor(page, () => window.__rsCoach.solo);
+      await coachEl(page, 'button.begin').click();
       verifyFresh(await rstudioState(page), lesson, scriptPath);
       const start = await soloView(page);
       const total = lesson.steps.reduce((n, s) => n + s.runs.length, 0);
@@ -379,6 +381,7 @@ async function guidedStep(page, lesson, s, from = 0) {
       await coachEl(page, 'button.mode-card[data-mode="solo"]').click();
       await waitForFreshStart(page, 1);
       await waitFor(page, () => window.__rsCoach.solo);
+      await coachEl(page, 'button.begin').click();
       const total = lesson.steps.reduce((n, s) => n + s.runs.length, 0);
       await consoleRun(page, 'library(tidyverse)');
       await consoleRun(page, 'trips = read_csv(\'data/trips.csv\', show_col_types = FALSE)');
@@ -398,6 +401,7 @@ async function guidedStep(page, lesson, s, from = 0) {
       await coachEl(page, 'button.mode-card[data-mode="guided"]').click();
       await waitForFreshStart(page, fresh + 1);
       await waitFor(page, () => window.__rsCoach.guided);
+      await coachEl(page, 'button.begin').click();
       verifyFresh(await rstudioState(page), lesson, scriptPath);
       for (let s = 0; s < 3; s += 1) {
         if (s > 0) await coachEl(page, 'button.next').click();
@@ -470,6 +474,7 @@ async function guidedStep(page, lesson, s, from = 0) {
       await coachEl(page, 'button.mode-card[data-mode="solo"]').click();
       await waitForFreshStart(page, ++fresh);
       await waitFor(page, () => window.__rsCoach.solo);
+      await coachEl(page, 'button.begin').click();
       const title = await coachText('h2');
       await consoleRun(page, 'library(tidyverse)');
       await waitFor(page, () => window.__rsCoach.solo.seen['0.0']);
@@ -532,6 +537,7 @@ async function guidedStep(page, lesson, s, from = 0) {
       await coachEl(page, 'button.mode-card[data-mode="guided"]').click();
       const {last} = await waitForFreshStart(page, ++fresh);
       await waitFor(page, () => window.__rsCoach.guided);
+      await coachEl(page, 'button.begin').click();
       verifyFresh(await rstudioState(page), lesson, scriptPath);
       const start = await guidedView(page);
       assert(start.step === 0 && Object.keys(start.done).length === 0 && start.tasks.join() === 'active', JSON.stringify(start));
@@ -554,6 +560,7 @@ async function guidedStep(page, lesson, s, from = 0) {
       await coachEl(page, 'button.mode-card[data-mode="solo"]').click();
       await waitForFreshStart(page, ++fresh);
       await waitFor(page, () => window.__rsCoach.solo);
+      await coachEl(page, 'button.begin').click();
       verifyFresh(await rstudioState(page), lesson, path.join(ROOT, 'run/project', lesson.script));
       await coachEl(page, 'button.check').click();
       const view = await soloView(page);

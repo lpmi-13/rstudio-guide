@@ -10,10 +10,11 @@ Lessons with "version": 2 (modelled on R for Data Science) are checked strictly:
 the collection, under their collection title, and start with a Setup step of library() calls,
 followed by 5-8 steps of 1-3 statements. "fixture": true marks a lesson that only the audits use.
 
-Plain language (content/plain-language.json, after ELK Guide's): the lessons listed there under
-"checked" must use none of its "avoid" words, keep sentences short (25 words, 20 in a task),
-paragraphs short (55 words) and the summary short (35 words). The coach's own strings must use
-none of the "avoid" words. Code in backticks and {values} count as one word each.
+Plain language (content/plain-language.json, after ELK Guide's): every lesson has a short summary
+(35 words), short task and purpose sentences (20 words), and short explanation paragraphs (55
+words). Lessons listed under "checked" also keep explanation sentences to 25 words and avoid
+formal words there. The coach's own strings avoid those words too. Code in backticks and {values}
+count as one word each.
 
   python3 -I tools/check_content.py
 """
@@ -256,23 +257,48 @@ def check_plain(lesson, problem):
         for sentence in long_sentences(text, sentence_limit):
             problem(f"{where}: a sentence is too long ({sentence})")
 
-    summary = lesson.get("summary", "")
-    plain(summary, "summary", limits["sentence_words"])
-    if len(prose_words(summary)) > limits["summary_words"]:
-        problem(f"summary: {len(prose_words(summary))} words, more than {limits['summary_words']}")
+    check_summary(lesson, problem)
     for number, step in enumerate(lesson.get("steps", []), start=1):
         explain = step.get("explain", "")
         plain(explain, f"step {number} explain", limits["sentence_words"])
-        for paragraph in re.split(r"\n\s*\n", explain.strip()):
-            for part in re.split(r"\n(?=\s*- )", paragraph):  # a list item counts on its own
-                if len(prose_words(part)) > limits["paragraph_words"]:
-                    problem(f"step {number} explain: a paragraph of {len(prose_words(part))} words, more than "
-                            f"{limits['paragraph_words']}: {part.strip()[:80]}")
+    check_paragraphs(lesson, problem)
+    check_instructions(lesson, problem)
+
+
+def check_summary(lesson, problem):
+    """Every lesson shows its summary in the start overview, in all three modes."""
+    summary = lesson.get("summary", "")
+    for word in hard_words(summary):
+        problem(f"summary: use a plainer word than {word}")
+    for sentence in long_sentences(summary, PLAIN["limits"]["sentence_words"]):
+        problem(f"summary: a sentence is too long ({sentence})")
+    if len(prose_words(summary)) > PLAIN["limits"]["summary_words"]:
+        problem(f"summary: {len(prose_words(summary))} words, more than {PLAIN['limits']['summary_words']}")
+
+
+def check_instructions(lesson, problem):
+    """Tasks appear in Guided and Solo; purposes narrate Demonstration and Show me."""
+    for number, step in enumerate(lesson.get("steps", []), start=1):
         for k, run in enumerate(step.get("runs", []), start=1):
-            if run.get("task"):
-                plain(run["task"], f"step {number} task {k}", limits["task_sentence_words"])
-            if run.get("purpose"):
-                plain(run["purpose"], f"step {number} purpose {k}", limits["task_sentence_words"])
+            for field in ("task", "purpose"):
+                text = run.get(field)
+                if not text:
+                    continue
+                for word in hard_words(text):
+                    problem(f"step {number} {field} {k}: use a plainer word than {word}")
+                for sentence in long_sentences(text, PLAIN["limits"]["task_sentence_words"]):
+                    problem(f"step {number} {field} {k}: a sentence is too long ({sentence})")
+
+
+def check_paragraphs(lesson, problem):
+    """Every mode shows step explanations, so keep them scannable throughout the collection."""
+    limit = PLAIN["limits"]["paragraph_words"]
+    for number, step in enumerate(lesson.get("steps", []), start=1):
+        for paragraph in re.split(r"\n\s*\n", step.get("explain", "").strip()):
+            for part in re.split(r"\n(?=\s*- )", paragraph):  # a list item counts on its own
+                if len(prose_words(part)) > limit:
+                    problem(f"step {number} explain: a paragraph of {len(prose_words(part))} words, more than "
+                            f"{limit}: {part.strip()[:80]}")
 
 
 def check_coach_strings(problems):
@@ -314,6 +340,12 @@ def main():
     folders = sorted(p for p in (ROOT / "scenarios").iterdir() if (p / "scenario.json").is_file())
     for folder in folders:
         check_lesson(folder, collection, problems)
+        if folder.name not in PLAIN["checked"]:
+            lesson = json.loads((folder / "scenario.json").read_text())
+            if "summary" in lesson:
+                check_summary(lesson, lambda text, folder=folder: problems.append(f"{folder.name} (plain language): {text}"))
+            check_instructions(lesson, lambda text, folder=folder: problems.append(f"{folder.name} (plain language): {text}"))
+            check_paragraphs(lesson, lambda text, folder=folder: problems.append(f"{folder.name} (plain language): {text}"))
     for lesson_id in PLAIN["checked"]:
         lesson = json.loads((ROOT / "scenarios" / lesson_id / "scenario.json").read_text())
         check_plain(lesson, lambda text, lesson_id=lesson_id: problems.append(f"{lesson_id} (plain language): {text}"))

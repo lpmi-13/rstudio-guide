@@ -5,7 +5,7 @@
   "title": "Data import",
   "modes": ["demonstration", "guided", "solo"],
   "script": "07-data-import.R",
-  "summary": "Read the Larkhaven Bikes monthly station exports, which were written for people rather than R: skip a title line, declare missing-value codes and column types, find parsing problems, clean the names and numbers, read twelve files at once, see which column types a CSV file keeps and which an RDS file keeps, and type a small table by hand.",
+  "summary": "Read messy monthly CSV files into R. Handle title lines, missing values and column types; find parsing problems; combine files; and compare CSV with RDS.",
   "steps": [
     {
       "id": "setup",
@@ -38,7 +38,7 @@
          "purpose": "read it again, with the codes the export uses for missing values",
          "task": "Read it again with `skip = 1`, and tell `read_csv()` that empty cells, `n/a` and `-` mean a missing value: `na = c(\"\", \"n/a\", \"-\")`."}
       ],
-      "explain": "The file's first line is a title, not column names, so the first read made one column named after the title, put each whole line in it, and warned about parsing issues. `skip = 1` skips the title: {n_rows} stations, with 10 named columns. In that read, `Avg Duration (min)` is text (`<chr>`), because the export writes a missing value as `n/a`, `-` or nothing. `na` lists the codes that mean missing; with them, the column is a number (`<dbl>`), with `NA` where a value is missing."
+      "explain": "The file's first line is a title, not column names, so the first read made one column named after the title, put each whole line in it, and warned about parsing issues. `skip = 1` skips the title: {n_rows} stations, with 10 named columns.\n\nIn that read, `Avg Duration (min)` is text (`<chr>`), because the export writes a missing value as `n/a`, `-` or nothing. `na` lists the codes that mean missing; with them, the column is a number (`<dbl>`), with `NA` where a value is missing."
     },
     {
       "id": "types",
@@ -48,12 +48,12 @@
          "warning": "One or more parsing issues",
          "alternatives": ["jan = read_csv('data/exports/station-activity-2025-01.csv', skip = 1, na = c('', 'n/a', '-'), col_types = cols(`Dock Faults` = 'i'))"],
          "purpose": "read January into `jan`, with `Dock Faults` as whole numbers",
-         "task": "Read the file into `jan` as in the last statement, adding `col_types = cols(`Dock Faults` = col_integer())` so that column is read as whole numbers."},
+         "task": "Read the file into `jan` as before. Add `col_types = cols(`Dock Faults` = col_integer())` to read Dock Faults as whole numbers."},
         {"code": "problems(jan)", "evidence": "pattern", "pattern": "an integer\\s+2 \\(est\\.\\)",
          "purpose": "list the values that didn't fit their column's type",
          "task": "List the parsing problems in `jan` with `problems()`."}
       ],
-      "explain": "Left to guess, `read_csv()` made `Dock Faults` text. `col_types` says what a column holds instead: `col_integer()` for whole numbers. One value isn't a whole number, so R warned, and `problems()` says where: in column 9, where it expected an integer, it found `2 (est.)`, someone's estimate. That cell is `NA` in `jan`; the others are whole numbers, or `NA` where the export left them missing. Names with spaces, such as `Dock Faults`, need backticks in code."
+      "explain": "Left to guess, `read_csv()` made `Dock Faults` text. `col_types` says what a column holds instead: `col_integer()` for whole numbers. One value isn't a whole number, so R warned, and `problems()` says where: in column 9, where it expected an integer, it found `2 (est.)`, someone's estimate.\n\nThat cell is `NA` in `jan`; the others are whole numbers, or `NA` where the export left them missing. Names with spaces, such as `Dock Faults`, need backticks in code."
     },
     {
       "id": "clean",
@@ -70,7 +70,7 @@
          "purpose": "give the columns names that are easy to type, and take the units out of two of them",
          "task": "Clean `jan`'s column names with `clean_names()`, then turn `avg_trip_distance` and `e_bike_share` into numbers with `parse_number()` inside `mutate()`."}
       ],
-      "explain": "`clean_names()` rewrote every column name in snake case, lower case with words joined by underscores: `Avg Duration (min)` became `avg_duration_min`, which needs no backticks. `parse_number()` reads the number out of a piece of text and drops what's around it: `{first_distance}` became {first_distance_number} and `{first_share}` became {first_share_number}. A unit belongs in a column's name or its notes, not in every cell, where it stops the column being a number."
+      "explain": "`clean_names()` rewrote every column name in snake case, lower case with words joined by underscores: `Avg Duration (min)` became `avg_duration_min`, which needs no backticks. `parse_number()` reads the number out of a piece of text and drops what's around it: `{first_distance}` became {first_distance_number} and `{first_share}` became {first_share_number}.\n\nA unit belongs in a column's name or its notes, not in every cell, where it stops the column being a number."
     },
     {
       "id": "many",
@@ -108,7 +108,7 @@
          "purpose": "read the CSV file back, and look at the type of `Dock Faults`",
          "task": "Read `jan.csv` back with `read_csv()`."}
       ],
-      "explain": "`write_csv()` saved `jan` as `jan.csv`, which is in the Files pane. A CSV file is plain text that any program can open, but it doesn't record column types. In `jan`, `Dock Faults` holds whole numbers (`<int>`), because you chose `col_integer()`. Read back, `read_csv()` guessed the types again, and its message lists `Dock Faults` under `dbl`: your choice is lost."
+      "explain": "`write_csv()` saved `jan` as `jan.csv`, which is in the Files pane. A CSV file is plain text that any program can open, but it doesn't record column types. In `jan`, `Dock Faults` holds whole numbers (`<int>`), because you chose `col_integer()`.\n\nRead back, `read_csv()` guessed the types again, and its message lists `Dock Faults` under `dbl`: your choice is lost."
     },
     {
       "id": "rds",
@@ -131,9 +131,9 @@
         {"code": "depots <- tribble(\n  ~depot      , ~mechanics ,\n  \"Northgate\" ,          3 ,\n  \"Harbour\"   ,          2 ,\n  \"Eastfield\" ,          3\n)", "evidence": "assign",
          "alternatives": ["depots = tibble(depot = c('Northgate', 'Harbour', 'Eastfield'), mechanics = c(3, 2, 3))"],
          "purpose": "type a small table of the three depots and their mechanics into `depots`",
-         "task": "Make a data frame `depots` with `tribble()`: a column `depot` holding \"Northgate\", \"Harbour\" and \"Eastfield\", and a column `mechanics` holding 3, 2 and 3."}
+         "task": "Make a data frame `depots` with `tribble()`. Its `depot` column has \"Northgate\", \"Harbour\" and \"Eastfield\"; its `mechanics` column has 3, 2 and 3."}
       ],
-      "explain": "`tribble()` builds a small data frame from values you type, one row per line, with the column names first, each after a `~`. It suits lookup tables like this one: the scheme's three repair depots and how many mechanics each has. RStudio's formatter, Air, lines the columns up so the code reads like the table it makes. `tibble()` builds the same thing a column at a time."
+      "explain": "`tribble()` builds a small data frame from values you type, one row per line, with the column names first, each after a `~`. It suits lookup tables like this one: the scheme's three repair depots and how many mechanics each has.\n\nRStudio's formatter, Air, lines the columns up so the code reads like the table it makes. `tibble()` builds the same thing a column at a time."
     }
   ]
 }

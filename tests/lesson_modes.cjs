@@ -228,6 +228,14 @@ async function chooseMode(page, mode) {
     .then(h => h.jsonValue());
   assert(last.problems.length === 0, `the fresh start met problems: ${last.problems.join(' ')}`);
   await wait(page, state => Boolean(window.__rsCoach?.[state]), {demonstration: 'demo', guided: 'guided', solo: 'solo'}[mode]);
+  if (mode === 'demonstration') {
+    assert(await coachEl(page, 'button.auto').getAttribute('aria-checked') === 'false', 'Auto-advance should start off');
+    await coachEl(page, 'button.auto').click(); // this audit runs the full demonstration without presses
+  } else {
+    const preview = await coachEl(page, '.lesson-preview').textContent();
+    assert(preview.includes('What you\'ll learn') && preview.includes(lessonScript), `missing lesson overview: ${preview}`);
+    await coachEl(page, 'button.begin').click();
+  }
 }
 
 (async () => {

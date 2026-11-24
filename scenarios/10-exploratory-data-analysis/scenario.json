@@ -9,7 +9,7 @@
     "solo"
   ],
   "script": "10-exploratory-data-analysis.R",
-  "summary": "Explore a year of trip lengths by asking questions of them: find the unusual values and set them aside as missing, see how trip length varies with a category and how two categories vary together, and use a model to show what distance alone doesn't explain.",
+  "summary": "Explore trip lengths by asking questions of the data. Find unusual values, compare groups, and use a model to see what distance alone cannot explain.",
   "steps": [
     {
       "id": "setup",
@@ -90,7 +90,7 @@
           "task": "Keep the trips whose `duration_min` is 0 or less, or more than a day (`24 * 60` minutes)."
         }
       ],
-      "explain": "`coord_cartesian(ylim = …)` zooms in without changing the data, so the rare bars show: a few trips last days. Zooming with a scale's limits instead would drop the rows outside them. The filter finds {n_bad} trips no one could have made: {n_zero} lasted no time or less than none, which a dock's clock got wrong, and {n_day} lasted more than a day; {n_day_no_end} of those have no end station, which is what a lost bike looks like."
+      "explain": "`coord_cartesian(ylim = …)` zooms in without changing the data, so the rare bars show: a few trips last days. Zooming with a scale's limits instead would drop the rows outside them.\n\nThe filter finds {n_bad} trips no one could have made: {n_zero} lasted no time or less than none, which a dock's clock got wrong, and {n_day} lasted more than a day; {n_day_no_end} of those have no end station, which is what a lost bike looks like."
     },
     {
       "id": "na",
@@ -106,7 +106,7 @@
             "n_na": "format(sum(is.na(clean$duration_min)))"
           },
           "purpose": "flag those trips as `implausible` and set their lengths to NA, keeping the trips, as `clean`",
-          "task": "Store in `clean` a copy of `trips` with a new column, `implausible`, that is `TRUE` where `duration_min` is 0 or less or more than a day, and with `duration_min` set to `NA` in those rows with `if_else()`."
+          "task": "Copy `trips` into `clean` and add `implausible`. Mark trips with `duration_min` at most 0 or over a day. Use `if_else()` to set those lengths to `NA`."
         },
         {
           "code": "ggplot(clean, aes(x = duration_min)) +\n  geom_histogram(binwidth = 2)",
@@ -119,7 +119,7 @@
           "task": "Draw a histogram of `duration_min` in `clean`, with `binwidth = 2`."
         }
       ],
-      "explain": "Rather than drop the trips with impossible lengths, `clean` keeps every trip and marks the problem. `implausible` says which rows had one, and `if_else()` replaces just those lengths with `NA`: the rest of each row, its stations and its bike, stays usable. A later `mutate()` argument can use a column made by an earlier one, as `if_else(implausible, …)` does. {n_na} trips now have no length. The histogram's x axis ends at a day, and ggplot2 warns that it removed {n_na} rows: the missing values aren't hidden, they're counted."
+      "explain": "Rather than drop the trips with impossible lengths, `clean` keeps every trip and marks the problem. `implausible` says which rows had one, and `if_else()` replaces just those lengths with `NA`: the rest of each row, its stations and its bike, stays usable.\n\nA later `mutate()` argument can use a column made by an earlier one, as `if_else(implausible, …)` does. {n_na} trips now have no length. The histogram's x axis ends at a day, and ggplot2 warns that it removed {n_na} rows: the missing values aren't hidden, they're counted."
     },
     {
       "id": "category",
@@ -140,7 +140,7 @@
           "task": "Draw `duration_min` in `clean` as a frequency polygon with `y = after_stat(density)`: `geom_freqpoly(binwidth = 2)`, coloured by `member_type`. Zoom to 0 to 90 minutes with `coord_cartesian()`."
         }
       ],
-      "explain": "Next question: does trip length vary with the kind of rider? A frequency polygon is a histogram drawn as a line, so several fit on one chart. Members make more trips than casual riders, so plain counts would make their line taller whatever its shape; `after_stat(density)` scales each line so its area is 1, and only the shapes are compared. Members' trips peak short and fall away quickly; casual riders' are spread wider. The median member trip is {med_member} minutes, the median casual trip {med_casual}."
+      "explain": "Next question: does trip length vary with the kind of rider? A frequency polygon is a histogram drawn as a line, so several fit on one chart.\n\nMembers make more trips than casual riders, so plain counts would make their line taller whatever its shape; `after_stat(density)` scales each line so its area is 1, and only the shapes are compared. Members' trips peak short and fall away quickly; casual riders' are spread wider.\n\nThe median member trip is {med_member} minutes, the median casual trip {med_casual}."
     },
     {
       "id": "tiles",
@@ -157,10 +157,10 @@
             "top_hour": "local({c <- count(clean, day = wday(started_at, label = TRUE), hour = hour(started_at)); format(c$hour[which.max(c$n)])})"
           },
           "purpose": "count the trips in each hour of each day of the week, and colour a tile by each count",
-          "task": "Count the trips in `clean` by `day` (`wday(started_at, label = TRUE)`) and `hour` (`hour(started_at)`), then pipe the counts into `ggplot()` and draw them with `geom_tile()`: `hour` on x, `day` on y, `fill = n`."
+          "task": "Count `clean` by `day` (`wday(started_at, label = TRUE)`) and `hour` (`hour(started_at)`). Pipe into `ggplot()` and draw `geom_tile()` with `hour` on x, `day` on y and `fill = n`."
         }
       ],
-      "explain": "Two categories vary together when some combinations are more common than they would be by chance. Here, each tile is one hour of one day, coloured by its number of trips over the year. Weekdays light up at the two rush hours; the weekend glows in the middle of the day instead. The busiest tile is {top_day} at {top_hour}:00. The count's result goes straight into `ggplot()` with `|>`, then the chart's layers join with `+`."
+      "explain": "Two categories vary together when some combinations are more common than they would be by chance. Here, each tile is one hour of one day, coloured by its number of trips over the year. Weekdays light up at the two rush hours; the weekend glows in the middle of the day instead.\n\nThe busiest tile is {top_day} at {top_hour}:00. The count's result goes straight into `ggplot()` with `|>`, then the chart's layers join with `+`."
     },
     {
       "id": "numbers",
@@ -180,7 +180,7 @@
           }
         }
       ],
-      "explain": "{n_trips} points would hide each other, so `geom_bin_2d()` divides the chart into rectangles and colours each by how many trips fall in it. On log scales, where each step along an axis multiplies by the same amount, the busiest rectangles form a straight band: longer trips take longer, in proportion. ggplot2 gives two warnings: {n_zero_km} trips have a distance of 0, whose logarithm is minus infinity, and it left out the {n_na} trips with no length, which include those."
+      "explain": "{n_trips} points would hide each other, so `geom_bin_2d()` divides the chart into rectangles and colours each by how many trips fall in it.\n\nOn log scales, each step along an axis multiplies by the same amount. The busiest rectangles form a straight band: longer trips take longer, in proportion.\n\nggplot2 warns that {n_zero_km} trips have distance 0, whose logarithm is minus infinity. It also leaves out {n_na} trips with no length. Those include the zero-distance trips."
     },
     {
       "id": "model",
@@ -220,7 +220,7 @@
           "task": "Draw boxplots of `.resid` for each `bike_type` in `residuals`."
         }
       ],
-      "explain": "Distance explains so much of a trip's length that it hides everything else. The model fits the straight band from the last chart, and each trip's residual, `.resid`, is how far its length is from what the model expects for its distance: above 0, longer; below, shorter (on the log scale). With distance accounted for, a pattern shows: the median residual is {res_classic} for classic bikes and {res_electric} for e-bikes, so over the same distance an e-bike trip takes about {pct_less}% less time. A model is another way to look at data: it takes out the pattern you know, so the next one can show."
+      "explain": "Distance explains so much of a trip's length that it hides everything else. The model fits the straight band from the last chart, and each trip's residual, `.resid`, is how far its length is from what the model expects for its distance: above 0, longer; below, shorter (on the log scale).\n\nWith distance accounted for, a pattern shows: the median residual is {res_classic} for classic bikes and {res_electric} for e-bikes, so over the same distance an e-bike trip takes about {pct_less}% less time. A model is another way to look at data: it takes out the pattern you know, so the next one can show."
     }
   ]
 }

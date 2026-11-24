@@ -5,7 +5,7 @@
   "title": "Workflow: basics",
   "modes": ["demonstration", "guided", "solo"],
   "script": "02-workflow-basics.R",
-  "summary": "Work out Larkhaven Bikes fares with R: sums, values kept with `<-`, many values at once, comments and names, functions with named arguments, and what R's error messages tell you.",
+  "summary": "Work out bike fares with R. Save values with `<-`, work with many values at once, and use functions with named arguments. Read error messages when code goes wrong.",
   "steps": [
     {
       "id": "setup",
@@ -24,13 +24,13 @@
         {"code": "1.5 + 0.18 * 20", "evidence": "value",
          "values": {"fare": "format(1.5 + 0.18 * 20)"},
          "purpose": "work out what a 20-minute ride costs a casual rider: $1.50 to unlock the bike, then 18 cents a minute",
-         "task": "Work out what a 20-minute ride costs a casual rider: 1.5 (the unlock fee) plus 0.18 (the price per minute) times 20."},
+         "task": "Find the cost of a 20-minute casual ride. Add the 1.5 unlock fee to 0.18 times 20."},
         {"code": "(1.5 + 0.18) * 20", "evidence": "value",
          "values": {"bracketed": "format((1.5 + 0.18) * 20)"},
          "purpose": "see what brackets change: add first, then multiply",
          "task": "Put brackets around `1.5 + 0.18`, then multiply by 20, to see what brackets change."}
       ],
-      "explain": "R works a sum out in the order maths does, multiplying before adding, so `1.5 + 0.18 * 20` is {fare}: a 20-minute ride at a casual rider's fare on a classic bike. Brackets go first: `(1.5 + 0.18) * 20` is {bracketed}, which charges the unlock fee 20 times. The `[1]` in front of each answer marks its first value; a longer result shows the position of the first value on each line."
+      "explain": "R works a sum out in the order maths does, multiplying before adding, so `1.5 + 0.18 * 20` is {fare}: a 20-minute ride at a casual rider's fare on a classic bike. Brackets go first: `(1.5 + 0.18) * 20` is {bracketed}, which charges the unlock fee 20 times.\n\nThe `[1]` in front of each answer marks its first value; a longer result shows the position of the first value on each line."
     },
     {
       "id": "assign",
@@ -47,7 +47,7 @@
          "purpose": "work out the 20-minute fare again, from the two names",
          "task": "Work out the 20-minute fare again, using `unlock_fee` and `per_minute` instead of the numbers."}
       ],
-      "explain": "`<-` assigns: it keeps the value on its right under the name on its left. R prints nothing, but both names now appear in the Environment pane, each with its value. Alt+- types the arrow with a space each side. A name stands for its value, so `unlock_fee + per_minute * 20` gives {fare_again}, as before. When the fare changes, you change one line rather than every sum."
+      "explain": "`<-` assigns: it keeps the value on its right under the name on its left. R prints nothing, but both names now appear in the Environment pane, each with its value. Alt+- types the arrow with a space each side. A name stands for its value, so `unlock_fee + per_minute * 20` gives {fare_again}, as before.\n\nWhen the fare changes, you change one line rather than every sum."
     },
     {
       "id": "vectors",
@@ -66,7 +66,7 @@
          "purpose": "work out what each of the five trips cost",
          "task": "Work out what each of the five trips cost, from `unlock_fee`, `per_minute` and `minutes`."}
       ],
-      "explain": "`c()` combines values into a vector: {n_minutes} numbers under one name. Arithmetic on a vector works on every element. `per_minute * minutes` multiplies each length by 0.18, and the one unlock fee is added to each, so the answer has five costs: {costs}. The first, {first_cost}, is a 12-minute ride. R reuses the single unlock fee for every element; this is called recycling."
+      "explain": "`c()` combines values into a vector: {n_minutes} numbers under one name. Arithmetic on a vector works on every element. `per_minute * minutes` multiplies each length by 0.18, and the one unlock fee is added to each, so the answer has five costs: {costs}. The first, {first_cost}, is a 12-minute ride.\n\nR reuses the single unlock fee for every element; this is called recycling."
     },
     {
       "id": "names",
@@ -80,7 +80,7 @@
          "purpose": "show `trip_cost`, mistyped with a capital T",
          "task": "Type `Trip_cost`, with a capital T by mistake, and run it to see R's error."}
       ],
-      "explain": "R ignores everything on a line after `#`, so a comment is for people: use it to say what code is for, which the code itself can't. A name starts with a letter and holds letters, numbers, `_` and `.`; these lessons use snake_case, lower-case words joined by `_`, as in `trip_cost`. Names are case-sensitive and R doesn't guess what you meant, so it reports: object 'Trip_cost' not found. That message tells you where to look: the spelling and capitals of a name. The Environment pane lists the names that exist, and typing a name's first letters then pressing Tab completes it."
+      "explain": "R ignores everything on a line after `#`, so a comment is for people: use it to say what code is for, which the code itself can't. A name starts with a letter and holds letters, numbers, `_` and `.`; these lessons use snake_case, lower-case words joined by `_`, as in `trip_cost`.\n\nNames are case-sensitive and R doesn't guess what you meant, so it reports: object 'Trip_cost' not found. That message tells you where to look: the spelling and capitals of a name. The Environment pane lists the names that exist, and typing a name's first letters then pressing Tab completes it."
     },
     {
       "id": "functions",
@@ -97,7 +97,7 @@
          "purpose": "find the five trips' mean cost, rounded to the cent",
          "task": "Find the mean of `trip_cost` with `mean()`, and round it to 2 decimal places with `round()` and its `digits` argument."}
       ],
-      "explain": "A function call is the function's name, then its arguments in brackets, separated by commas. `seq(from = 5, to = 60, by = 5)` names each argument and gives {n_seq} numbers. Given in order, arguments need no names: `seq(5, 60, 5)` gives the same, because `from`, `to` and `by` come first in `seq()`. Names make a call easier to read, and let you leave out arguments or give them in any order. One call can go inside another: `mean()` works out {raw_mean}, then `round()` rounds it to {mean_cost}. Typing `seq(` shows its arguments, and `?seq` opens its help page."
+      "explain": "A function call is the function's name, then its arguments in brackets, separated by commas. `seq(from = 5, to = 60, by = 5)` names each argument and gives {n_seq} numbers. Given in order, arguments need no names: `seq(5, 60, 5)` gives the same, because `from`, `to` and `by` come first in `seq()`.\n\nNames make a call easier to read, and let you leave out arguments or give them in any order. One call can go inside another: `mean()` works out {raw_mean}, then `round()` rounds it to {mean_cost}. Typing `seq(` shows its arguments, and `?seq` opens its help page."
     },
     {
       "id": "errors",
@@ -115,7 +115,7 @@
          "purpose": "print the fares table",
          "task": "Print `fares`."}
       ],
-      "explain": "An error message says what went wrong, and often where. This one says there is no `data/fare.csv` in the working directory, the project's folder, which it names; the Files pane shows what is there. With the name right, `read_csv()` reads the table's {n_fares} rows into `fares` and reports the type it gave each column. The {n_current} rows whose `valid_to` is `NA` are today's fares, with no end date yet: a casual rider on a classic bike pays the 1.5 and 0.18 used above."
+      "explain": "An error message says what went wrong, and often where. This one says there is no `data/fare.csv` in the working directory, the project's folder, which it names; the Files pane shows what is there. With the name right, `read_csv()` reads the table's {n_fares} rows into `fares` and reports the type it gave each column.\n\nThe {n_current} rows whose `valid_to` is `NA` are today's fares, with no end date yet: a casual rider on a classic bike pays the 1.5 and 0.18 used above."
     }
   ]
 }

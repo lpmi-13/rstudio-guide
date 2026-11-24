@@ -435,8 +435,9 @@
   "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
   "format": "1",
   "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
-  "lesson": "af98c01cdf9f883869c6c4022bdf7495b5c0f29a742cf95fc21e60bfeaca3208",
+  "lesson": "aa40164e939ea5ebcd0add9a7ef6412b925b1175afdfdabd0a7f5fec6b840edf",
   "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
+  "project": "",
   "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
   "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
  }

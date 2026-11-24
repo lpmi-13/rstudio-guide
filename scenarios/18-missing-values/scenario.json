@@ -9,7 +9,7 @@
     "solo"
   ],
   "script": "18-missing-values.R",
-  "summary": "Find and handle what's missing from Larkhaven Bikes' data: blanks to fill down, a code that means missing, fallbacks for missing names, hours with no row at all, a mean of nothing, and stations that never appear in the trips.",
+  "summary": "Find and handle missing bike trip data. Fill blanks, replace missing codes, find hours with no rows, and spot stations absent from the trips.",
   "steps": [
     {
       "id": "setup",
@@ -53,7 +53,7 @@
           "task": "Fill `Depot` down into the missing rows with `fill()`."
         }
       ],
-      "explain": "Whoever made the summary typed each depot's name once, on its January row, and left the rows below blank because they mean \"same as above\". Read in, those blanks are `NA`, yet the value is known. `fill()` carries the last value down into the `NA`s below it, so each month is labelled with its depot; `.direction = \"up\"` would carry values up instead."
+      "explain": "Whoever made the summary typed each depot's name once, on its January row, and left the rows below blank because they mean \"same as above\". Read in, those blanks are `NA`, yet the value is known.\n\n`fill()` carries the last value down into the `NA`s below it, so each month is labelled with its depot; `.direction = \"up\"` would carry values up instead."
     },
     {
       "id": "sentinel",
@@ -91,7 +91,7 @@
           "task": "Replace -99 with `NA` in `temp_c` and in `wind_kmh` with `na_if()`, and store the result back in `weather`."
         }
       ],
-      "explain": "A temperature of -99 °C and a wind of -99 km/h can't be real: the sensor writes -99 when it has no reading. A code like that is worse than a blank, because sums and means treat it as a number. `na_if(x, -99)` turns every -99 into `NA`, here {n_sentinel} readings, after which `min()` would need `na.rm = TRUE` and give a believable coldest hour, {coldest} °C. Check a dataset's documentation, or its extreme values, for codes such as -99, 9999 or \"n/a\"."
+      "explain": "A temperature of -99 °C and a wind of -99 km/h can't be real: the sensor writes -99 when it has no reading. A code like that is worse than a blank, because sums and means treat it as a number.\n\n`na_if(x, -99)` turns every -99 into `NA`, here {n_sentinel} readings, after which `min()` would need `na.rm = TRUE` and give a believable coldest hour, {coldest} °C. Check a dataset's documentation, or its extreme values, for codes such as -99, 9999 or \"n/a\"."
     },
     {
       "id": "coalesce",
@@ -116,7 +116,7 @@
           "task": "Add `january_name`: `former_name` where there is one, and `name` where it's missing, with `coalesce()`. Keep the columns used, and show the rows where it differs from `name`."
         }
       ],
-      "explain": "Two stations were renamed during 2025, and `former_name` holds their old names; for every other station it is `NA`. `coalesce()` takes the first value that isn't missing, row by row, from the vectors it's given: the former name if there is one, otherwise the current name. So `january_name` is what each station was called at the start of the year, and only the two renamed stations differ."
+      "explain": "Two stations were renamed during 2025, and `former_name` holds their old names; for every other station it is `NA`. `coalesce()` takes the first value that isn't missing, row by row, from the vectors it's given: the former name if there is one, otherwise the current name.\n\nSo `january_name` is what each station was called at the start of the year, and only the two renamed stations differ."
     },
     {
       "id": "implicit",
@@ -145,7 +145,7 @@
           "task": "Keep the rows of `june` whose `temp_c` is missing."
         }
       ],
-      "explain": "An explicit missing value is an `NA` you can see; an implicit one is a row that isn't there at all. June has 720 hours, but `weather` has only {n_june} rows for it: the sensor stopped for a while. `complete()` makes the missing rows, one for every value of `time` in the sequence that has no row yet, and fills their other columns with `NA`. That added {n_added} rows, and now the gap shows: from 23 June to 25 June, all of 24 June included."
+      "explain": "A visible missing value is an `NA` in a row. Another kind of missing value is a row that is absent. June has 720 hours, but `weather` has only {n_june} rows: the sensor stopped for a while.\n\n`complete()` makes the missing rows, one for every value of `time` in the sequence that has no row yet, and fills their other columns with `NA`. That added {n_added} rows, and now the gap shows: from 23 June to 25 June, all of 24 June included."
     },
     {
       "id": "nan",
@@ -161,7 +161,7 @@
           "task": "Add `day` (`as_date(time)`), find the mean `temp_c` for each day with `na.rm = TRUE`, then keep the days whose mean `is.nan()`."
         }
       ],
-      "explain": "With `na.rm = TRUE`, `mean()` leaves out the missing hours. On 24 June every hour is missing, so the mean is of nothing at all, 0 divided by 0, which R calls `NaN`, \"not a number\". `NaN` behaves like `NA`, and `is.na()` is `TRUE` for both; `is.nan()` picks out only `NaN`. Seeing one usually means a group had no values left to summarise."
+      "explain": "With `na.rm = TRUE`, `mean()` leaves out the missing hours. On 24 June every hour is missing, so the mean is of nothing at all, 0 divided by 0, which R calls `NaN`, \"not a number\". `NaN` behaves like `NA`, and `is.na()` is `TRUE` for both; `is.nan()` picks out only `NaN`.\n\nSeeing one usually means a group had no values left to summarise."
     },
     {
       "id": "groups",
@@ -192,10 +192,10 @@
             "trips |> mutate(start_station = factor(start_station, levels = unique(stations$station_id))) |> count(start_station, .drop = FALSE) |> filter(n < 1)"
           ],
           "purpose": "count the trips from every station in the registry, keeping stations with none",
-          "task": "Make `start_station` a factor whose levels are every station in the registry (`unique(stations$station_id)`), count by it with `.drop = FALSE`, and keep the counts of 0."
+          "task": "Make `start_station` a factor with every registry station (`unique(stations$station_id)`) as a level. Count with `.drop = FALSE` and keep counts of 0."
         }
       ],
-      "explain": "A count only has rows for values that occur, so a station with no trips is simply absent from `count(trips, start_station)`. `anti_join()` finds them by comparison: the stations with no matching trip, the two in Saltings. A factor knows its possible values even when they don't occur, and `.drop = FALSE` keeps a row for each, with a count of 0. Either way, a missing group becomes something you can see."
+      "explain": "A count only has rows for values that occur, so a station with no trips is simply absent from `count(trips, start_station)`. `anti_join()` finds them by comparison: the stations with no matching trip, the two in Saltings.\n\nA factor knows its possible values even when they don't occur, and `.drop = FALSE` keeps a row for each, with a count of 0. Either way, a missing group becomes something you can see."
     }
   ]
 }

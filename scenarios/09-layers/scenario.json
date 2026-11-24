@@ -5,7 +5,7 @@
   "title": "Layers",
   "modes": ["demonstration", "guided", "solo"],
   "script": "09-layers.R",
-  "summary": "Build charts layer by layer with ggplot2: map the stations with size and colour, give each day its own line, split a chart into a grid of panels, chart a share computed by a stat, stack, fill and dodge bars, and spread out overlapping points.",
+  "summary": "Build ggplot2 charts layer by layer. Map stations, draw lines, split charts into panels, compare shares, arrange bars, and spread out crowded points.",
   "steps": [
     {
       "id": "setup",
@@ -36,7 +36,7 @@
          "purpose": "draw the same map with a coordinate system for maps",
          "task": "Draw the same chart again, adding `coord_quickmap()`."}
       ],
-      "explain": "An aesthetic is anything about a point that can show a variable: position, size, colour, shape, transparency (`alpha`). Inside `aes()`, `size = docks` maps the number of docks to the point's size, from {min_docks} to {max_docks}, and `colour = neighbourhood` gives each of the {n_hoods} neighbourhoods its own colour; ggplot2 adds a legend for each. Shape works the same way for a variable with a few values: there are six shapes to go round. The first map is stretched, because a degree of longitude is shorter than a degree of latitude this far north. `coord_quickmap()` changes the coordinate system to correct that, so the city has its true shape."
+      "explain": "An aesthetic is anything about a point that can show a variable: position, size, colour, shape, transparency (`alpha`). Inside `aes()`, `size = docks` maps the number of docks to the point's size, from {min_docks} to {max_docks}, and `colour = neighbourhood` gives each of the {n_hoods} neighbourhoods its own colour; ggplot2 adds a legend for each.\n\nShape works the same way for a variable with a few values: there are six shapes to go round. The first map is stretched, because a degree of longitude is shorter than a degree of latitude this far north. `coord_quickmap()` changes the coordinate system to correct that, so the city has its true shape."
     },
     {
       "id": "hourly",
@@ -51,13 +51,13 @@
          "alternatives": ["hourly = week |> mutate(day = wday(started_at, label = TRUE), hour = hour(started_at)) |> count(day, hour)"],
          "values": {"n_hourly": "format(nrow(hourly))"},
          "purpose": "count the trips in each hour of each day, as `hourly`",
-         "task": "Count the trips in `week` by `day`, made with `wday(started_at, label = TRUE)`, and `hour`, made with `hour(started_at)`, and store the result in `hourly`."},
+         "task": "Count trips in `week` by `day` and `hour`. Make these with `wday(started_at, label = TRUE)` and `hour(started_at)`. Store the result in `hourly`."},
         {"code": "ggplot(hourly, aes(x = hour, y = n)) +\n  geom_line()", "evidence": "ggplot",
          "alternatives": ["ggplot(hourly, aes(hour, n)) + geom_line()"],
          "purpose": "draw the trips per hour as a line",
          "task": "Draw `n` against `hour` for `hourly` with `geom_line()`."}
       ],
-      "explain": "`hourly` has a row for each day and hour that had trips: {n_hourly}, out of the {n_week} trips. Its line is a mess: `geom_line()` joins every point from left to right, so at each hour it jumps up and down between the seven days. ggplot2 has no way to know the points belong to seven separate days until a mapping says so."
+      "explain": "`hourly` has a row for each day and hour that had trips: {n_hourly}, out of the {n_week} trips.\n\nIts line is a mess: `geom_line()` joins every point from left to right, so at each hour it jumps up and down between the seven days. ggplot2 has no way to know the points belong to seven separate days until a mapping says so."
     },
     {
       "id": "groups",
@@ -72,7 +72,7 @@
          "purpose": "colour each day's line differently",
          "task": "Draw it once more, with `colour = day` instead of `group = day`."}
       ],
-      "explain": "`group = day` splits the data into one group per day, and `geom_line()` draws each group as its own line. The lines are all the same colour, though, so you can't tell which is which. Mapping `colour = day` groups the data in the same way, and also tells the days apart, with a legend. Weekdays have two peaks, the rush hours; the weekend lines have one broad hump around the middle of the day."
+      "explain": "`group = day` splits the data into one group per day, and `geom_line()` draws each group as its own line. The lines are all the same colour, though, so you can't tell which is which. Mapping `colour = day` groups the data in the same way, and also tells the days apart, with a legend.\n\nWeekdays have two peaks, the rush hours; the weekend lines have one broad hump around the middle of the day."
     },
     {
       "id": "facets",
@@ -85,9 +85,9 @@
            "med_member_electric": "format(median(week$duration_min[week$member_type == \"member\" & week$bike_type == \"electric\"]))"
          },
          "purpose": "draw a histogram of trip lengths for each combination of member type and bike type",
-         "task": "Draw a histogram of `duration_min` with `binwidth = 2`, split into a grid with `facet_grid()`: a row for each `member_type` and a column for each `bike_type`."}
+         "task": "Draw a histogram of `duration_min` with `binwidth = 2`. Use `facet_grid()` for a row per `member_type` and a column per `bike_type`."}
       ],
-      "explain": "`facet_grid(member_type ~ bike_type)` draws one panel for each combination: the variable before `~` makes the rows, the one after makes the columns. Every panel shares the same axes, so they compare at a glance: the members' trips, in the bottom row, bunch up at the short end, and e-bike trips are shorter than classic ones. The median trip is {med_casual_classic} minutes for a casual rider on a classic bike, and {med_member_electric} for a member on an e-bike. `facet_wrap()`, from lesson 1, lays out panels for a single variable instead."
+      "explain": "`facet_grid(member_type ~ bike_type)` draws one panel for each combination: the variable before `~` makes the rows, the one after makes the columns. Every panel shares the same axes, so they compare at a glance: the members' trips, in the bottom row, bunch up at the short end, and e-bike trips are shorter than classic ones.\n\nThe median trip is {med_casual_classic} minutes for a casual rider on a classic bike, and {med_member_electric} for a member on an e-bike. `facet_wrap()`, from lesson 1, lays out panels for a single variable instead."
     },
     {
       "id": "stats",
@@ -97,9 +97,9 @@
          "alternatives": ["ggplot(week) + geom_bar(aes(member_type, after_stat(prop), group = 1))"],
          "values": {"member_share": "format(round(100 * mean(week$member_type == \"member\")))"},
          "purpose": "draw each member type's share of the week's trips",
-         "task": "Draw a bar chart of `member_type` whose bars show each type's share of trips: map `y` to `after_stat(prop)` and `group` to 1."}
+         "task": "Draw a bar chart of each `member_type`'s share of trips. Map `y` to `after_stat(prop)` and `group` to 1."}
       ],
-      "explain": "A bar chart counts before it draws: `geom_bar()` uses a stat, `stat_count()`, which turns the rows into a count for each bar, and also works out `prop`, each bar's share. `after_stat(prop)` maps y to that share instead of the count. `group = 1` puts all the bars in one group, so that each share is of the whole week; without it, each bar would be its own group, and 100% of itself. Members made {member_share}% of the trips."
+      "explain": "A bar chart counts before it draws: `geom_bar()` uses a stat, `stat_count()`, which turns the rows into a count for each bar, and also works out `prop`, each bar's share. `after_stat(prop)` maps y to that share instead of the count.\n\n`group = 1` puts all the bars in one group, so that each share is of the whole week; without it, each bar would be its own group, and 100% of itself. Members made {member_share}% of the trips."
     },
     {
       "id": "positions",
@@ -118,7 +118,7 @@
          "purpose": "put the two bike types' bars side by side",
          "task": "Draw it again with `position = \"dodge\"`."}
       ],
-      "explain": "A position adjusts bars that would sit in the same place. By default they stack: each bar's height is the hour's trips, split into its bike types. `position = \"fill\"` stretches every stack to the same height, so the bars show shares instead of counts: e-bikes' share of each hour. `position = \"dodge\"` puts the bike types side by side, which makes their counts easy to compare within an hour but harder to total."
+      "explain": "A position adjusts bars that would sit in the same place. By default they stack: each bar's height is the hour's trips, split into its bike types. `position = \"fill\"` stretches every stack to the same height, so the bars show shares instead of counts: e-bikes' share of each hour.\n\n`position = \"dodge\"` puts the bike types side by side, which makes their counts easy to compare within an hour but harder to total."
     },
     {
       "id": "jitter",
@@ -129,7 +129,7 @@
          "purpose": "plot every trip's length by member type, with the points spread sideways so they don't hide each other",
          "task": "Plot `duration_min` against `member_type` as points, spread sideways with `position = position_jitter(width = 0.3, height = 0, seed = 1)`, and set `alpha = 0.2`."}
       ],
-      "explain": "With plain points, all of a member type's trips would sit in one vertical line, thousands on top of each other. `position_jitter()` moves each point sideways by a small random amount (`height = 0` leaves the lengths as they are), so the crowd shows: where the points are thickest is where most trips are. `alpha = 0.2` makes each point faint, so overlaps look darker. `seed = 1` fixes the random moves, so the chart is the same every time. Together, the layers a chart is built from are its data, mappings, geoms, stats, positions, facets and coordinate system; each has a default you can change."
+      "explain": "With plain points, all of a member type's trips would sit in one vertical line, thousands on top of each other. `position_jitter()` moves each point sideways by a small random amount (`height = 0` leaves the lengths as they are), so the crowd shows: where the points are thickest is where most trips are.\n\n`alpha = 0.2` makes each point faint, so overlaps look darker. `seed = 1` fixes the random moves, so the chart is the same every time. Together, the layers a chart is built from are its data, mappings, geoms, stats, positions, facets and coordinate system; each has a default you can change."
     }
   ]
 }

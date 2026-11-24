@@ -291,6 +291,8 @@ async function runSteps(page, manifest, from, to, tag, {scriptPath, typed = true
       assert(g.parent === 'rstudio_Sidebar_pane' && g.fills && Object.keys(g.overlaps).length === 0, JSON.stringify(g));
       const view = await coachView(page);
       assert(view.overview && !view.card, `before Start, the panel should introduce the lesson: ${JSON.stringify(view)}`);
+      assert((await autoSwitch(page)).on === 'false', 'Auto-advance should start off');
+      await coachEl(page, 'button.auto').click(); // later probes exercise automatic steps
       await page.screenshot({path: path.join(OUT, 'lesson1-docked.png')});
       return {resetMs: last.ms, ...g};
     });
