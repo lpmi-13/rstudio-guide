@@ -681,19 +681,22 @@
     guided: {label: 'Guided', icon: '✎', what: 'Type and run each line yourself, one step at a time. The coach checks each result, and gives hints or shows you if you ask.'},
     solo: {label: 'Solo', icon: '◎', what: 'Work through the whole task list on your own, then ask the coach to check your work.'},
   };
+  // Under the lessons, while none is chosen: the modes come next.
+  const THEN_MODE = 'Then choose how to work through it: watch a <strong>Demonstration</strong>, be <strong>Guided</strong> step by step, or work <strong>Solo</strong>.';
 
   // Several lessons can share a run (one RStudio project). The picker then offers the lessons
-  // first, as compact cards, and the modes of the selected one below them. The chosen lesson,
-  // its mode and the mode's progress are kept per run in sessionStorage, so a reload returns to
-  // them as they were. Choosing a mode starts it afresh (see freshStart), and forgets every
+  // first, as compact cards with none chosen, and the modes of the chosen one below them. The
+  // chosen lesson, its mode and the mode's progress are kept per run in sessionStorage, so a
+  // reload returns to them as they were. Choosing a mode starts it afresh (see freshStart), and forgets every
   // other mode's progress, which no longer matches the script or R. Back on the picker returns
   // to the mode just left, as it was.
   //
-  // The lessons modelled on R for Data Science (those with a part) are too many for cards: the
-  // picker shows the chosen lesson on one line above the mode cards, and Change opens the lessons
-  // in their six parts, each with a tick once any mode of it is finished. A new tab opens on the
-  // first lesson not yet finished, so starting it takes one click, and a finished lesson offers
-  // the next. Which lessons and modes are finished is kept per run in localStorage.
+  // The lessons modelled on R for Data Science (those with a part) are too many for cards. A new
+  // tab opens on the lessons in their six parts, none chosen, with the part of the first lesson
+  // not yet finished expanded; each lesson is ticked once any mode of it is finished. Once a
+  // lesson is chosen, the picker shows it on one line above the mode cards, and Change opens the
+  // lessons again. A finished lesson offers the next. Which lessons and modes are finished is
+  // kept per run in localStorage.
   function startLessons(root, session, lessons, status) {
     const content = root.querySelector('.content');
     const read = key => { try { return sessionStorage.getItem(key); } catch (_error) { return null; } }; // storage blocked
@@ -719,7 +722,8 @@
     const finished = () => local.read(finishedKey) || {};
     const collection = lessons.length > 1 && lessons.every(l => l.part);
     const firstUnfinished = () => lessons.find(l => !finished()[l.id]?.length) || lessons[0];
-    let lesson = lessons.find(l => l.id === read(lessonKey)) || (collection ? firstUnfinished() : lessons[0]);
+    // null until the learner chooses one, when the run has several.
+    let lesson = lessons.find(l => l.id === read(lessonKey)) || (lessons.length === 1 ? lessons[0] : null);
     const nextAfter = l => {
       const next = collection ? lessons[lessons.indexOf(l) + 1] : null;
       return next && {label: `Next: lesson ${next.number} · ${next.title}`, go: () => { resume = null; lesson = next; open(null); }};
@@ -731,12 +735,12 @@
     // A mode as it stands: reopened after a reload or by Back, or just reset by start().
     function open(mode, {restored = false, autostart = false} = {}) {
       leave();
-      Object.assign(coach, {mode, lesson: lesson.id});
+      Object.assign(coach, {mode, lesson: lesson?.id ?? null});
       setHeader(mode ? MODES[mode].label : lessons.length > 1 ? 'Choose a lesson and mode' : 'Choose a mode');
-      write(lessonKey, lesson.id);
-      write(modeKey(lesson), mode);
+      write(lessonKey, lesson?.id);
+      if (lesson) write(modeKey(lesson), mode);
       status(`Run ${session.run_id} · ${mode ? lesson.title : `${lessons.length} lesson${lessons.length > 1 ? 's' : ''}`}`);
-      note('mode', {lesson: lesson.id, mode, restored});
+      note('mode', {lesson: lesson?.id ?? null, mode, restored});
       content.replaceChildren();
       if (!mode) { renderPicker(); return; }
       const render = {demonstration: renderDemo, guided: renderGuided, solo: renderSolo}[mode];
@@ -820,7 +824,7 @@
 
     function renderPicker() {
       if (collection) { renderCollectionPicker(); return; }
-      const modes = modesOf(lesson);
+      const modes = lesson ? modesOf(lesson) : [];
       const lessonCards = `
         <div class="pick" role="radiogroup" aria-labelledby="lesson-label">
           <p class="pick-label" id="lesson-label">Choose a lesson</p>
@@ -833,6 +837,7 @@
         </div>`;
       content.innerHTML = `
         ${lessons.length > 1 ? lessonCards : `<h2>${escapeHtml(lesson.title)}</h2><p>${escapeHtml(lesson.summary)}</p>`}
+        ${lesson ? `
         <div class="pick" role="group" aria-labelledby="pick-label">
           <p class="pick-label" id="pick-label">How do you want to work through it?</p>
           ${modes.map(mode => `
@@ -841,13 +846,14 @@
               <strong>${MODES[mode].label}</strong>
               <span class="what">${escapeHtml(MODES[mode].what)}</span>
             </button>`).join('')}
-        </div>
+        </div>` : `<p class="muted then">${THEN_MODE}</p>`}
         ${resume ? `<div class="row"><button class="back">Back to ${escapeHtml(MODES[resume.mode].label)}${lessons.length > 1 ? `: ${escapeHtml(resume.lesson.title)}` : ''}</button></div>` : ''}
         <p class="muted">You can change ${lessons.length > 1 ? 'lesson or ' : ''}mode at any time. Each choice starts afresh: the lesson's script goes back to its step headings, and the Console, Environment and Plots are emptied.</p>`;
       for (const card of content.querySelectorAll('.lesson-card')) {
         card.addEventListener('click', () => {
           lesson = lessons.find(l => l.id === card.dataset.lesson);
           write(lessonKey, lesson.id);
+          Object.assign(coach, {lesson: lesson.id});
           note('lesson', {lesson: lesson.id});
           renderPicker();
           content.querySelector(`.lesson-card[data-lesson="${CSS.escape(lesson.id)}"]`)?.focus();
@@ -862,19 +868,16 @@
       });
     }
     // The chosen lesson on one line, the lessons by part behind Change, then the mode cards.
+    // Until a lesson is chosen, only the lessons by part, with no mode cards.
     function renderCollectionPicker(listOpen = false) {
-      const modes = modesOf(lesson);
       const done = finished();
       const parts = [...new Set(lessons.map(l => l.part))].map(title => ({title, lessons: lessons.filter(l => l.part === title)}));
       const tick = l => (done[l.id]?.length ? `<span class="tick" title="Finished: ${done[l.id].map(m => MODES[m].label).join(', ')}">✓</span>` : '');
-      content.innerHTML = `
-        <div class="lesson-row">
-          <p><span class="muted">Lesson ${lesson.number} · ${escapeHtml(lesson.part)}</span><br><strong class="lesson-title">${escapeHtml(lesson.title)}</strong></p>
-          <button class="link change" aria-expanded="${listOpen}" aria-controls="lesson-list">${listOpen ? 'Close' : 'Change'}</button>
-        </div>
-        <nav class="lesson-list" id="lesson-list" aria-label="Lessons" ${listOpen ? '' : 'hidden'}>
+      const expanded = lesson || firstUnfinished(); // whose part starts open
+      const list = `
+        <nav class="lesson-list" id="lesson-list" ${lesson ? 'aria-label="Lessons"' : 'aria-labelledby="lesson-label"'} ${lesson && !listOpen ? 'hidden' : ''}>
           ${parts.map(part => `
-            <details ${part.lessons.includes(lesson) ? 'open' : ''}>
+            <details ${part.lessons.includes(expanded) ? 'open' : ''}>
               <summary>${escapeHtml(part.title)}</summary>
               <ul>${part.lessons.map(l => `
                 <li><button class="lesson-pick" data-lesson="${escapeHtml(l.id)}" aria-current="${l === lesson}">
@@ -882,7 +885,22 @@
                   <span class="what">${l.steps.length} steps</span>${tick(l)}</button></li>`).join('')}
               </ul>
             </details>`).join('')}
-        </nav>
+        </nav>`;
+      if (!lesson) {
+        content.innerHTML = `
+          <p class="pick-label" id="lesson-label">Choose a lesson</p>
+          ${list}
+          <p class="muted then">${THEN_MODE}</p>`;
+        bindLessonPicks();
+        return;
+      }
+      const modes = modesOf(lesson);
+      content.innerHTML = `
+        <div class="lesson-row">
+          <p><span class="muted">Lesson ${lesson.number} · ${escapeHtml(lesson.part)}</span><br><strong class="lesson-title">${escapeHtml(lesson.title)}</strong></p>
+          <button class="link change" aria-expanded="${listOpen}" aria-controls="lesson-list">${listOpen ? 'Close' : 'Change'}</button>
+        </div>
+        ${list}
         <p class="lesson-summary">${escapeHtml(lesson.summary)}</p>
         <div class="pick" role="group" aria-labelledby="pick-label">
           <p class="pick-label" id="pick-label">How do you want to work through it?</p>
@@ -900,15 +918,7 @@
         renderCollectionPicker(!listOpen);
         content.querySelector(listOpen ? '.change' : '.lesson-pick[aria-current="true"]')?.focus();
       });
-      for (const pick of content.querySelectorAll('.lesson-pick')) {
-        pick.addEventListener('click', () => {
-          lesson = lessons.find(l => l.id === pick.dataset.lesson);
-          write(lessonKey, lesson.id);
-          note('lesson', {lesson: lesson.id});
-          renderCollectionPicker(false);
-          content.querySelector('.mode-card')?.focus();
-        });
-      }
+      bindLessonPicks();
       for (const card of content.querySelectorAll('.mode-card')) card.addEventListener('click', () => start(card.dataset.mode));
       content.querySelector('.back')?.addEventListener('click', () => {
         const {lesson: was, mode} = resume;
@@ -917,12 +927,26 @@
         open(mode, {restored: true});
       });
     }
+    // Choosing a lesson in the list closes it and offers that lesson's modes.
+    function bindLessonPicks() {
+      for (const pick of content.querySelectorAll('.lesson-pick')) {
+        pick.addEventListener('click', () => {
+          lesson = lessons.find(l => l.id === pick.dataset.lesson);
+          write(lessonKey, lesson.id);
+          Object.assign(coach, {lesson: lesson.id});
+          note('lesson', {lesson: lesson.id});
+          renderCollectionPicker(false);
+          content.querySelector('.mode-card')?.focus();
+        });
+      }
+    }
     // What a lesson covers, from its step titles: "Plots: plot()" -> "plot()".
     function covers(l) {
       return `${l.steps.length} steps: ${l.steps.map(s => s.title.split(': ').pop()).join(', ')}`;
     }
     // A reload returns to the lesson and mode as they were; a new run (or tab) opens on the picker,
-    // or straight into the only mode of a one-lesson, one-mode run, as provisioned.
+    // with no lesson chosen if there are several, or straight into the only mode of a one-lesson,
+    // one-mode run, as provisioned.
     const pending = (() => { try { return JSON.parse(read(pendingKey) || 'null'); } catch (_error) { return null; } })();
     if (pending && lessons.some(l => l.id === pending.lesson) && pending.mode in MODES) {
       write(pendingKey, null);
@@ -930,8 +954,8 @@
       start(pending.mode, {autostart: pending.autostart, tries: pending.tries});
       return;
     }
-    const saved = read(modeKey(lesson));
-    const modes = modesOf(lesson);
+    const saved = lesson && read(modeKey(lesson));
+    const modes = lesson ? modesOf(lesson) : [];
     open(modes.includes(saved) ? saved : modes.length === 1 && lessons.length === 1 ? modes[0] : null, {restored: modes.includes(saved)});
   }
 

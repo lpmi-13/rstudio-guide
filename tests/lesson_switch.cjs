@@ -2,8 +2,9 @@
 // run of the two audit fixtures (engine-actions, then engine-check, in the "Audit fixtures" part),
 // adds 30 notes files that sort above the scripts in the Files pane, signs in at 1366x768 and checks:
 //
-// - the picker shows the first unfinished lesson on one line, with the mode cards in view, and
-//   Change opens the lessons by part, each with its step count;
+// - the picker opens on the lessons by part, each with its step count, none chosen and no mode
+//   cards; a chosen lesson then shows on one line, with the mode cards in view, and Change opens
+//   the lessons again;
 // - a Demonstration that has to open its script from Files scrolls the Files list to it first;
 // - finishing a lesson ticks it in the picker and on its mode card, and its last step offers
 //   "Next: lesson 92", which opens the picker on that lesson;
@@ -27,9 +28,11 @@ const pickerView = page => page.evaluate(() => {
   return {
     mode: window.__rsCoach.mode,
     lesson: window.__rsCoach.lesson,
+    label: root.querySelector('.pick-label')?.textContent ?? null,
+    then: root.querySelector('.then')?.textContent ?? null,
     row: root.querySelector('.lesson-row')?.innerText.replace(/\s+/g, ' ').trim() ?? null,
     listOpen: !root.querySelector('.lesson-list')?.hidden,
-    parts: [...root.querySelectorAll('.lesson-list details')].map(d => ({part: d.querySelector('summary').textContent,
+    parts: [...root.querySelectorAll('.lesson-list details')].map(d => ({part: d.querySelector('summary').textContent, open: d.open,
       lessons: [...d.querySelectorAll('.lesson-pick')].map(b => b.innerText.replace(/\s+/g, ' ').trim())})),
     cards: cards.map(c => c.querySelector('strong').innerText.trim()),
     cardsInView: cards.every(c => c.getBoundingClientRect().bottom <= innerHeight),
@@ -47,12 +50,18 @@ const evidence = page => page.evaluate(() => fetch('/coach/api/evidence', {cache
   page.on('pageerror', e => errors.push(e.message));
   let fresh = 0;
 
-  await probe('picker: the first unfinished lesson on one line, mode cards in view; Change lists the lessons by part', async () => {
+  await probe('picker: the lessons by part, none chosen and no mode cards; a lesson then shows on one line, mode cards in view; Change lists the lessons again', async () => {
     await page.goto('http://127.0.0.1:8788/auth-sign-in');
     await page.evaluate(settings => { for (const [k, v] of Object.entries(settings)) localStorage.setItem(k, String(v)); }, FAST);
     await signIn(page, password, null);
+    const first = await pickerView(page);
+    assert(first.mode === null && first.lesson === null && first.row === null && first.listOpen && first.cards.length === 0, JSON.stringify(first));
+    assert(first.label === 'Choose a lesson' && /^Then choose how to work through it/.test(first.then), JSON.stringify(first));
+    assert(first.parts.length === 1 && first.parts[0].open && first.parts[0].lessons.join() === '91 Engine actions 6 steps,92 Engine check 7 steps', JSON.stringify(first.parts));
+    await page.screenshot({path: path.join(OUT, 'picker-first.png')});
+    await coachEl(page, '.lesson-pick[data-lesson="engine-actions"]').click();
     const view = await pickerView(page);
-    assert(view.mode === null && /Lesson 91 · Audit fixtures Engine actions Change/.test(view.row) && !view.listOpen, JSON.stringify(view));
+    assert(view.mode === null && view.lesson === 'engine-actions' && /Lesson 91 · Audit fixtures Engine actions Change/.test(view.row) && !view.listOpen, JSON.stringify(view));
     assert(view.cards.join() === 'Demonstration,Guided,Solo' && view.cardsInView, JSON.stringify(view));
     await coachEl(page, 'button.change').click();
     const open = await pickerView(page);
@@ -62,7 +71,7 @@ const evidence = page => page.evaluate(() => fetch('/coach/api/evidence', {cache
     await coachEl(page, '.lesson-pick[data-lesson="engine-actions"]').click();
     const closed = await pickerView(page);
     assert(!closed.listOpen && closed.lesson === 'engine-actions', JSON.stringify(closed));
-    return {row: view.row, lessons: open.parts[0].lessons};
+    return {first: first.label, row: view.row, lessons: open.parts[0].lessons};
   });
 
   await probe('Demonstration opens its script from Files, scrolling the list to it first', async () => {

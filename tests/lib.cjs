@@ -77,13 +77,17 @@ async function signIn(page, password, mode) {
 const coachEl = (page, sel) => page.locator('#rs-coach-host').locator(sel);
 const MODE_STATE = {demonstration: 'demo', guided: 'guided', solo: 'solo'};
 
-// Wait until the coach has loaded its lesson. A new run opens on the mode picker, where this
-// clicks `mode`'s card as a learner would; after a reload the coach reopens the mode chosen
-// before, so there is nothing to click. `mode` null: leave the picker as it is.
+// Wait until the coach has loaded its lesson. A new run opens on the picker, where this clicks
+// `mode`'s card as a learner would (in a run of several lessons, after the first lesson, since
+// none is chosen yet); after a reload the coach reopens the mode chosen before, so there is
+// nothing to click. `mode` null: leave the picker as it is.
 async function waitForCoach(page, mode = 'demonstration') {
   await page.waitForFunction(() => window.__rsCoach && window.__rsCoach.mode !== undefined, null, {timeout: 30000});
   if (mode) {
     const current = await page.evaluate(() => window.__rsCoach.mode);
+    if (current === null && await page.evaluate(() => window.__rsCoach.lesson === null)) {
+      await coachEl(page, '.lesson-pick, .lesson-card').first().click();
+    }
     if (current === null) await coachEl(page, `button.mode-card[data-mode="${mode}"]`).click();
     else if (current !== mode) throw new Error(`the coach reopened in ${current}, not ${mode}`);
     await page.waitForFunction(state => window.__rsCoach[state], MODE_STATE[mode], {timeout: 30000});

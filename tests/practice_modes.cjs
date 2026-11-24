@@ -19,8 +19,9 @@
 //   Environment and Plots are empty, and progress starts over.
 //   Demonstration then Guided is the case a learner reported: step 1's code was already
 //   written. Back on the picker returns to the mode just left, as it was;
-// - the default run holds every lesson written so far (tools/collection.py): the picker shows the
-//   first on one line, with the mode cards in view, and Change lists them by part.
+// - the default run holds every lesson written so far (tools/collection.py): the picker opens on
+//   them by part, none chosen and no mode cards, and the coach waits; a chosen lesson shows on
+//   one line, with the mode cards in view, and Change lists the lessons again.
 //
 // Runs: 01 Data visualization (picker, Guided, then Solo), 03 Data transformation at 1366x768
 // (Solo, then Guided with a failing Show me), and the default run at 1366x768.
@@ -51,6 +52,8 @@ const pickerView = page => page.evaluate(() => {
     label: root.querySelector('.mode').textContent,
     row: root.querySelector('.lesson-row')?.innerText.replace(/\s+/g, ' ').trim() ?? null,
     listOpen: Boolean(root.querySelector('.lesson-list')) && !root.querySelector('.lesson-list').hidden,
+    listInView: (r => Boolean(r) && r.bottom <= body.bottom)(root.querySelector('.lesson-list:not([hidden])')?.getBoundingClientRect()),
+    then: root.querySelector('.then')?.textContent ?? null,
     // Each part's lessons, read from the markup: only the current lesson's part is expanded.
     parts: [...root.querySelectorAll('.lesson-list details')].map(d => ({part: d.querySelector('summary').textContent, open: d.open,
       lessons: [...d.querySelectorAll('.lesson-pick')].map(b => `${b.dataset.lesson}: ${b.querySelector('.what')?.textContent.trim()}`)})),
@@ -418,26 +421,30 @@ async function guidedStep(page, lesson, s, from = 0) {
     let lessons;
     let fresh = 0;
 
-    await probe(`the default run of ${DEFAULT.length} lessons (1366x768): the first on one line, the mode cards in view, the coach waits; Change lists the lessons by part`, async () => {
+    await probe(`the default run of ${DEFAULT.length} lessons (1366x768): the lessons by part, none chosen and no mode cards, the coach waits; a lesson then shows on one line, mode cards in view; Change lists the lessons again`, async () => {
       await signIn(page, password, null);
       lessons = (await steps(page)).lessons;
       assert(lessons.map(l => l.id).join() === DEFAULT.join(), `the default run holds ${lessons.map(l => l.id)}`);
-      const view = await pickerView(page);
-      assert(view.mode === null && view.label === 'Choose a lesson and mode' && /^Lesson 1 · Whole game Data visualization/.test(view.row) && !view.listOpen, JSON.stringify(view));
-      assert(view.cards.join() === 'Demonstration,Guided,Solo' && view.inView.every(Boolean), JSON.stringify(view));
+      const entry = l => `${l.id}: ${l.steps.length} steps`;
+      const byPart = [...new Set(lessons.map(l => l.part))].map(part => `${part}${part === lessons[0].part ? ' (open)' : ''}: ${lessons.filter(l => l.part === part).map(entry).join('; ')}`);
+      const partsOf = view => view.parts.map(p => `${p.part}${p.open ? ' (open)' : ''}: ${p.lessons.join('; ')}`);
+      const first = await pickerView(page);
+      assert(first.mode === null && first.lesson === null && first.label === 'Choose a lesson and mode' && first.row === null && first.cards.length === 0, JSON.stringify(first));
+      assert(first.listOpen && first.listInView && /^Then choose how to work through it/.test(first.then) && partsOf(first).join(' | ') === byPart.join(' | '), JSON.stringify(partsOf(first)));
       const files = [...DEFAULT.map(id => lessons.find(l => l.id === id).script), 'lessons.Rproj'].filter(f => fs.existsSync(path.join(ROOT, 'run/project', f)));
       assert(files.length === DEFAULT.length + 1 && /lessons/.test(await page.title()), `project files ${files}, title ${await page.title()}`);
+      await page.screenshot({path: path.join(OUT, 'lessons-picker-first.png')});
+      await coachEl(page, '.lesson-pick[data-lesson="01-data-visualization"]').click();
+      const view = await pickerView(page);
+      assert(view.mode === null && view.lesson === '01-data-visualization' && /^Lesson 1 · Whole game Data visualization/.test(view.row) && !view.listOpen, JSON.stringify(view));
+      assert(view.cards.join() === 'Demonstration,Guided,Solo' && view.inView.every(Boolean), JSON.stringify(view));
       const rec = await record(page);
       assert(!view.started && rec.clicks.length === 0 && rec.edits.length === 0, 'the coach acted before a mode was chosen');
       await coachEl(page, 'button.change').click();
       const open = await pickerView(page);
-      const parts = open.parts.map(p => `${p.part}${p.open ? ' (open)' : ''}: ${p.lessons.join('; ')}`);
-      const entry = l => `${l.id}: ${l.steps.length} steps`;
-      const byPart = [...new Set(lessons.map(l => l.part))].map(part => `${part}${part === lessons[0].part ? ' (open)' : ''}: ${lessons.filter(l => l.part === part).map(entry).join('; ')}`);
-      const want = byPart;
-      assert(open.listOpen && parts.join(' | ') === want.join(' | '), JSON.stringify(parts));
+      assert(open.listOpen && partsOf(open).join(' | ') === byPart.join(' | '), JSON.stringify(partsOf(open)));
       await page.screenshot({path: path.join(OUT, 'lessons-picker.png')});
-      return {row: view.row, parts, lowestCardBottom: view.cardBottom, viewport: 768};
+      return {first: first.then, row: view.row, parts: partsOf(first), lowestCardBottom: view.cardBottom, viewport: 768};
     });
 
     const transformation = () => lessons.find(l => l.id === '03-data-transformation');
