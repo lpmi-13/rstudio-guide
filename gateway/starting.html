@@ -1,0 +1,43 @@
+<!doctype html>
+<!-- Served by the gateway (gateway/nginx.conf) in place of nginx's 502 page while RStudio isn't
+     answering yet, for example in the second between the gateway starting and RStudio listening.
+     It reloads itself every 2 s, so RStudio opens on its own once it is ready. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="2">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Starting RStudio</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      display: grid; place-items: center;
+      background: #f6f8fa; color: #1f2328;
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    main {
+      display: flex; gap: 16px; align-items: center;
+      padding: 24px 28px; max-width: 30em;
+      background: #fff; border: 1px solid #d0d7de; border-radius: 8px;
+    }
+    h1 { margin: 0 0 4px; font-size: 17px; }
+    p { margin: 0; color: #57606a; }
+    .spinner {
+      flex: none; width: 28px; height: 28px; border-radius: 50%;
+      border: 3px solid #d0d7de; border-top-color: #0b5cad;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+  </style>
+</head>
+<body>
+  <main role="status">
+    <div class="spinner" aria-hidden="true"></div>
+    <div>
+      <h1>RStudio is starting</h1>
+      <p>This usually takes a few seconds. RStudio opens here as soon as it is ready.</p>
+    </div>
+  </main>
+</body>
+</html>

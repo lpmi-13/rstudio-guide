@@ -10,6 +10,8 @@
 # A run's folder, ports and Docker Compose project can be changed, so that several runs work side by
 # side (tests/run_lesson_audits.py does this): LAB_RUN_DIR (default run), LAB_GATEWAY_PORT (8788),
 # LAB_RSTUDIO_PORT (18787) and LAB_COMPOSE_NAME (rstudio-guide).
+#
+# DISABLE_AUTH=true (in the environment or lab.env) skips RStudio's sign-in; see the warning below.
 set -euo pipefail
 cd "$(dirname "$0")"
 IMAGE=rstudio-guide-runtime:local
@@ -64,10 +66,18 @@ case "${1:-up}" in
     if [ -f lab.env ]; then
       while IFS='=' read -r key value; do
         case "$key" in
-          FRAME_ORIGIN|SAME_SITE|GATEWAY_BIND|LAB_PREBUILT) if [ -z "${!key:-}" ]; then export "$key=$value"; fi ;;
+          FRAME_ORIGIN|SAME_SITE|GATEWAY_BIND|LAB_PREBUILT|DISABLE_AUTH) if [ -z "${!key:-}" ]; then export "$key=$value"; fi ;;
         esac
       done < lab.env
     fi
+    # DISABLE_AUTH=true opens RStudio with no sign-in: anyone who reaches the gateway gets RStudio,
+    # with its terminal, as the learner. The iximiuz playground sets it in lab.env, because its
+    # RStudio tab has private access, so iximiuz signs the learner in first. Leave it off on a
+    # machine you share, and remember that a website can reach a loopback port by DNS rebinding.
+    case "${DISABLE_AUTH:=false}" in
+      true|false) ;;
+      *) echo "DISABLE_AUTH must be true or false, not '$DISABLE_AUTH'" >&2; exit 2 ;;
+    esac
     stop_run
     mkdir -p "$RUN_DIR/evidence"
     password=$(head -c 32 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 20)
@@ -75,8 +85,9 @@ case "${1:-up}" in
     # GATEWAY_BIND: loopback by default. 0.0.0.0 serves plain HTTP on every interface (and Docker
     # bypasses ufw), so only behind a TLS proxy such as iximiuz's tab; otherwise use an SSH tunnel.
     # FRAME_ORIGIN / SAME_SITE: let a platform (e.g. https://labs.iximiuz.com) frame RStudio.
-    (umask 077; printf 'RSTUDIO_PASSWORD=%s\nLAB_SCENARIO=%s\nHOST_UID=%s\nHOST_GID=%s\nGATEWAY_BIND=%s\nFRAME_ORIGIN=%s\nSAME_SITE=%s\nLAB_RUN_DIR=%s\nGATEWAY_PORT=%s\nRSTUDIO_PORT=%s\n' \
-      "$password" "$project" "$(id -u)" "$(id -g)" "${GATEWAY_BIND:-127.0.0.1}" "${FRAME_ORIGIN:-}" "${SAME_SITE:-}" "$RUN_DIR" "$GATEWAY_PORT" "$RSTUDIO_PORT" > "$RUN_DIR/.env")
+    # The password is set with sign-in off too, so the account never keeps Rocker's default one.
+    (umask 077; printf 'RSTUDIO_PASSWORD=%s\nDISABLE_AUTH=%s\nLAB_SCENARIO=%s\nHOST_UID=%s\nHOST_GID=%s\nGATEWAY_BIND=%s\nFRAME_ORIGIN=%s\nSAME_SITE=%s\nLAB_RUN_DIR=%s\nGATEWAY_PORT=%s\nRSTUDIO_PORT=%s\n' \
+      "$password" "$DISABLE_AUTH" "$project" "$(id -u)" "$(id -g)" "${GATEWAY_BIND:-127.0.0.1}" "${FRAME_ORIGIN:-}" "${SAME_SITE:-}" "$RUN_DIR" "$GATEWAY_PORT" "$RSTUDIO_PORT" > "$RUN_DIR/.env")
     # A rootfs with the runtime image preloaded sets LAB_PREBUILT=1, so nothing is rebuilt or pulled.
     if [ "${LAB_PREBUILT:-0}" != 1 ] || ! docker image inspect rstudio-guide-runtime:local >/dev/null 2>&1; then
       compose build --quiet rstudio
@@ -86,19 +97,26 @@ case "${1:-up}" in
     for _ in $(seq 1 60); do
       if curl -fsS -o /dev/null "http://127.0.0.1:$GATEWAY_PORT/auth-sign-in" 2>/dev/null; then
         wait_for_host_network
-        touch "$RUN_DIR/ready" # for launchers and the playground's terminal banner
+        touch "$RUN_DIR/ready" # for launchers
         if [ "${GATEWAY_BIND:-127.0.0.1}" = 127.0.0.1 ]; then where="at http://127.0.0.1:$GATEWAY_PORT/"; else where="(open the RStudio tab)"; fi
-        echo "Ready: ${scenarios[*]} $where  user: rstudio  password: $password"
-        python3 -I - "$RUN_DIR/public/session.json" <<'PY'
+        if [ "$DISABLE_AUTH" = true ]; then
+          echo "Ready: ${scenarios[*]} $where  (no sign-in)"
+          then_word="Then"
+        else
+          echo "Ready: ${scenarios[*]} $where  user: rstudio  password: $password"
+          then_word="After signing in,"
+        fi
+        python3 -I - "$RUN_DIR/public/session.json" "$then_word" <<'PY'
 import json, sys
 session = json.load(open(sys.argv[1]))
+then = sys.argv[2]
 lessons = session.get("lessons", [])
 modes = sorted({m for lesson in lessons for m in lesson["modes"]}, key=["demonstration", "guided", "solo"].index)
 modes = ", ".join(m.capitalize() for m in modes[:-1]) + " or " + modes[-1].capitalize() if len(modes) > 1 else ""
 if len(lessons) > 1:
-    print(f"After signing in, choose a lesson and a mode ({modes}) in the Coach pane on the right.")
+    print(f"{then} choose a lesson and a mode ({modes}) in the Coach pane on the right.")
 elif modes:
-    print(f"After signing in, choose {modes} in the Coach pane on the right.")
+    print(f"{then} choose {modes} in the Coach pane on the right.")
 PY
         exit 0
       fi

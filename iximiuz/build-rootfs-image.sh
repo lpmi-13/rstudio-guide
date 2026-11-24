@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Builds the iximiuz Labs rootfs image: the iximiuz Docker base, plus this repository,
-# the terminal banner, and the RStudio runtime and gateway images preloaded, so a
-# playground needs no Docker Hub pulls. Pushes it when PUSH_ROOTFS_IMAGE=1.
+# Builds the iximiuz Labs rootfs image: the iximiuz Docker base, plus this repository and
+# the RStudio runtime and gateway images preloaded, so a playground needs no Docker Hub pulls.
+# Pushes it when PUSH_ROOTFS_IMAGE=1.
 # publish-rootfs-image.sh is the usual entry point; it picks the next tag.
 #
 #   IMAGE_TAG=v3 PUSH_ROOTFS_IMAGE=1 bash iximiuz/build-rootfs-image.sh
@@ -72,11 +72,13 @@ snapshot="$(git -c user.name=build-rootfs -c user.email=build-rootfs@localhost s
 mkdir -p "${build_context}/rstudio-guide"
 git archive --format=tar "${snapshot:-HEAD}" -- . ':(exclude)tests' ':(exclude)spikes' ':(exclude).claude' \
   | tar -C "${build_context}/rstudio-guide" -xf -
-# Settings every ./run.sh up in the playground keeps (see run.sh and the README).
+# Settings every ./run.sh up in the playground keeps (see run.sh and the README). No RStudio
+# sign-in: the RStudio tab has private access, so iximiuz signs the learner in before it.
 printf '%s\n' \
   'FRAME_ORIGIN=https://labs.iximiuz.com' \
   'GATEWAY_BIND=0.0.0.0' \
   'LAB_PREBUILT=1' \
+  'DISABLE_AUTH=true' \
   > "${build_context}/rstudio-guide/lab.env"
 cp "${repo_root}/iximiuz/Dockerfile" "${build_context}/Dockerfile"
 

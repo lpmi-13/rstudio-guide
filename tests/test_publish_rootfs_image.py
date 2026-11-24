@@ -149,7 +149,7 @@ esac
         self.assertEqual(result.returncode, 0, result.stderr)
         context = self.context_log.read_text()
         for expected in ("./Dockerfile", "./images.tar", "./rstudio-guide/iximiuz", "./rstudio-guide/runtime", "images.tar mode 644",
-                         "FRAME_ORIGIN=https://labs.iximiuz.com", "GATEWAY_BIND=0.0.0.0", "LAB_PREBUILT=1",
+                         "FRAME_ORIGIN=https://labs.iximiuz.com", "GATEWAY_BIND=0.0.0.0", "LAB_PREBUILT=1", "DISABLE_AUTH=true",
                          # setUp's uncommitted edit to a tracked file is published, as before.
                          'readonly ROOTFS_IMAGE_TAG="v0"', "start-lab.sh executable"):
             self.assertIn(expected, context)

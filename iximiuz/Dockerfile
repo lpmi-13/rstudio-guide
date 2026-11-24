@@ -15,10 +15,6 @@ COPY images.tar /opt/rstudio-guide/images.tar
 
 RUN <<'EOS'
 set -eu
-install -m 0644 /home/laborant/rstudio-guide/iximiuz/rstudio-lab-banner.sh /etc/profile.d/zz-rstudio-lab.sh
-# The base's "Welcome to iximiuz Labs' Docker Playground!" text, which ~/.bashrc prints in the
-# first terminal after our banner. The banner also removes any copy written at boot.
-rm -f /home/laborant/.welcome
 for cmd in bash docker python3 curl ip md5sum runuser; do
   command -v "${cmd}" >/dev/null 2>&1 || { echo "missing expected tool: ${cmd}" >&2; exit 1; }
 done

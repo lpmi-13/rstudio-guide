@@ -4,7 +4,7 @@ RStudio Server with an in-IDE coach, lessons modelled on R for Data Science that
 
 **Inspiration for the lessons.** The next set of lessons follows the chapters of [R for Data Science (2e)](https://r4ds.hadley.nz) by Hadley Wickham, Mine Çetinkaya-Rundel and Garrett Grolemund. There is one lesson for each of its 29 chapters, teaching the same concepts. The book guides what the lab teaches; it isn't a source of material. The lessons use their own code, data and explanations, built on current R packages. On 20 November 2026 the first four replaced the two article-based lessons the spike began with, `graphical-tools` and `statistical-tools`, and the other 25 followed on 21 November. This README keeps those lessons' audit records as history. The plan is `plan-docs/R4DS_CHAPTERS_PLAN.md`. The book is free to read online, and it is the best place to go deeper on any of these topics.
 
-**Try it in your browser:** [RStudio coach on iximiuz Labs](https://labs.iximiuz.com/playgrounds/rstudio-guide-16afe14e). It needs a free iximiuz account. Starting it takes about a minute. The **Terminal** tab then shows the RStudio password; open the **RStudio** tab and sign in. Since 22 November 2026 (rootfs v5) it offers all 29 lessons.
+**Try it in your browser:** [RStudio coach on iximiuz Labs](https://labs.iximiuz.com/playgrounds/rstudio-guide-16afe14e). It needs a free iximiuz account. Starting it takes about a minute. Since 22 November 2026 (rootfs v5) it offers all 29 lessons. From rootfs v6 (built, not yet published) it opens on the **RStudio** tab, already signed in, with no Terminal tab and no password; v5 shows the password in a **Terminal** tab, and the **RStudio** tab asks for it.
 
 | Question | Answer |
 | --- | --- |
@@ -19,7 +19,7 @@ One intermittent failure appeared earlier, before the fix in finding 7: Chromium
 
 ## Work ledger
 
-Where the work stands and what's left, so it can resume from here. Updated 22 November 2026. The plan for the new lessons is `~/projects/plan-docs/R4DS_CHAPTERS_PLAN.md` (its §6 lists the phases). Each finished phase has a decision record in this README, named below.
+Where the work stands and what's left, so it can resume from here. Updated 24 November 2026. The plan for the new lessons is `~/projects/plan-docs/R4DS_CHAPTERS_PLAN.md` (its §6 lists the phases). Each finished phase has a decision record in this README, named below.
 
 ### Done
 
@@ -35,10 +35,12 @@ Where the work stands and what's left, so it can resume from here. Updated 22 No
 | 20 Nov 2026 | Phase 2, the swap: the pilots replace the article lessons, and `demo_mode.cjs` and `practice_modes.cjs` are ported to them. Committed as `0a42c38`. | "Choosing a lesson and a mode" and "Demonstration mode" |
 | 21 Nov 2026 | Phase 3: the other 25 lessons, with what they needed (Alt+-, `source` and `new-project` actions, a fresh start that returns to the lessons' project and resets Help, the Viewer and `View()` tabs, fingerprints for databases, duckplyr, rvest and patchwork, a DuckDB file in the world, and new world checks), the default run of every lesson, `tools/format_lesson.py`, and parallel lesson audits. Committed as `0a42c38`. | "Phase 3: the other 25 lessons" |
 | 21–22 Nov 2026 | Phase 4, release, all automated (no manual review at this stage, the user's call): a security review of `/coach/api/evidence` (one fix, two hardenings), an automated learner-read review of the 25 new lessons (11 small text fixes), every Demonstration timed at the coach's own pace (4.9 to 10.6 minutes), every audit run again (all passed), and rootfs v5 published to the public playground (76 to 107 s from start to ready). The review and fixes are in `0a42c38`; the timings, audits and v5 aren't committed yet. | "Phase 4: release" |
+| 24 Nov 2026 | The playground opens on RStudio, signed in: `DISABLE_AUTH=true` in its `lab.env`, no Terminal tab or banner, and a starting page in the gateway for the moment before RStudio listens. Tested locally and on a throwaway iximiuz session; v6 not published yet. | "Sign-in off and the starting page", under "Remote playground" |
 
 ### Outstanding, in order
 
-1. **A manual review by the user**, last: the lessons read and the Demonstrations watched as a learner would, and the playground tried by hand (the RStudio tab signed in, which headless tests can't reach).
+1. **Publish rootfs v6**, with RStudio's sign-in off and no Terminal tab: `bash iximiuz/publish-rootfs-image.sh`. It also updates the public playground.
+2. **A manual review by the user**, last: the lessons read and the Demonstrations watched as a learner would, and the playground tried by hand (the RStudio tab, which headless tests can't reach inside the iximiuz page).
 
 Also open: lessons 9 and 11's Demonstrations run a little over the plan's 10 minutes (10.3 and 10.6); the spikes in `spikes/phase0/` provision the retired `statistical-tools`; the coach's code for the older lesson format is no longer exercised by any audit; Guided says nothing when a Quarto render fails (the error shows only in RStudio's Background Jobs tab); a learner can pass a style lesson (4) with unstyled code, since checks see results; and the points under "Plan deviations and open points" at the end.
 
@@ -73,13 +75,15 @@ NODE_PATH=$(npm root -g) node tests/practice_modes.cjs results
 NODE_PATH=$(npm root -g) node tests/lesson_modes.cjs engine-check results/engine-check
 NODE_PATH=$(npm root -g) node tests/lesson_modes.cjs 01-data-visualization results/lesson-01
 NODE_PATH=$(npm root -g) node tests/lesson_switch.cjs results/lesson-switch
+NODE_PATH=$(npm root -g) node tests/no_sign_in.cjs results/no-sign-in   # sign-in off, as on iximiuz, and the starting page
 NODE_PATH=$(npm root -g) python3 -I tests/run_lesson_audits.py --jobs 3   # every lesson's audit, 3 runs side by side
 LAB_PACE=normal NODE_PATH=$(npm root -g) python3 -I tests/run_lesson_audits.py --jobs 4 $(python3 -I tools/collection.py)   # time every Demonstration at the coach's own pace
 ```
 
-After signing in, choose a lesson and then **Demonstration**, **Guided** or **Solo** in the Coach pane on the right; `run.sh` prints the same reminder. A one-lesson run shows only that lesson. `regional-revenue` is the original Guided stub (a Check work button, no steps), so it opens straight into it with no picker, and it can't share a run.
+After signing in (straight away with sign-in off), choose a lesson and then **Demonstration**, **Guided** or **Solo** in the Coach pane on the right; `run.sh` prints the same reminder. A one-lesson run shows only that lesson. `regional-revenue` is the original Guided stub (a Check work button, no steps), so it opens straight into it with no picker, and it can't share a run.
 
 - Gateway with the coach: <http://127.0.0.1:8788/>. The user is `rstudio`; `./run.sh up` prints the password, which is also in `run/.env`.
+- `DISABLE_AUTH=true ./run.sh up …` skips RStudio's sign-in, as the iximiuz playground does (its `lab.env` sets it). Then anyone who can reach the gateway gets RStudio, and its terminal, as `rstudio`: other users of the machine, and websites you visit, through DNS rebinding. So keep the password on a machine of your own, and use this for audits (any audit that signs in through `tests/lib.cjs` runs this way too). `run.sh` still sets the account's password, so it never keeps Rocker's default one.
 - Direct RStudio without the coach, for comparison: <http://127.0.0.1:18787/>.
 - Both ports listen on loopback only. On a remote VM, keep that and use an SSH tunnel: `ssh -L 8788:127.0.0.1:8788 <vm>`, then open <http://127.0.0.1:8788/> locally. `GATEWAY_BIND=0.0.0.0 ./run.sh up …` serves RStudio over plain HTTP on every network the VM is on, where anyone who can read the traffic can take over the session, and Docker's published ports bypass host firewalls such as ufw. Use it only behind something that adds TLS and access control, as the iximiuz playground's private RStudio tab does.
 
@@ -103,9 +107,9 @@ After signing in, choose a lesson and then **Demonstration**, **Guided** or **So
 | Bake | `tools/bake.py`, `runtime/bake.R` | Runs each lesson twice, as the Console would, in throwaway containers from the runtime image (`--network none`, read-only, 2 GB, 2 CPUs, 10 minutes) and records each statement's output, fingerprint, assigned name, chart, warnings, messages, files written and quoted values. It fails on anything unexpected (see Phase 1) and when the two runs differ. Results are committed in `content/lessons/baked/` with a stamp of what they depend on, so `up` bakes only after a change. |
 | Content checks | `tools/check_content.py`, `tools/format_lesson.py` | The schema, purposes and tasks, step counts and the evidence each statement needs, without running R. `format_lesson.py` formats a lesson's code the way Air does, which the bake requires. `tools/collection.py` lists the lessons written, in order: `run.sh`'s default run. |
 | Runtime | `runtime/Dockerfile`, `runtime/rstudio-prefs.json`, `runtime/03_lab_project`, `runtime/evidence.R`, `runtime/packages.lock` | `rocker/tidyverse:4.6.2@sha256:9241ac46…` (RStudio Server 2026.11.0+203, R 4.6.2, Ubuntu 26.04), from 20 November 2026; before that, `rocker/rstudio:4.6.2`. It adds the new lessons' packages from a dated Posit Package Manager snapshot, Air 0.13.0 and `~/.duckdb` (see Phase 0 spikes). The build fails if any installed package's version differs from `runtime/packages.lock` (refresh it with `tools/update_packages_lock.sh` after a deliberate upgrade), and it generates the world into `/opt/lab/world`. Each RStudio session records evidence of the learner's work for the coach (`runtime/evidence.R`, spike S2). The preferences show the sidebar on the right, hide Posit Assistant, use Air, run whole statements with Ctrl+Enter, and show rendered documents in the Viewer. Admin settings in `/etc/rstudio/rsession.conf` lock out Posit Assistant and Copilot, so a learner can't turn them back on: `posit-assistant-enabled`, `posit-assistant-installation-enabled`, `copilot-enabled` and the two `allow-*` options, all `0`. A container-init hook opens the run's project on first sign-in. |
-| Gateway | `gateway/nginx.conf` | `nginx:1.30.7-alpine` (stable branch). Proxies everything, including WebSockets and long-polls. Only the IDE host page (`location = /`) is rewritten, with the coach script tag placed right after `<head>`. `/coach/api/session` and `/coach/api/steps` serve the run's public files. `/coach/api/evidence` serves R's evidence only to a browser signed in to RStudio (`auth_request`; see Phase 4's security review). The coach's API answers as JSON with `nosniff`, and nginx doesn't give its version. `/coach/api/check` is a stub. |
+| Gateway | `gateway/nginx.conf`, `gateway/starting.html` | `nginx:1.30.7-alpine` (stable branch). Proxies everything, including WebSockets and long-polls. Only the IDE host page (`location = /`) is rewritten, with the coach script tag placed right after `<head>`. If RStudio isn't answering yet, that page is a short "RStudio is starting" page instead (503, reloads itself every 2 s), not nginx's 502, which would stay until the learner reloaded; every other path still gets the 502. `/coach/api/session` and `/coach/api/steps` serve the run's public files. `/coach/api/evidence` serves R's evidence only to a browser signed in to RStudio (`auth_request`; see Phase 4's security review). The coach's API answers as JSON with `nosniff`, and nginx doesn't give its version. `/coach/api/check` is a stub. |
 | Coach | `coach/coach.js` | Vanilla JS in a Shadow DOM, about 2,800 lines. Contains the keyboard shield (which also notices shortcuts such as Alt+-), docking and floating placement, an overlay with the highlight box and the pointer, the lesson and mode picker (and the one-line picker for the new lessons), the fresh start (script reset, Environment, Plots and Console cleared; R restarted between new lessons), the RStudio driver (Demonstration and Show me: multi-line typing and IDE actions), the evidence reader, the Console watcher (Guided and Solo), and the regional-revenue Guided stub. |
-| Audits | `tests/coach_in_ide.cjs`, `tests/demo_mode.cjs`, `tests/practice_modes.cjs`, `tests/lesson_modes.cjs`, `tests/lesson_switch.cjs` (shared helpers in `tests/lib.cjs`), `tests/run_lesson_audits.py` (lesson audits side by side) | Playwright on headless Chromium. With `LAB_PACE=normal`, the lesson audit runs Demonstration alone at the coach's own pace and times each step. They drive the real IDE through the gateway, using only the coach's visible buttons, the keyboard and RStudio's own menus, as a learner would; they never call coach internals to complete a step. They write `results/*.json` and screenshots to a local, git-ignored `results/` folder. |
+| Audits | `tests/coach_in_ide.cjs`, `tests/demo_mode.cjs`, `tests/practice_modes.cjs`, `tests/lesson_modes.cjs`, `tests/lesson_switch.cjs`, `tests/no_sign_in.cjs` (shared helpers in `tests/lib.cjs`), `tests/run_lesson_audits.py` (lesson audits side by side) | Playwright on headless Chromium. With `LAB_PACE=normal`, the lesson audit runs Demonstration alone at the coach's own pace and times each step. They drive the real IDE through the gateway, using only the coach's visible buttons, the keyboard and RStudio's own menus, as a learner would; they never call coach internals to complete a step. They write `results/*.json` and screenshots to a local, git-ignored `results/` folder. |
 | Spikes | `spikes/phase0/` | The Phase 0 spikes for the new lessons (see that section). They use the audits' helpers and write to `results/spikes/`. They provision the retired `statistical-tools` lesson, so they need changing before they run again. |
 
 ## Docking into the sidebar
@@ -588,6 +592,7 @@ What was tried, against a running lab, and what it gave:
 - **Same-origin pages can read it**: a document in the Viewer or Help pane is served from the lab's origin, so its scripts could read the evidence, as they could call RStudio's own RPC endpoints, which is far more. The lessons' documents are the lab's own (an existing open point).
 - **Each request costs RStudio one `GET /`.** The coach reads the evidence at most about four times a second; each check took 1 to 2 ms.
 - **`/coach/api/session` and `/coach/api/steps` are public by design**: lesson content, reference fingerprints and the values explanations quote. They hold no secrets, so a gateway bound to every interface (`GATEWAY_BIND=0.0.0.0`) exposes only what the repository already holds. On iximiuz, the RStudio tab is private to the session's owner.
+- **With sign-in off (`DISABLE_AUTH=true`, the playground from rootfs v6), the check keeps out only clients that never opened RStudio.** RStudio signs in any browser that asks, so anyone who reaches the gateway can read the evidence, and can use RStudio itself, which is far more. On iximiuz only the session's owner reaches it (the tab's private access); `./run.sh up` keeps sign-in on unless asked. `tests/no_sign_in.cjs` checks both answers.
 
 ### Automated review of the lessons
 
@@ -680,7 +685,7 @@ In the first session, through `labctl port-forward` and Playwright: signing in t
 
 The public playground is [`rstudio-guide-16afe14e`](https://labs.iximiuz.com/playgrounds/rstudio-guide-16afe14e). Anyone can list, view and start it (`accessControl: anyone` in `iximiuz/manifest.yaml`); each session runs on the quota of the person who starts it.
 
-It runs from a published **rootfs image**, `ghcr.io/lpmi-13/rstudio-guide-rootfs`. It is built on iximiuz's Docker base (`ubuntu-docker-c36cb070`) and carries this repository, the terminal banner, and the RStudio runtime and gateway images, preloaded so no Docker Hub pull is needed. Publishing works like argo-remotelab's `scripts/publish-rootfs-image.sh`.
+It runs from a published **rootfs image**, `ghcr.io/lpmi-13/rstudio-guide-rootfs`. It is built on iximiuz's Docker base (`ubuntu-docker-c36cb070`) and carries this repository and the RStudio runtime and gateway images, preloaded so no Docker Hub pull is needed. Publishing works like argo-remotelab's `scripts/publish-rootfs-image.sh`.
 
 ### Publish a new rootfs version
 
@@ -708,13 +713,13 @@ labctl playground start docker -f iximiuz/manifest.yaml   # throwaway session fr
 
 The public playground was created once with `labctl playground create --base docker -f iximiuz/manifest.yaml rstudio-guide`. iximiuz added the `-16afe14e` suffix, and `name:` in the manifest records it, so later publishes update that playground. Don't run `create` again: it would make a second playground with a new link.
 
-**What a learner sees:** the playground opens on **Terminal**, which prints the RStudio username and this run's password. If RStudio is still starting, the terminal waits and then prints them. A second tab, **RStudio**, shows the IDE inside the playground page with the coach docked. That makes one click plus sign-in. Every lesson in the default run is offered, so the learner picks one in the Coach pane, as the terminal banner and the playground's description say. Rootfs v5 holds all 29 lessons; v3 and v4 held the two article lessons. `./run.sh up <lesson>` starts a one-lesson run; a new terminal then shows the new password.
+**What a learner sees:** from rootfs v6, iximiuz's loading screen until the init task is done, then the playground's only tab, **RStudio**: the IDE inside the playground page, already signed in, with the coach docked. No clicks and no password. Every lesson in the default run is offered, so the learner picks one in the Coach pane, as the playground's description says. Up to v5 the playground opened on a **Terminal** tab that printed the RStudio username and the run's password, and the learner then signed in on the RStudio tab: one click plus sign-in. Rootfs v5 holds all 29 lessons; v3 and v4 held the two article lessons. With no terminal, the learner can't start a one-lesson run (`./run.sh up <lesson>`) any more; the default run offers every lesson anyway.
 
 ### How it works
 
 - **Init:** the manifest's single init task runs `iximiuz/start-lab.sh`. On first start it does `docker load` on `/opt/rstudio-guide/images.tar`, then runs `./run.sh up`, the default run: all 29 lessons from v5, the two article lessons in v3 and v4, and `graphical-tools` alone up to v2.
-- **`lab.env`** is baked into the rootfs with `FRAME_ORIGIN=https://labs.iximiuz.com`, `GATEWAY_BIND=0.0.0.0` and `LAB_PREBUILT=1`. Every later `./run.sh up` keeps these, so switching scenario keeps the RStudio tab working and never rebuilds or pulls. Values set in the environment still win.
-- **The RStudio tab** is an `http-port` tab on 8788 with private access: only the person who started that session can open it, even though anyone can start the playground. RStudio allows `labs.iximiuz.com` to frame it via `www-frame-origin`, set at container start by `runtime/04_lab_frame_origin`. The coach skips only frames nested *inside* RStudio, so it runs when RStudio itself is framed.
+- **`lab.env`** is baked into the rootfs with `FRAME_ORIGIN=https://labs.iximiuz.com`, `GATEWAY_BIND=0.0.0.0`, `LAB_PREBUILT=1` and, from v6, `DISABLE_AUTH=true`. Every later `./run.sh up` keeps these, so switching scenario keeps the RStudio tab working and never rebuilds or pulls. Values set in the environment still win.
+- **The RStudio tab** is an `http-port` tab on 8788 with private access: only the person who started that session can open it, even though anyone can start the playground. From v6 that is the only lock: RStudio's sign-in is off (`DISABLE_AUTH=true`; Rocker then sets `auth-none=1`), so RStudio signs in whoever iximiuz lets through. A learner who exposes port 8788 publicly themselves (`labctl expose port --public`, or the UI) gives anyone with the link their RStudio, and its terminal, until the session ends. RStudio allows `labs.iximiuz.com` to frame it via `www-frame-origin`, set at container start by `runtime/04_lab_frame_origin`. The coach skips only frames nested *inside* RStudio, so it runs when RStudio itself is framed.
 - **Earlier approach:** the first tests below packed the repository into the manifest as a startup file, because iximiuz allows at most 20 startup files. The rootfs image replaced that.
 
 ### Results: rootfs image
@@ -752,9 +757,55 @@ From the version that packed the code into the manifest, on the official `docker
 | Private access | Anonymous requests to the exposed URL get a 302 to iximiuz sign-in. iximiuz adds its own `frame-ancestors 'self' https://*.iximiuz.com`. |
 | The RStudio tab inside the iximiuz page, signed in | **Confirmed working by hand.** Headless testing can't reach it, because it needs an iximiuz login. |
 
+### Sign-in off and the starting page (24 November 2026)
+
+Up to v5, a learner read the password in the **Terminal** tab and typed it into the **RStudio** tab. iximiuz already signs the learner in before it shows a tab with private access, so RStudio's sign-in was a second lock, and it was the only reason for the Terminal tab. From v6, `lab.env` sets `DISABLE_AUTH=true`. Rocker then starts RStudio with `auth-none=1`, the manifest has only the RStudio tab, and the terminal banner is gone. Locally, `./run.sh up` keeps the password unless asked (see "Run it").
+
+**Alternatives, and why not:**
+- A gateway page that submits the password for the learner protects nothing more than no sign-in does, and adds parts that can break.
+- RStudio's proxied sign-in, where the gateway passes the user's name to RStudio, is only in Posit Workbench.
+- The gateway could mint RStudio's signed sign-in cookie itself, but that is fragile and gives the same result.
+
+**How sign-in off behaves** (RStudio 2026.11.0+203, checked first on `rocker/rstudio:4.6.2` with `DISABLE_AUTH=true`, then in the lab):
+- `/` redirects to `/auth-sign-in`, which signs the browser in as `rstudio` with no form and redirects back to `/`.
+- The R session runs as `rstudio`, as UID 1001 too (iximiuz's `laborant`).
+- `runtime/04_lab_frame_origin` runs after Rocker swaps in its no-sign-in `rserver.conf`, so `www-frame-origin` survives.
+- `run.sh` still passes the run's password. Without it, the account would keep Rocker's default password, `rstudio`.
+
+**Before RStudio is ready.** iximiuz shows a loading screen until the init task is done, but [a learner can close it](https://labs.iximiuz.com/docs/custom-playgrounds/init-tasks). What the RStudio tab then gets was measured on a throwaway v5 session, with its init task held back 3 minutes, and by polling the gateway on its VM every 0.2 s during `./run.sh up`:
+
+| Window | What a browser gets | How long |
+| --- | --- | --- |
+| Nothing listens on 8788 yet (VM booting, `docker load`, provisioning) | iximiuz's proxy holds the request and retries. If the gateway answers within about 110 s, the page loads normally; if not, a bare plain-text 503 (`upstream connect error or disconnect/reset before headers…`). | About 30 s from init start on first boot; about 5 s in a restart |
+| The gateway is up but RStudio isn't listening | Before: nginx's own `502 Bad Gateway`, which stays until a reload. Now: the gateway's starting page (`gateway/starting.html`, 503), which reloads itself every 2 s. | About 1 s, seen in 1 of 2 restarts |
+
+The first window needs nothing from the lab, because first boot is well inside the proxy's 110 s. So the starting page is only the gateway's answer on `/` in the second window. No placeholder server runs during `docker load`.
+
+**End to end on iximiuz**, on a throwaway session of the new manifest. That session ran rootfs v5 with this change's `run.sh`, `compose.yaml`, gateway files, `start-lab.sh` and `lab.env` laid over it as startup files, so nothing was published. Port 8788 was exposed publicly for the test only, since a headless browser can't sign in to iximiuz, and the session was then destroyed.
+
+| Check | Result |
+| --- | --- |
+| A playground with only the RStudio tab | Starts; the init task completed, 31 s from its start to ready |
+| Opening RStudio while the init task ran, as a learner who closes the loading screen | The proxy held the request 27 s; then `302 /`, `302 /auth-sign-in`, `200 /`, the IDE in 30 s and the coach's picker with 29 lessons, with no sign-in form, no reload and no page errors |
+| RStudio stopped inside its container (`s6-svc -d`) | `/` gave the starting page through the proxy (503, `no-store`, `Retry-After: 2`), and other paths gave nginx's 502. The open page reloaded itself twice in 5 s, then opened RStudio 4.2 s after it was started again. |
+| Framing | `Content-Security-Policy: frame-ancestors https://labs.iximiuz.com` from RStudio, plus iximiuz's own `frame-ancestors 'self' https://*.iximiuz.com` |
+
+**Audits, locally on v5's runtime image:**
+
+| Audit | Sign-in | Result |
+| --- | --- | --- |
+| `tests/no_sign_in.cjs` (new): run.sh's messages and the account's password, the IDE with no form, framing, the evidence's answers, the starting page | off | 6/6 |
+| `tests/coach_in_ide.cjs` (regional-revenue), including the evidence endpoint's 401s | on | 22/22 |
+| `tests/lesson_switch.cjs` | on, then off | 6/6 and 6/6 |
+| `tests/lesson_modes.cjs engine-check` (Demonstration, Guided, Solo) | off | 5/5 |
+| `tests/test_publish_rootfs_image.py` (`lab.env` now has `DISABLE_AUTH=true`) | n/a | 9/9 |
+
+There were no warnings or page errors. Locally, RStudio took about 23 s to answer after `s6-svc -u`, against 4 s on iximiuz; the starting page waited it out either way.
+
 ### Not done yet
 
-- The RStudio tab on v5, signed in by hand inside the iximiuz page (part of the user's manual review, the ledger's last step). The same mechanism was confirmed on the earlier version, and v5's RStudio was checked through a port forward.
+- **Publishing rootfs v6** (`bash iximiuz/publish-rootfs-image.sh`), which also updates the public playground. Until then it shows v5's Terminal tab and sign-in.
+- The RStudio tab on v6 by hand inside the iximiuz page: that it opens on RStudio, signed in, and what the loading screen does if closed early (part of the user's manual review, the ledger's last step). The headless checks above went through a public exposure of the same port, not the private tab.
 
 ## Plan deviations and open points
 

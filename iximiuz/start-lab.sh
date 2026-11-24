@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Playground init task: load the images preloaded in the rootfs (first start only),
-# then start the lab. The terminal banner prints the password once run.sh is ready.
+# then start the lab. lab.env turns RStudio's sign-in off, so the RStudio tab opens signed in.
 #
 #   iximiuz/start-lab.sh [scenario...]   (default: every lesson written so far; see run.sh)
 set -euo pipefail

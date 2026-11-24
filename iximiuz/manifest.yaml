@@ -6,11 +6,9 @@ description: RStudio Server with an in-IDE coach and lessons modelled on R for D
 categories:
     - linux
 markdown: |-
-    RStudio Server with a coach docked in its sidebar.
+    RStudio Server with a coach docked in its sidebar. It opens signed in, with no password.
 
-    1. The **Terminal** tab shows the RStudio username and password.
-    2. Open the **RStudio** tab and sign in.
-    3. In the **Coach** pane on the right, choose a lesson, then **Demonstration** (watch), **Guided** (do it with hints) or **Solo** (do it, then check).
+    In the **Coach** pane on the right, choose a lesson, then **Demonstration** (watch), **Guided** (do it with hints) or **Solo** (do it, then check).
 playground:
     networks:
         - name: local
@@ -22,7 +20,7 @@ playground:
             - name: laborant
               default: true
           drives:
-            - source: oci://ghcr.io/lpmi-13/rstudio-guide-rootfs:v5
+            - source: oci://ghcr.io/lpmi-13/rstudio-guide-rootfs:v6
               mount: /
               size: 20GiB
           network:
@@ -32,10 +30,6 @@ playground:
             cpuCount: 2
             ramSize: 4GiB
     tabs:
-        - id: terminal
-          kind: terminal
-          name: Terminal
-          machine: docker-01
         - id: rstudio
           kind: http-port
           name: RStudio

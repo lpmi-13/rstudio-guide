@@ -57,11 +57,19 @@ async function loadSignInPage(page, url) {
   if (!ready) throw new Error('sign-in page scripts did not load, even after a reload');
 }
 
+// Whether the run under test has RStudio's sign-in off (DISABLE_AUTH=true, as on iximiuz). Any audit
+// that signs in with signIn() also runs that way: `DISABLE_AUTH=true node tests/<audit>.cjs`.
+const signInOff = () => /^DISABLE_AUTH=true$/m.test(fs.readFileSync(path.join(RUN_DIR, '.env'), 'utf8'));
+
 async function signIn(page, password, mode) {
-  await loadSignInPage(page, `${GATEWAY}/`);
-  await page.fill('#username', 'rstudio');
-  await page.fill('#password', password);
-  await page.click('#signinbutton');
+  if (signInOff()) {
+    await page.goto(`${GATEWAY}/`);
+  } else {
+    await loadSignInPage(page, `${GATEWAY}/`);
+    await page.fill('#username', 'rstudio');
+    await page.fill('#password', password);
+    await page.click('#signinbutton');
+  }
   await page.waitForSelector('#rstudio_console_input', {timeout: 90000});
   await waitForCoach(page, mode);
 }
