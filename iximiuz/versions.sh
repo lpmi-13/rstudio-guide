@@ -4,7 +4,7 @@
 # v0 means nothing has been published yet.
 
 readonly ROOTFS_IMAGE_REPO="ghcr.io/lpmi-13/rstudio-guide-rootfs"
-readonly ROOTFS_IMAGE_TAG="v7"
-readonly ROOTFS_IMAGE="ghcr.io/lpmi-13/rstudio-guide-rootfs:v7"
+readonly ROOTFS_IMAGE_TAG="v8"
+readonly ROOTFS_IMAGE="ghcr.io/lpmi-13/rstudio-guide-rootfs:v8"
 # The iximiuz Docker playground base. ubuntu-docker pointed at this release on 2026-11-19.
 readonly IXIMIUZ_ROOTFS_RELEASE="c36cb070"
