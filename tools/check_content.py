@@ -10,6 +10,11 @@ Lessons with "version": 2 (modelled on R for Data Science) are checked strictly:
 the collection, under their collection title, and start with a Setup step of library() calls,
 followed by 5-8 steps of 1-3 statements. "fixture": true marks a lesson that only the audits use.
 
+Plain language (content/plain-language.json, after ELK Guide's): the lessons listed there under
+"checked" must use none of its "avoid" words, keep sentences short (25 words, 20 in a task),
+paragraphs short (55 words) and the summary short (35 words). The coach's own strings must use
+none of the "avoid" words. Code in backticks and {values} count as one word each.
+
   python3 -I tools/check_content.py
 """
 import json
@@ -204,6 +209,85 @@ def check_run(run, where, modes, strict, values, problem):
         values.add(name)
 
 
+PLAIN = json.loads((ROOT / "content" / "plain-language.json").read_text())
+CODE_SPAN = re.compile(r"`[^`]*`")
+
+
+def word_forms(word):
+    """The word and the base forms its common English endings could come from."""
+    found = {word}
+    for ending, base in (("ies", "y"), ("ied", "y"), ("es", ""), ("s", ""), ("ed", ""), ("ed", "e"), ("d", ""),
+                         ("ing", ""), ("ing", "e"), ("ly", ""), ("ily", "y")):
+        if word.endswith(ending) and len(word) - len(ending) >= 3:
+            found.add(word[: -len(ending)] + base)
+    return found
+
+
+def hard_words(text):
+    """Words from the avoid list, outside code, each with the plainer word to use."""
+    words = re.findall(r"[a-z]+(?:'[a-z]+)?", CODE_SPAN.sub(" ", text).casefold())
+    avoid = PLAIN["avoid"]
+    return sorted({f"{word} (try: {avoid[base]})" for word in words for base in word_forms(word.removesuffix("'s")) if base in avoid})
+
+
+def prose_words(text):
+    """Words as a reader counts them: a code span or a {value} is one word; markup isn't one."""
+    text = PLACEHOLDER.sub("N", CODE_SPAN.sub("X", text)).replace("**", "").replace("*", "")
+    return re.findall(r"[^\s—–]+", text)
+
+
+def long_sentences(text, limit):
+    found = []
+    for block in re.split(r"\n\s*\n|\n(?=\s*- )", text.strip()):
+        for sentence in re.split(r"(?:(?<=[.!?])|(?<=[.!?][)\"”’]))\s+(?=[A-Z`*{(“\"])", block.strip()):
+            n = len(prose_words(sentence))
+            if n > limit:
+                found.append(f"{n} words: {sentence[:120]}")
+    return found
+
+
+def check_plain(lesson, problem):
+    """A lesson listed as rewritten in plain language stays that way."""
+    limits = PLAIN["limits"]
+
+    def plain(text, where, sentence_limit):
+        for word in hard_words(text):
+            problem(f"{where}: use a plainer word than {word}")
+        for sentence in long_sentences(text, sentence_limit):
+            problem(f"{where}: a sentence is too long ({sentence})")
+
+    summary = lesson.get("summary", "")
+    plain(summary, "summary", limits["sentence_words"])
+    if len(prose_words(summary)) > limits["summary_words"]:
+        problem(f"summary: {len(prose_words(summary))} words, more than {limits['summary_words']}")
+    for number, step in enumerate(lesson.get("steps", []), start=1):
+        explain = step.get("explain", "")
+        plain(explain, f"step {number} explain", limits["sentence_words"])
+        for paragraph in re.split(r"\n\s*\n", explain.strip()):
+            for part in re.split(r"\n(?=\s*- )", paragraph):  # a list item counts on its own
+                if len(prose_words(part)) > limits["paragraph_words"]:
+                    problem(f"step {number} explain: a paragraph of {len(prose_words(part))} words, more than "
+                            f"{limits['paragraph_words']}: {part.strip()[:80]}")
+        for k, run in enumerate(step.get("runs", []), start=1):
+            if run.get("task"):
+                plain(run["task"], f"step {number} task {k}", limits["task_sentence_words"])
+            if run.get("purpose"):
+                plain(run["purpose"], f"step {number} purpose {k}", limits["task_sentence_words"])
+
+
+def check_coach_strings(problems):
+    """The coach's own text uses none of the avoid list's words. Its strings are often fragments, so
+    only words are checked, as ELK Guide does."""
+    source = (ROOT / "coach" / "coach.js").read_text()
+    source = re.sub(r"/\*.*?\*/", lambda m: "\n" * m.group().count("\n"), source, flags=re.S)
+    source = re.sub(r"(?m)(^|[\s;{}(),])//.*$", r"\1", source)
+    for match in re.finditer(r"'(?:[^'\\\n]|\\.)*'|\"(?:[^\"\\\n]|\\.)*\"|`(?:[^`\\]|\\.)*`", source):
+        text = re.sub(r"<[^>]+>|\$\{[^}]*\}", " ", match.group()[1:-1])
+        for word in hard_words(text):
+            line = source[: match.start()].count("\n") + 1
+            problems.append(f"coach/coach.js:{line}: use a plainer word than {word}")
+
+
 def compiles(pattern, where, problem):
     if not isinstance(pattern, str):
         problem(f"{where} must be a regular expression")
@@ -230,6 +314,10 @@ def main():
     folders = sorted(p for p in (ROOT / "scenarios").iterdir() if (p / "scenario.json").is_file())
     for folder in folders:
         check_lesson(folder, collection, problems)
+    for lesson_id in PLAIN["checked"]:
+        lesson = json.loads((ROOT / "scenarios" / lesson_id / "scenario.json").read_text())
+        check_plain(lesson, lambda text, lesson_id=lesson_id: problems.append(f"{lesson_id} (plain language): {text}"))
+    check_coach_strings(problems)
     for problem in problems:
         print(f"check_content: {problem}", file=sys.stderr)
     built = sum(1 for lesson in collection if (ROOT / "scenarios" / lesson).is_dir())

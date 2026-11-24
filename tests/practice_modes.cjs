@@ -9,8 +9,9 @@
 // - Guided counts a statement only once R has the reference result, from the Console or the
 //   script, however it is written (quotes, = for <-, other arguments that give the same result);
 //   an R error or a different result gets feedback instead;
-// - hints come one at a time, and Show me types and runs the statement with the pointer, is
-//   recorded as shown, and reports an R error without counting;
+// - hints come one at a time, and Show me types and runs the statement with the pointer (leaving
+//   it unsaved, as a learner would), is recorded as shown, and reports an R error without counting;
+// - Run with the cursor on a blank line, which sends nothing or only a comment, gets a nudge;
 // - Solo discloses nothing until Check my work, counts hints, and never counts
 //   statements run before Solo was chosen, even after a reload refills the Console;
 // - reload keeps the chosen mode and progress, and Change mode returns to the picker;
@@ -191,13 +192,25 @@ async function guidedStep(page, lesson, s, from = 0) {
       await waitFor(page, () => window.__rsCoach.guided.done['0.0']);
       const view = await guidedView(page);
       assert(view.done['0.0'] === 'learner' && view.tasks.join() === 'done' && view.steps[0] === 'done', JSON.stringify(view));
-      assert(view.explain.startsWith('library(tidyverse) attaches ggplot2') && view.next === 'Next: step 2' && !view.feedback, JSON.stringify(view));
+      assert(view.explain.startsWith('library(tidyverse) loads ggplot2') && /Conflicts/.test(view.explain) && view.next === 'Next: step 2' && !view.feedback, JSON.stringify(view));
       await page.screenshot({path: path.join(OUT, 'guided-step1.png')});
       return {next: view.next};
     });
 
-    await probe('guided: a statement typed below the heading in the script and run with Ctrl+Enter counts (= for <-, single quotes)', async () => {
+    await probe('guided: Run on a blank line under the heading sends no code, and the coach says so', async () => {
       await coachEl(page, 'button.next').click();
+      // The learner clicks the blank line below step 2's heading and presses Ctrl+Enter.
+      const box = await page.locator('#rstudio_Source_pane .ace_line', {hasText: lesson.steps[1].heading}).first().boundingBox();
+      await page.mouse.click(box.x + 40, box.y + box.height * 1.5);
+      await page.keyboard.press('End');
+      await page.keyboard.press('Control+Enter');
+      await feedbackMatches(page, '^(Nothing ran|Only a comment ran)');
+      const view = await guidedView(page);
+      assert(Object.keys(view.done).length === 1, `something counted: ${JSON.stringify(view.done)}`);
+      return {feedback: view.feedback};
+    });
+
+    await probe('guided: a statement typed below the heading in the script and run with Ctrl+Enter counts (= for <-, single quotes)', async () => {
       await scriptRun(page, lesson.steps[1].heading, 'week = read_csv(\'data/trips-week.csv\')');
       await waitFor(page, () => window.__rsCoach.guided.done['1.0']);
       const view = await guidedView(page);
@@ -228,10 +241,12 @@ async function guidedStep(page, lesson, s, from = 0) {
       const spotlit = verifySpotlight(rec, since, until);
       const shade = await overlayState(page);
       assert(!shade.dim && !shade.spot, `RStudio stayed dimmed after Show me: ${JSON.stringify(shade)}`);
-      const saved = fs.readFileSync(scriptPath, 'utf8').split('\n');
-      const at = saved.indexOf(lesson.steps[1].heading);
-      const end = saved.indexOf(lesson.steps[2].heading);
-      assert(at >= 0 && saved.slice(at + 1, end).includes(code), `Show me did not save ${code} under step 2's heading: ${JSON.stringify(saved.slice(at, end))}`);
+      const lines = await editorLines(page);
+      const at = lines.indexOf(lesson.steps[1].heading);
+      const end = lines.indexOf(lesson.steps[2].heading);
+      assert(at >= 0 && lines.slice(at + 1, end).includes(code), `Show me did not write ${code} under step 2's heading: ${JSON.stringify(lines.slice(at, end))}`);
+      const saves = await page.evaluate(() => window.__rsCoach.log.filter(e => e.type === 'demo_click' && e.target === 'save').length);
+      assert(saves === 0, `Show me pressed Save ${saves} times`);
       await page.screenshot({path: path.join(OUT, 'guided-show-me.png')});
       return {clicks, ...typing, ...spotlit};
     });
@@ -430,7 +445,7 @@ async function guidedStep(page, lesson, s, from = 0) {
       const partsOf = view => view.parts.map(p => `${p.part}${p.open ? ' (open)' : ''}: ${p.lessons.join('; ')}`);
       const first = await pickerView(page);
       assert(first.mode === null && first.lesson === null && first.label === 'Choose a lesson and mode' && first.row === null && first.cards.length === 0, JSON.stringify(first));
-      assert(first.listOpen && first.listInView && /^Then choose how to work through it/.test(first.then) && partsOf(first).join(' | ') === byPart.join(' | '), JSON.stringify(partsOf(first)));
+      assert(first.listOpen && first.listInView && /^Then choose how to work:/.test(first.then) && partsOf(first).join(' | ') === byPart.join(' | '), JSON.stringify(partsOf(first)));
       const files = [...DEFAULT.map(id => lessons.find(l => l.id === id).script), 'lessons.Rproj'].filter(f => fs.existsSync(path.join(ROOT, 'run/project', f)));
       assert(files.length === DEFAULT.length + 1 && /lessons/.test(await page.title()), `project files ${files}, title ${await page.title()}`);
       await page.screenshot({path: path.join(OUT, 'lessons-picker-first.png')});
@@ -478,7 +493,8 @@ async function guidedStep(page, lesson, s, from = 0) {
       await coachEl(page, 'button.go').click();
       await waitFor(page, () => window.__rsCoach.demo.completed.includes(0) && window.__rsCoach.demo.state === 'waiting', null, 60000);
       const until = await now(page);
-      const tab = await page.evaluate(() => [...document.querySelectorAll('#rstudio_Source_pane [role="tab"]')].find(t => t.getAttribute('aria-selected') === 'true')?.innerText.trim());
+      // The coach doesn't save, so the tab shows RStudio's unsaved marker after the name.
+      const tab = await page.evaluate(() => [...document.querySelectorAll('#rstudio_Source_pane [role="tab"]')].find(t => t.getAttribute('aria-selected') === 'true')?.innerText.trim().replace(/\s*\*$/, ''));
       const rec = await record(page);
       const clicks = verifyPointer(rec, since, until);
       const typing = verifyTyping(rec, since, until, [lessons[0].steps[0].runs[0].code]);

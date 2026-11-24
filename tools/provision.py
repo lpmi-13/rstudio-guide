@@ -134,8 +134,8 @@ def render_script(scenario):
         f"# {scenario['title']}",
         f"# {about}",
         "#",
-        "# Each step's code goes below its heading. To run a statement, put the cursor on",
-        "# its first line and press Ctrl+Enter (or click Run).",
+        "# Write each step's code under its heading.",
+        "# To run it, press Ctrl+Enter (or click Run).",
         "",
     ]
     for number, step in enumerate(scenario["steps"], start=1):
@@ -259,9 +259,8 @@ def render_readme(lessons):
     lines = ["# Lessons", ""]
     for lesson in lessons:
         lines += [f"- `{lesson['script']}`: {lesson['title']}. {lesson['summary']}"]
-    lines += ["", "Choose a lesson and a mode in the Coach pane on the right. Each lesson's code",
-              "goes below its step headings in its script. To run a statement, put the cursor on",
-              "its first line and press Ctrl+Enter, or click **Run**.", ""]
+    lines += ["", "Choose a lesson and a mode in the Coach pane on the right. Write each lesson's code",
+              "under the step headings in its script. To run it, press Ctrl+Enter, or click **Run**.", ""]
     if any(lesson.get("world") for lesson in lessons):
         lines += ["The lessons' data is in `data/`. Its README says what each file holds.", ""]
     return "\n".join(lines)

@@ -6,9 +6,11 @@
 // same steps and reference output:
 // - Demonstration works RStudio the way a learner would: a visible pointer moves
 //   to each control it clicks, and code is typed into the Source pane one key at
-//   a time, then run with RStudio's Run button and saved. It waits until the
-//   Console or Plots pane shows the result, checks it against the reference
-//   output, and only then explains it, using the values RStudio displayed.
+//   a time, then run with RStudio's Run button (not saved: nothing needs the file
+//   on disk). It waits until the Console or Plots pane shows the result, checks it
+//   against the reference output, and only then explains it, using the values
+//   RStudio displayed. Auto-advance (on unless the learner turns it off) moves on
+//   to the next step once the explanation has been read.
 // - Guided gives one step at a time. The learner types and runs each line; the
 //   coach ticks it once RStudio shows the reference result, and offers hints and
 //   Show me (a one-line demonstration).
@@ -96,7 +98,7 @@
   // minimum for up to 60 characters, plus `readStepMs` each time the text doubles in length.
   const readMinMs = setting('rsCoachReadMinMs', 5000);
   const readStepMs = setting('rsCoachReadStepMs', 3000);
-  const readMs = text => Math.round(readMinMs + readStepMs * Math.log2(Math.max(1, text.replace(/`/g, '').trim().length / 60)));
+  const readMs = text => Math.round(readMinMs + readStepMs * Math.log2(Math.max(1, readable(text).length / 60)));
 
   // RStudio Server 2026.11.0+203 anchors. Presentation and demo driving only.
   const ide = {
@@ -414,32 +416,39 @@
   const clearHighlight = () => highlight(null, 0);
 
   // ---------- panel ----------
+  // Type scale (accessibility audit, 24 November 2026): 15px for what the learner reads (narration,
+  // explanations, tasks, hints), 14px for secondary text, never below 13px. Every control shows a
+  // focus ring, and small link-style buttons are at least 24px tall.
   const css = `
     :host { all: initial; }
     :host([data-placement="docked"]) { position: absolute; inset: 0; z-index: 1000; } /* above the pane's own maximize/close icons */
-    .panel { position: fixed; right: 16px; bottom: 16px; z-index: 2147483000; width: 340px;
+    .panel { position: fixed; right: 16px; bottom: 16px; z-index: 2147483000; width: 360px;
       max-height: calc(100vh - 32px); display: flex; flex-direction: column; box-sizing: border-box;
-      font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color: #1f2328;
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #1f2328;
       background: #fff; border: 1px solid #d0d7de; border-radius: 10px;
       box-shadow: 0 8px 24px rgba(31,35,40,.18); overflow: hidden; }
     :host([data-placement="docked"]) .panel { position: absolute; inset: 0; width: auto; max-height: none;
       border-radius: 0; box-shadow: none; border-width: 0 0 0 1px; }
     .panel.collapsed .body { display: none; }
-    header { display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+    header { display: flex; align-items: center; gap: 8px; padding: 8px 14px;
       background: #0b5cad; color: #fff; cursor: move; user-select: none; }
     :host([data-placement="docked"]) header { cursor: default; }
     :host([data-placement="docked"]) .collapse { display: none; }
-    header strong { flex: 1; font-size: 13px; }
-    header .mode { font-size: 11px; background: rgba(255,255,255,.2); padding: 1px 7px; border-radius: 8px; }
-    header button { all: unset; cursor: pointer; padding: 0 6px; font-size: 16px; line-height: 1; }
-    .body { padding: 12px; overflow: auto; display: grid; gap: 12px; align-content: start; flex: 1; }
+    header strong { flex: 1; font-size: 15px; }
+    header .mode { font-size: 13px; background: rgba(0,0,0,.25); padding: 1px 9px; border-radius: 9px; }
+    header button { all: unset; cursor: pointer; padding: 2px 8px; font-size: 18px; line-height: 1; border-radius: 4px; }
+    header button:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+    .body { padding: 14px; overflow: auto; display: grid; gap: 14px; align-content: start; flex: 1; }
     .content, .overview { display: grid; gap: 12px; }
-    h2 { margin: 0; font-size: 15px; }
-    h3 { margin: 0; font-size: 13px; }
+    h2 { margin: 0; font-size: 19px; line-height: 1.3; }
+    h3 { margin: 0; font-size: 16px; line-height: 1.35; }
     p { margin: 0; }
-    .muted { color: #57606a; font-size: 12px; }
-    code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: #f6f8fa; padding: 0 3px; border-radius: 4px; }
-    ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+    a { color: #0b5cad; }
+    a:focus-visible { outline: 2px solid #0b5cad; outline-offset: 2px; border-radius: 2px; }
+    .muted { color: #57606a; font-size: 14px; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: max(.9em, 13px); background: #f0f3f6; padding: 1px 4px; border-radius: 4px; overflow-wrap: anywhere; }
+    strong code { font-weight: 600; }
+    ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
     li.done { color: #1a7f37; }
     li.done::marker { content: "✓  "; }
     li.active { font-weight: 600; color: #0b5cad; }
@@ -448,14 +457,15 @@
     li.failed::marker { content: "✕  "; }
     label { display: grid; gap: 4px; font-weight: 600; }
     textarea { font: inherit; font-weight: 400; min-height: 54px; resize: vertical; padding: 6px; border: 1px solid #d0d7de; border-radius: 6px; }
-    .row { display: flex; flex-wrap: wrap; gap: 6px; }
-    .row button { font: inherit; padding: 4px 10px; border-radius: 6px; border: 1px solid #d0d7de; background: #f6f8fa; cursor: pointer; }
-    .row button.primary { background: #1a7f37; color: #fff; border-color: #1a7f37; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .row button { font: inherit; padding: 5px 11px; min-height: 34px; border-radius: 6px; border: 1px solid #8c959f; background: #f6f8fa; color: #1f2328; cursor: pointer; }
+    .row button:focus-visible, .mode-card:focus-visible, .lesson-card:focus-visible { outline: 2px solid #0b5cad; outline-offset: 2px; }
+    .row button.primary { background: #1a7f37; color: #fff; border-color: #1a7f37; font-weight: 600; }
     .row button:disabled { opacity: .55; cursor: default; }
-    .card { border: 1px solid #d0d7de; border-radius: 8px; padding: 10px; display: grid; gap: 8px; background: #f6f8fa; }
+    .card { border: 1px solid #d0d7de; border-radius: 8px; padding: 12px 14px; display: grid; gap: 10px; background: #f6f8fa; }
     .card code { background: #fff; }
-    .phase { font-size: 13px; color: #1f2328; background: #fff8e1; border-left: 3px solid #ffb000;
-      padding: 6px 8px; border-radius: 4px; }
+    .phase { font-size: 15px; color: #1f2328; background: #fff8e1; border-left: 4px solid #ffb000;
+      padding: 8px 10px; border-radius: 4px; }
     .phase.new { animation: phase-in .35s ease-out; }
     @keyframes phase-in { from { opacity: 0; transform: translateY(3px); } }
     @media (prefers-reduced-motion: reduce) { .phase.new { animation: none; } }
@@ -470,61 +480,78 @@
       .timer.working span { animation: none; transform: none; width: 100% !important; opacity: .55; }
       .timer span { transition: none !important; }
     }
-    .explain { display: grid; gap: 6px; }
+    /* Explanations: short paragraphs with room between them, and the odd list. */
+    .explain, .prose { display: grid; gap: 10px; }
+    .explain ul, .prose ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
     .explain strong { color: #0b5cad; }
+    .note { font-size: 14px; font-weight: 400; color: #1f2328; background: #eef6ff; border-left: 4px solid #0b5cad; padding: 8px 10px; border-radius: 4px; }
+    .note strong { color: inherit; }
     .error { color: #cf222e; }
-    .status { font-size: 12px; color: #57606a; min-height: 1.4em; }
+    .status { font-size: 14px; color: #57606a; min-height: 1.4em; }
     .ended { font-weight: 600; }
     .pick { display: grid; gap: 8px; }
-    .pick-label { font-weight: 600; font-size: 14px; }
-    .mode-card { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 26px 1fr; gap: 2px 8px;
-      padding: 10px 12px; border: 1px solid #d0d7de; border-radius: 8px; background: #fff; cursor: pointer; }
+    .pick-label { font-weight: 600; font-size: 16px; }
+    .mode-card { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 26px 1fr; gap: 1px 8px;
+      padding: 8px 12px; border: 1px solid #d0d7de; border-radius: 8px; background: #fff; cursor: pointer; }
     .mode-card:hover { border-color: #0b5cad; background: #f3f8fe; }
-    .mode-card:focus-visible { outline: 2px solid #0b5cad; outline-offset: 2px; }
-    .mode-card .icon { grid-row: span 2; align-self: center; text-align: center; font-size: 18px; color: #0b5cad; }
-    .mode-card strong { font-size: 14px; color: #0b5cad; }
-    .mode-card .what { color: #57606a; font-size: 12px; }
+    .mode-card .icon { grid-row: span 2; align-self: center; text-align: center; font-size: 20px; color: #0b5cad; }
+    .mode-card strong { font-size: 16px; color: #0b5cad; }
+    .mode-card .what { color: #57606a; font-size: 14px; line-height: 1.4; }
     .lesson-card { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 16px 1fr; gap: 0 8px; align-items: center;
       padding: 6px 10px; border: 1px solid #d0d7de; border-radius: 8px; background: #fff; cursor: pointer; }
     .lesson-card:hover { border-color: #0b5cad; }
-    .lesson-card:focus-visible { outline: 2px solid #0b5cad; outline-offset: 2px; }
     .lesson-card[aria-checked="true"] { border-color: #0b5cad; background: #f3f8fe; }
-    .lesson-card .dot { grid-row: span 2; width: 12px; height: 12px; box-sizing: border-box; border: 2px solid #8c959f; border-radius: 50%; }
+    .lesson-card .dot { grid-row: span 2; width: 12px; height: 12px; box-sizing: border-box; border: 2px solid #6e7781; border-radius: 50%; }
     .lesson-card[aria-checked="true"] .dot { border: 4px solid #0b5cad; }
-    .lesson-card strong { font-size: 13px; }
-    .lesson-card .what { grid-column: 2; color: #57606a; font-size: 12px; }
-    .row button.switch { margin-left: auto; background: none; border-color: transparent; color: #0b5cad; }
+    .lesson-card strong { font-size: 15px; }
+    .lesson-card .what { grid-column: 2; color: #57606a; font-size: 14px; }
+    .row button.switch { margin-left: auto; background: none; border-color: transparent; color: #0b5cad; text-decoration: underline; text-underline-offset: 2px; }
     .lesson-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
     .lesson-row p { margin: 0; }
-    .lesson-title { font-size: 15px; }
-    .lesson-list { display: grid; gap: 4px; border: 1px solid #d0d7de; border-radius: 8px; padding: 6px 8px; background: #f6f8fa; }
-    .lesson-list summary { font-size: 12px; padding: 2px 0; }
+    .lesson-title { font-size: 18px; }
+    .lesson-list { display: grid; gap: 2px; border: 1px solid #d0d7de; border-radius: 8px; padding: 4px 8px; background: #f6f8fa; }
+    .lesson-list summary { font-size: 14px; min-height: 24px; display: flex; align-items: center; }
     .lesson-list ul { list-style: none; margin: 2px 0 4px; padding: 0; display: grid; gap: 1px; }
     .lesson-pick { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 22px 1fr auto 14px; gap: 6px; align-items: baseline;
-      width: 100%; padding: 3px 6px; border-radius: 6px; cursor: pointer; }
+      width: 100%; min-height: 26px; padding: 2px 6px; border-radius: 6px; cursor: pointer; }
     .lesson-pick:hover { background: #fff; }
     .lesson-pick:focus-visible { outline: 2px solid #0b5cad; outline-offset: 1px; }
     .lesson-pick[aria-current="true"] { background: #fff; box-shadow: inset 0 0 0 1px #0b5cad; }
     .lesson-pick .num { color: #57606a; text-align: right; font-variant-numeric: tabular-nums; }
-    .lesson-pick .what { color: #57606a; font-size: 11px; }
+    .lesson-pick .what { color: #57606a; font-size: 13px; }
     .lesson-pick .tick, .done-mark { color: #1a7f37; font-weight: 600; }
-    .done-mark { font-size: 11px; }
+    .done-mark { font-size: 13px; }
     .lesson-summary { color: #1f2328; }
-    .tasks { padding-left: 18px; }
-    .hints { display: grid; gap: 4px; }
-    .hint-text { font-size: 12px; }
-    pre.code { margin: 4px 0 0; padding: 4px 6px; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
-      background: #f6f8fa; border-radius: 4px; white-space: pre; overflow-x: auto; }
-    .feedback { color: #9a6700; }
+    .tasks { padding-left: 20px; }
+    .hints { display: grid; gap: 6px; }
+    .hint-text { font-size: 15px; }
+    pre.code { margin: 4px 0 0; padding: 6px 8px; font: 14px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+      background: #fff; border: 1px solid #d0d7de; border-radius: 4px; white-space: pre; overflow-x: auto; }
+    .feedback { color: #8a5c00; }
     .feedback:empty, .hints:empty { display: none; }
-    .stats { margin: 0; padding-left: 18px; display: grid; gap: 2px; }
-    .solo-steps { gap: 8px; }
-    .solo-steps .tasks { margin-top: 2px; font-weight: 400; }
-    li.missing { color: #9a6700; }
+    .stats { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+    .solo-steps { gap: 10px; }
+    .solo-steps .tasks { margin-top: 4px; font-weight: 400; display: grid; gap: 6px; }
+    .solo-steps .note { margin-top: 4px; }
+    li.missing { color: #8a5c00; }
     li.missing::marker { content: "○  "; }
-    button.link { all: unset; cursor: pointer; color: #0b5cad; font-size: 12px; text-decoration: underline; }
+    button.link { all: unset; cursor: pointer; color: #0b5cad; font-size: 14px; text-decoration: underline; text-underline-offset: 2px;
+      display: inline-flex; align-items: center; min-height: 24px; padding: 0 4px; border-radius: 4px; }
+    button.link:focus-visible, summary:focus-visible { outline: 2px solid #0b5cad; outline-offset: 1px; }
     details summary { cursor: pointer; font-weight: 600; }
-    h4 { margin: 8px 0 2px; font-size: 12px; }
+    details.steps-box > summary { color: #0b5cad; font-size: 14px; min-height: 24px; }
+    details.steps-box[open] > summary { margin-bottom: 6px; }
+    h4 { margin: 10px 0 4px; font-size: 15px; }
+    /* Auto-advance: a switch, on by default, beside Stop. */
+    .row.controls button.stop { margin-left: auto; }
+    .row button.auto { all: unset; box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; min-height: 30px;
+      padding: 0 2px; cursor: pointer; font-size: 14px; color: #1f2328; border-radius: 6px; }
+    .row button.auto:focus-visible { outline: 2px solid #0b5cad; outline-offset: 2px; }
+    .auto .track { position: relative; width: 34px; height: 20px; border-radius: 10px; background: #6e7781; flex: none; transition: background .15s; }
+    .auto .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform .15s; }
+    .auto[aria-checked="true"] .track { background: #1a7f37; }
+    .auto[aria-checked="true"] .track::after { transform: translateX(14px); }
+    @media (prefers-reduced-motion: reduce) { .auto .track, .auto .track::after { transition: none; } }
     [hidden] { display: none !important; }
   `;
 
@@ -677,12 +704,12 @@
   // A mode changes who works RStudio and when results are disclosed, never the steps, the
   // script or the reference output. The learner picks one first and can change it at any time.
   const MODES = {
-    demonstration: {label: 'Demonstration', icon: '▶', what: 'Watch the coach type each line into the script, run it and explain the result.'},
-    guided: {label: 'Guided', icon: '✎', what: 'Type and run each line yourself, one step at a time. The coach checks each result, and gives hints or shows you if you ask.'},
-    solo: {label: 'Solo', icon: '◎', what: 'Work through the whole task list on your own, then ask the coach to check your work.'},
+    demonstration: {label: 'Demonstration', icon: '▶', what: 'Watch the coach write and run the code, and explain it.'},
+    guided: {label: 'Guided', icon: '✎', what: 'Do it yourself, one step at a time, with checks and hints.'},
+    solo: {label: 'Solo', icon: '◎', what: 'Do the whole task list alone, then check your work.'},
   };
   // Under the lessons, while none is chosen: the modes come next.
-  const THEN_MODE = 'Then choose how to work through it: watch a <strong>Demonstration</strong>, be <strong>Guided</strong> step by step, or work <strong>Solo</strong>.';
+  const THEN_MODE = 'Then choose how to work: watch a <strong>Demonstration</strong>, be <strong>Guided</strong> step by step, or work <strong>Solo</strong>.';
 
   // Several lessons can share a run (one RStudio project). The picker then offers the lessons
   // first, as compact cards with none chosen, and the modes of the chosen one below them. The
@@ -777,7 +804,7 @@
         <h2>${escapeHtml(lesson.title)}</h2>
         <section class="card starting">
           <h3>${autostart ? 'Starting over' : `Starting ${MODES[mode].label}`}</h3>
-          <p class="phase">Starting afresh: ${escapeHtml(lesson.script)} goes back to its step headings, ${restart ? 'R restarts, ' : ''}and the Console, Environment and Plots are emptied.</p>
+          <p class="phase">Starting from the beginning: <code>${escapeHtml(lesson.script)}</code> goes back to its step headings, ${restart ? 'R restarts, ' : ''}and the Console, Environment and Plots are cleared.</p>
           <div class="timer working"><span></span></div>
         </section>`;
       const phase = content.querySelector('.starting .phase');
@@ -811,7 +838,7 @@
         }
       }
       const problems = [...wrongProject, ...await freshStart(lesson, {restart, slow: () => {
-        phase.textContent = 'R is restarting. In a session\'s first half-minute RStudio holds a restart back, for up to 30 seconds.';
+        phase.textContent = 'R is restarting. Just after RStudio starts, this can take up to 30 seconds.';
       }})];
       local.write(inRKey, lesson.id);
       open(mode, {autostart});
@@ -836,10 +863,10 @@
             </button>`).join('')}
         </div>`;
       content.innerHTML = `
-        ${lessons.length > 1 ? lessonCards : `<h2>${escapeHtml(lesson.title)}</h2><p>${escapeHtml(lesson.summary)}</p>`}
+        ${lessons.length > 1 ? lessonCards : `<h2>${escapeHtml(lesson.title)}</h2><div class="prose">${format(lesson.summary, {})}</div>`}
         ${lesson ? `
         <div class="pick" role="group" aria-labelledby="pick-label">
-          <p class="pick-label" id="pick-label">How do you want to work through it?</p>
+          <p class="pick-label" id="pick-label">How do you want to work?</p>
           ${modes.map(mode => `
             <button class="mode-card" data-mode="${mode}">
               <span class="icon" aria-hidden="true">${MODES[mode].icon}</span>
@@ -848,7 +875,7 @@
             </button>`).join('')}
         </div>` : `<p class="muted then">${THEN_MODE}</p>`}
         ${resume ? `<div class="row"><button class="back">Back to ${escapeHtml(MODES[resume.mode].label)}${lessons.length > 1 ? `: ${escapeHtml(resume.lesson.title)}` : ''}</button></div>` : ''}
-        <p class="muted">You can change ${lessons.length > 1 ? 'lesson or ' : ''}mode at any time. Each choice starts afresh: the lesson's script goes back to its step headings, and the Console, Environment and Plots are emptied.</p>`;
+        <p class="muted">You can change the ${lessons.length > 1 ? 'lesson or ' : ''}mode at any time. Each choice starts the lesson from the start, with a clean script and R.</p>`;
       for (const card of content.querySelectorAll('.lesson-card')) {
         card.addEventListener('click', () => {
           lesson = lessons.find(l => l.id === card.dataset.lesson);
@@ -901,9 +928,9 @@
           <button class="link change" aria-expanded="${listOpen}" aria-controls="lesson-list">${listOpen ? 'Close' : 'Change'}</button>
         </div>
         ${list}
-        <p class="lesson-summary">${escapeHtml(lesson.summary)}</p>
+        <div class="lesson-summary prose">${format(lesson.summary, {})}</div>
         <div class="pick" role="group" aria-labelledby="pick-label">
-          <p class="pick-label" id="pick-label">How do you want to work through it?</p>
+          <p class="pick-label" id="pick-label">How do you want to work?</p>
           ${modes.map(mode => `
             <button class="mode-card" data-mode="${mode}">
               <span class="icon" aria-hidden="true">${MODES[mode].icon}</span>
@@ -912,7 +939,7 @@
             </button>`).join('')}
         </div>
         ${resume ? `<div class="row"><button class="back">Back to ${escapeHtml(MODES[resume.mode].label)}: ${escapeHtml(resume.lesson.title)}</button></div>` : ''}
-        <p class="muted">Each choice starts afresh: the lesson's script goes back to its step headings, and R and its panes are emptied.${lesson.chapter
+        <p class="muted">Each choice starts the lesson from the start, with a clean script and R.${lesson.chapter
           ? ` To go deeper, read <a href="${escapeHtml(lesson.chapter)}" target="_blank" rel="noopener">this topic in R for Data Science</a>.` : ''}</p>`;
       content.querySelector('.change').addEventListener('click', () => {
         renderCollectionPicker(!listOpen);
@@ -966,15 +993,27 @@
     el.classList.remove('new');
     if (text) { void el.offsetWidth; el.classList.add('new'); }
   };
-  const lessonHeader = (lesson, intro) => `
+  // A lesson's introduction: its title, what it covers, and how this mode works, in a few short
+  // lines. The list of steps folds away (`stepsBox`), so the controls stay in view.
+  const lessonHeader = (lesson, howto) => `
     <h2>${escapeHtml(lesson.title)}</h2>
-    <p class="intro">${inline(intro)}</p>
-    ${lesson.chapter ? `<p class="muted source">To go deeper, read <a href="${escapeHtml(lesson.chapter)}" target="_blank" rel="noopener">this topic in R for Data Science</a>.</p>`
-      : `<p class="muted source">${escapeHtml(lesson.source)}</p>`}`;
+    <div class="intro prose">${format(lesson.summary, {})}</div>
+    <p class="howto">${inline(howto)}</p>`;
+  const sourceLine = lesson => (lesson.chapter
+    ? `<p class="muted source">To go deeper, read <a href="${escapeHtml(lesson.chapter)}" target="_blank" rel="noopener">this topic in R for Data Science</a>.</p>`
+    : `<p class="muted source">${escapeHtml(lesson.source)}</p>`);
   // What the lesson's checklist counts: lines in the older lessons; tasks (statements and IDE
   // actions) in those modelled on the book.
   const unitOf = lesson => (lesson.version === 2 ? 'task' : 'line');
   const stepList = steps => `<ol class="steps">${steps.map((s, i) => `<li data-step="${i}">${escapeHtml(s.title)}</li>`).join('')}</ol>`;
+  const stepsBox = (steps, open = false) => `<details class="steps-box"${open ? ' open' : ''}><summary>The ${steps.length} steps</summary>${stepList(steps)}</details>`;
+  // R's message after library(tidyverse) ends with red "Conflicts" lines that look like errors.
+  const attachesTidyverse = run => run.evidence === 'attached' && /^tidyverse$/.test(run.expected?.library || '');
+  const CONFLICTS_NOTE = '<p class="note"><strong>Red ✖ lines under “Conflicts”?</strong> They are normal, not errors. They say that two tidyverse functions, <code>filter()</code> and <code>lag()</code>, are used instead of base R functions with the same names. You can ignore them.</p>';
+  const CONFLICTS_NOTE_SHORT = '<p class="note">Red ✖ lines under “Conflicts” after this are normal, not errors. You can ignore them.</p>';
+  const stepNotes = step => (step.runs.some(attachesTidyverse) ? CONFLICTS_NOTE : '');
+  // A step's explanation, with any note about what RStudio showed.
+  const explainHtml = (step, values) => format(step.explain, values) + stepNotes(step);
   function endedView(content, text, changeMode, switchLabel) {
     content.innerHTML = `<p class="ended"></p><div class="row"><button class="switch">${switchLabel}</button></div>`;
     content.querySelector('.ended').textContent = text;
@@ -1378,14 +1417,20 @@
   // once, and otherwise the coach moves on when the countdown ends, into the next step after an
   // explanation. Advance pressed while the coach is acting ends the next wait as soon as it starts.
   //
+  // Auto-advance (a switch, on by default, kept in localStorage) is the learner's pause: turned
+  // off, the coach still works through a step by itself, but after the explanation it waits for
+  // Next however long the learner takes. Turned off during an explanation's countdown, it stops
+  // that countdown; turned on again, the countdown carries on from where it was.
+  //
   // Start over resets the script and R (a fresh start) and then runs step 1 by itself, so every
   // line is typed again. `autostart` is that second half.
   function renderDemo({content, session, lesson: manifest, status, autostart, storeKey: keyFor, switchLabel, changeMode, startOver, finish, next}) {
     const steps = manifest.steps;
     content.innerHTML = `
       <div class="overview">
-        ${lessonHeader(manifest, `${manifest.summary} For each ${manifest.version === 2 ? 'statement' : 'line'}, the coach types it into ${manifest.script}, presses Run and explains the result once RStudio shows it.`)}
-        ${stepList(steps)}
+        ${lessonHeader(manifest, `Watch the coach type each ${manifest.version === 2 ? 'statement' : 'line'} into \`${manifest.script}\`, run it, and explain the result.`)}
+        ${stepsBox(steps)}
+        ${sourceLine(manifest)}
       </div>
       <section class="card" hidden>
         <h3></h3>
@@ -1396,17 +1441,25 @@
       <div class="row">
         <button class="primary go">Start demonstration</button>
         <button class="restart" hidden>Start over</button>
-        <button class="stop">Stop</button>
-        <button class="switch">${switchLabel}</button>
         ${next ? `<button class="primary next-lesson" hidden>${escapeHtml(next.label)}</button>` : ''}
       </div>
-      <p class="muted watch" hidden>The amber pointer is the coach's. While it works, watch RStudio rather than typing in it.</p>`;
+      <div class="row controls">
+        <button class="auto" role="switch" aria-checked="true" aria-describedby="auto-off"><span class="track" aria-hidden="true"></span>Auto-advance</button>
+        <button class="stop">Stop</button>
+      </div>
+      <p class="muted auto-off" id="auto-off" hidden>Auto-advance is off. After each step, the coach waits until you press <strong>Next</strong>.</p>
+      <div class="row"><button class="switch">${switchLabel}</button></div>
+      <p class="muted watch" hidden>The amber pointer is the coach's. While it works, watch RStudio and don't type in it.</p>`;
     const $ = sel => content.querySelector(sel);
     const card = $('.card');
     const phaseEl = $('.phase');
     const explainEl = $('.explain');
     const go = $('.go');
     const restart = $('.restart');
+    const autoBtn = $('.auto');
+    const AUTO_KEY = 'rsCoachAutoAdvance';
+    let auto = (() => { try { return localStorage.getItem(AUTO_KEY) !== '0'; } catch (_error) { return true; } })(); // storage blocked
+    let held = null; // {i, ms}: step i's explanation, waiting for Next while Auto-advance is off
 
     const storeKey = keyFor('Demo');
     // reloadAt: the step whose action reloads the page (a new project), so that after the reload
@@ -1420,6 +1473,7 @@
         note('demo_restored', {completed: demo.completed.length, reloadAt: demo.reloadAt});
       }
     } catch (_error) { /* storage blocked */ }
+    if (demo.completed.length) content.querySelector('.steps-box').open = true; // after a reload: the progress so far
     const persist = () => {
       try { sessionStorage.setItem(storeKey, JSON.stringify({completed: demo.completed, values: demo.values, reloadAt: demo.reloadAt})); } catch (_error) { /* storage blocked */ }
     };
@@ -1497,6 +1551,8 @@
         : next === null ? 'Demonstration complete'
         : left ? `Next: step ${next + 1} · ${left}s` : `Next: step ${next + 1}`;
       go.title = left ? 'Move on now. Otherwise the coach moves on when the countdown ends.' : '';
+      autoBtn.setAttribute('aria-checked', String(auto));
+      $('.auto-off').hidden = auto || demo.state === 'stopped';
       restart.hidden = !(demo.state === 'failed' || (demo.state !== 'running' && demo.completed.length));
       const complete = demo.state !== 'running' && demo.completed.length === steps.length;
       const nextLesson = $('.next-lesson');
@@ -1515,6 +1571,22 @@
       pointerFrom(go);
       runStep(i);
     }
+    autoBtn.addEventListener('click', () => {
+      auto = !auto;
+      try { localStorage.setItem(AUTO_KEY, auto ? '1' : '0'); } catch (_error) { /* storage blocked */ }
+      note('demo_auto_advance_switch', {on: auto, state: demo.state});
+      if (!auto && demo.state === 'waiting' && counting()) {
+        // The explanation's countdown stops where it is, until Auto-advance is back on or Next.
+        const left = Math.max(0, wait.end - Date.now());
+        endCountdown(false);
+        held = {i: demo.index, ms: left};
+      } else if (auto && held && demo.state === 'waiting' && demo.index === held.i) {
+        const {i, ms} = held;
+        held = null;
+        continueAfterReading(i, Math.max(ms, 1500));
+      }
+      renderControls();
+    });
     go.addEventListener('click', () => {
       if (demo.state !== 'running') { begin(); return; }
       note('demo_advance', {counting: counting()}); // Advance
@@ -1528,6 +1600,7 @@
     });
     const halt = () => {
       demo.stopped = true;
+      held = null;
       wait.queued = false;
       endCountdown(false);
       bar(null);
@@ -1540,7 +1613,7 @@
       demo.state = 'stopped';
       try { sessionStorage.removeItem(storeKey); } catch (_error) { /* storage blocked */ }
       note('stop');
-      endedView(content, 'This demonstration has ended. RStudio stays open and keeps what the demonstration ran.', changeMode, switchLabel);
+      endedView(content, 'This demonstration has ended. RStudio stays open, with everything the coach ran.', changeMode, switchLabel);
     });
     $('.switch').addEventListener('click', () => changeMode());
     $('.next-lesson')?.addEventListener('click', () => next.go());
@@ -1549,6 +1622,7 @@
       const step = steps[i];
       Object.assign(demo, {index: i, state: 'running', failure: null, stopped: false});
       wait.queued = false;
+      held = null;
       started += 1;
       card.hidden = false;
       $('.card h3').textContent = `Step ${i + 1} of ${steps.length}: ${step.title}`;
@@ -1568,7 +1642,7 @@
           await drive.doRun(run, step, i);
           if (firstEcho < 0) firstEcho = demo.echoAt;
         }
-        if (step.runs.some(r => r.code)) await drive.save();
+        // No Save: the script stays as typed, unsaved, as a learner's would. Nothing checks the file.
         explainStep(i, firstEcho);
       } catch (error) {
         if (stepFailed(step, error)) return; // stopped: the panel may already be gone
@@ -1586,11 +1660,11 @@
       const charts = step.runs.some(r => ['plot', 'ggplot'].includes(r.evidence));
       const pane = step.runs.some(r => r.ide?.viewer) ? ide.viewer : step.runs.some(r => r.ide?.help) ? ide.help : null;
       highlight(charts ? ide.plots : pane || (firstEcho >= 0 ? () => consoleRangeRect(firstEcho) : ide.console), Infinity);
-      explainEl.innerHTML = format(step.explain, demo.values);
+      explainEl.innerHTML = explainHtml(step, demo.values);
       demo.completed = [...new Set([...demo.completed, i])];
       demo.state = 'waiting';
       demo.reloadAt = null;
-      wait.queued = false; // an Advance pressed during the save hurried the save, not this explanation
+      wait.queued = false; // an Advance pressed while the coach acted hurried the coach, not this explanation
       bar(null);
       persist();
       note('demo_step_done', {step: step.id, values: {...demo.values}});
@@ -1643,9 +1717,13 @@
     }
 
     // The next step starts by itself once the learner has had time to read the explanation,
-    // unless they press Next first (or Stop, or Start over).
-    async function continueAfterReading(i) {
-      const ms = readMs(explainEl.textContent);
+    // unless they press Next first (or Stop, or Start over), or Auto-advance is off.
+    async function continueAfterReading(i, ms = readMs(explainEl.textContent)) {
+      if (!auto) {
+        held = {i, ms};
+        note('demo_hold', {step: steps[i].id});
+        return;
+      }
       note('demo_read', {text: 'explanation', step: steps[i].id, ms});
       if (!(await countdown(ms)) || demo.stopped || demo.state !== 'waiting' || demo.index !== i) return;
       note('demo_auto_advance', {step: steps[i + 1].id});
@@ -1858,19 +1936,6 @@
       return {first, last};
     }
 
-    async function save() {
-      const unsaved = () => ide.unsaved(script);
-      if (!unsaved()) return;
-      // The toolbar's Save saves the document shown, and a statement may have shown another (reprex
-      // opens its Markdown file): show the script first.
-      if (!ide.scriptEditor(script)) await openScript();
-      say(`Saving ${script}`);
-      if (!(await clickOn(ide.saveButton, 'save'))) throw new Error('The Save button in the Source pane is not visible.');
-      if (!(await waitFor(() => !unsaved(), 5000))) throw new Error(`RStudio did not save ${script}.`);
-      check();
-      note('demo_action', {action: 'save', script});
-    }
-
     // Each statement is narrated by what it is for (the run's `purpose`, from scenario.json), not by
     // where it goes: "Writing code to find the highest temperature".
     async function doRun(run, step, index) {
@@ -1900,20 +1965,16 @@
         await clickInEditor(editor, block.last, lines[block.last].length);
         ({first: row, last} = await typeStatement(editor, block.last, run.code, run.keys));
         spotlight(() => editorRowsRect(editor, headingRow, last));
-        if (count > 1) {
-          await heed(400);
-          // Run sends the whole statement the cursor is in; the coach puts it on the first line.
-          say('Putting the cursor on the statement\'s first line');
-          await clickInEditor(editor, row, 0);
-        }
       }
       await heed(400);
 
-      // With no selection, Run sends the statement the cursor is on, comment included.
+      // With no selection, Run sends the whole statement the cursor is in, from any of its lines
+      // (checked in RStudio 2026.11, "execution_behavior": "statement"). After typing, the cursor
+      // is at the end of the statement's last line, as a learner's is, so it runs from there.
       const runMenu = !ide.runButton() && ide.runMenu();
-      const press = runMenu ? 'Pressing Run › Run Selected Line(s)' : 'Pressing Run';
-      say(count > 1 ? `${press} to send the whole statement, all its lines, to the Console (Ctrl+Enter does the same)`
-        : `${press} to send this line to the Console (Ctrl+Enter does the same)`);
+      const press = runMenu ? 'Pressing **Run › Run Selected Line(s)**' : 'Pressing **Run**';
+      say(count > 1 ? `${press} to send the whole statement, every line of it, to the Console (**Ctrl+Enter** does the same)`
+        : `${press} to send this line to the Console (**Ctrl+Enter** does the same)`);
       // After a Render, RStudio's Background Jobs tab can cover the Console; a learner would bring it back.
       if (!shown(document.getElementById('rstudio_console_input')) && ide.consoleTab()) {
         say('Bringing the Console to the front');
@@ -1963,11 +2024,14 @@
         say('The Viewer pane shows the result');
       } else if (stored) {
         spotlight(() => environmentRowRect(stored) || ide.environment());
-        say(`\`${stored}\` now appears in the Environment pane (an assignment prints nothing in the Console)`);
+        say(`\`${stored}\` now appears in the Environment pane. An assignment prints nothing in the Console`);
       } else {
         spotlight(() => consoleRangeRect(echoAt));
         say(run.evidence === 'error' ? 'R stopped with an error, shown in the Console'
-          : run.evidence === 'attached' ? `R attached ${run.expected?.library}; the Console lists what came with it`
+          : run.evidence === 'attached' ? (attachesTidyverse(run) && /Conflicts/.test(output)
+            ? 'R loaded the tidyverse. The Console lists its packages, and the red “Conflicts” lines are normal'
+            : printed ? `R loaded ${run.expected?.library}, and the Console shows its message`
+            : `R loaded ${run.expected?.library}. It was loaded already, so the Console shows nothing new`)
           : run.evidence === 'file' ? `R wrote ${run.path} into the project folder`
           : printed && printed.length <= 40 ? `R printed \`${printed}\` in the Console` : 'R printed the result in the Console');
       }
@@ -2090,11 +2154,9 @@
         const {first, last} = await typeStatement(editor, row, run.text);
         spotlight(() => editorRowsRect(editor, first, last));
         await heed(400);
-        await save();
       } else if (run.action === 'source') {
-        // Source runs the saved script, so the coach saves it first, as RStudio would.
+        // Source saves the script itself, then runs the saved file.
         await openScript();
-        await save();
         say(`${purpose}: the Source button`);
         // Straight after Restart R, RStudio can fail to save the script first ("Error Saving File …
         // jsonrpc error"). Like a learner, the coach dismisses the message and tries again.
@@ -2129,7 +2191,7 @@
         if (run.evidence === 'file' || run.evidence === 'ide' ? evidenceMatch(run, await readEvidence(), mark) : true) break;
         if (!slow && run.ide?.restarted && Date.now() - started > 4000) {
           slow = true;
-          setPhase('R is restarting. In a session\'s first half-minute RStudio holds a restart back for up to 30 seconds.');
+          setPhase('R is restarting. Just after RStudio starts, this can take up to 30 seconds.');
         }
         if (Date.now() - started > 60000) throw new Error(`RStudio didn't show the result of ${run.action === 'menu' ? run.menu.join(' › ') : run.action}.`);
         await sleep(200);
@@ -2152,18 +2214,21 @@
 
     // File › New Project… › New Directory › New Project, the directory name typed one key at a time,
     // then Create Project. RStudio then reloads the page into the new project (S7), which ends this
-    // script: whoever called this records beforehand what to do after the reload. RStudio offers to
-    // save a document with unsaved changes first, and the coach saves it. A folder of that name may
-    // be left from before; RStudio opens it as the project all the same.
+    // script: whoever called this records beforehand what to do after the reload. RStudio first asks
+    // about documents with unsaved changes, and the coach saves them: "Unsaved Changes" with Save
+    // for one document, "The following 2 files have unsaved changes" with Save Selected (all ticked)
+    // for several. A folder of that name may be left from before; RStudio opens it as the project
+    // all the same.
     async function newProject(run, purpose) {
-      await save();
       say(`${purpose}: File › New Project…`);
       await menuPath(['File', 'New Project…']);
       const wizard = () => ide.dialog(/New Project Wizard/);
       const unsavedAsk = () => !wizard() && ide.dialog(/unsaved changes/i);
+      const saveAll = () => unsavedAsk() && (ide.dialogButton(unsavedAsk(), 'Save') || ide.dialogButton(unsavedAsk(), 'Save Selected'));
       if (!(await waitFor(() => wizard() || unsavedAsk(), 10000))) throw new Error('The New Project wizard did not open.');
       if (unsavedAsk()) {
-        await clickOn(() => ide.dialogButton(unsavedAsk(), 'Save'), 'dialog Save');
+        say('RStudio asks whether to save your changes before it leaves this project: pressing **Save**');
+        if (!(await clickOn(saveAll, 'dialog Save'))) throw new Error('RStudio\'s question about unsaved changes has no Save button.');
         if (!(await waitFor(wizard, 10000))) throw new Error('The New Project wizard did not open.');
       }
       for (const choice of ['New Directory', 'New Project']) {
@@ -2234,7 +2299,7 @@
       await waitFor(() => !dialog(), 5000);
     }
 
-    return {openScript, doRun, doAction, save};
+    return {openScript, doRun, doAction};
   }
 
   // ---------- Guided and Solo: the learner works RStudio ----------
@@ -2317,11 +2382,11 @@
     const current = () => steps[g.step].runs.findIndex((_run, r) => !g.done[key(g.step, r)]); // -1: step done
     const finished = () => g.step === steps.length - 1 && stepDone(g.step);
 
+    // The current step's card comes first, so its task is in view; what the lesson covers, and its
+    // steps, fold away below the buttons.
     content.innerHTML = `
-      ${lessonHeader(lesson, lesson.version === 2
-        ? `${lesson.summary} Type each statement below its step heading in ${script}, then press Ctrl+Enter to run it. The coach ticks each task once R shows the right result.`
-        : `${lesson.summary} Type each line below its step heading in ${script}, then press Ctrl+Enter to run it. The coach ticks each line once RStudio shows the right result.`)}
-      ${stepList(steps)}
+      <h2>${escapeHtml(lesson.title)}</h2>
+      <p class="howto">${inline(`Write each ${unitOf(lesson) === 'task' ? 'statement' : 'line'} under its step heading in \`${script}\`, then press **Ctrl+Enter** to run it. The coach ticks each ${unitOf(lesson)} when R shows the right result.`)}</p>
       <section class="card">
         <h3></h3>
         <ol class="tasks"></ol>
@@ -2336,7 +2401,14 @@
         <button class="show">Show me</button>
         <button class="primary next" hidden>Next step</button>
         <button class="switch">${switchLabel}</button>
-      </div>`;
+      </div>
+      <details class="steps-box about"><summary>About this lesson</summary>
+        <div class="overview">
+          <div class="intro prose">${format(lesson.summary, {})}</div>
+          ${stepList(steps)}
+          ${sourceLine(lesson)}
+        </div>
+      </details>`;
     const $ = sel => content.querySelector(sel);
     const hintBtn = $('.hint');
     const showBtn = $('.show');
@@ -2350,8 +2422,8 @@
       if (run.action) return [escapeHtml(run.hint_where), escapeHtml(run.hint_how)];
       const several = run.code.includes('\n');
       return [
-        `Type it on a new line below <code>${escapeHtml(step.heading)}</code> in ${escapeHtml(script)}. With the cursor on ${several ? 'its first line' : 'that line'}, press Ctrl+Enter or ${/\.qmd$/.test(script) ? 'choose Run › Run Selected Line(s)' : 'click Run'}.` +
-          (several && /[([{]\n/.test(run.code) ? ' When you press Enter between brackets, RStudio moves the closing one down a line for you, so don\'t type it twice.' : ''),
+        `Write it on a new line under <code>${escapeHtml(step.heading)}</code> in ${escapeHtml(script)}. Then press <strong>Ctrl+Enter</strong>${/\.qmd$/.test(script) ? ', or choose <strong>Run › Run Selected Line(s)</strong>' : ', or click <strong>Run</strong>'}.` +
+          (several && /[([{]\n/.test(run.code) ? ' When you press Enter between brackets, RStudio moves the closing bracket down a line for you. So don\'t type it twice.' : ''),
         `It starts like this: ${codeHtml(run.hint_partial)}` + keysHint(run),
         `The whole ${several ? 'statement' : 'line'} is ${codeHtml(run.hint_line)}` + keysHint(run),
       ];
@@ -2371,7 +2443,7 @@
       const hints = r < 0 ? [] : hintsFor(g.step, r);
       $('.hints').innerHTML = hints.slice(0, read).map(h => `<p class="hint-text">${h}</p>`).join('');
       $('.feedback').textContent = r < 0 || g.showing ? '' : g.feedback;
-      $('.explain').innerHTML = r < 0 ? format(step.explain, {...expectedValues(steps), ...g.values}) : '';
+      $('.explain').innerHTML = r < 0 ? explainHtml(step, {...expectedValues(steps), ...g.values}) : '';
       hintBtn.hidden = showBtn.hidden = r < 0;
       hintBtn.disabled = g.showing || read >= hints.length;
       hintBtn.textContent = read >= hints.length ? 'No more hints' : `Hint ${read + 1} of ${hints.length}`;
@@ -2419,7 +2491,16 @@
       const from = Math.max(view.from, g.since ?? view.from);
       for (let k = view.entries.length - 1; k >= from; k -= 1) {
         const entry = view.entries[k];
-        if (!codeKey(entry.code)) continue; // a comment, such as a step heading Run sent along
+        if (!codeKey(entry.code)) {
+          // The last thing run was an empty line, or only a comment: Run with the cursor on a blank
+          // line sends that line, or jumps ahead to the next heading. Say so once R is quiet.
+          if (k === view.entries.length - 1 && !entry.output.trim() && view.quietMs >= 1500) {
+            return entry.code.trim()
+              ? 'Only a comment ran. Click in your code, then press Ctrl+Enter.'
+              : 'Nothing ran: the cursor was on an empty line. Click in your code, then press Ctrl+Enter.';
+          }
+          continue; // a comment, such as a step heading Run sent along
+        }
         const error = consoleError(entry.output);
         const wanted = steps[g.step].runs[current()];
         if (error && !(wanted?.evidence === 'error')) return `R reported: ${error.replace(/\.$/, '')}. Fix the line, then run it again.`;
@@ -2500,7 +2581,6 @@
         } else {
           await drive.openScript();
           output = await drive.doRun(run, step, s);
-          await drive.save();
         }
         // The coach's result is the one that counts for this statement.
         const doc = lesson.version === 2 ? await readEvidence(0) : null;
@@ -2562,13 +2642,14 @@
     };
 
     content.innerHTML = `
-      ${lessonHeader(lesson, `${lesson.summary} Work through the list on your own in ${lesson.script}: type each ${lesson.version === 2 ? 'statement' : 'line'} below its step heading and run it. The coach checks nothing until you ask.`)}
+      ${lessonHeader(lesson, `Work through the list on your own in \`${lesson.script}\`. Write each ${lesson.version === 2 ? 'statement' : 'line'} under its step heading and run it. The coach checks nothing until you press **Check my work**.`)}
+      ${sourceLine(lesson)}
       <ol class="solo-steps">${steps.map((step, s) => `
         <li><strong>${escapeHtml(step.title)}</strong>
           <ul class="tasks">${step.runs.map((run, r) => `
             <li data-line="${s}.${r}">${inline(run.task)}
               <button class="link hint" data-line="${s}.${r}" title="Hints are counted in your results">Hint</button>
-              <span class="hint-text"></span></li>`).join('')}
+              <span class="hint-text"></span>${attachesTidyverse(run) ? CONFLICTS_NOTE_SHORT : ''}</li>`).join('')}
           </ul></li>`).join('')}
       </ol>
       <div class="row">
@@ -2596,9 +2677,9 @@
       if (done === lines.length) {
         const values = {...expectedValues(steps), ...solo.values};
         results.innerHTML = `<h3>All ${lines.length} ${unit}s done</h3>
-          <p>Every ${unit} gave the reference result in RStudio. Hints used: <strong>${hints}</strong>.</p>
+          <p>Every ${unit} gave the right result in R. Hints used: <strong>${hints}</strong>.</p>
           <details><summary>What each step showed</summary>
-            ${steps.map(step => `<h4>${escapeHtml(step.title)}</h4>${format(step.explain, values)}`).join('')}
+            <div class="prose">${steps.map(step => `<h4>${escapeHtml(step.title)}</h4>${explainHtml(step, values)}`).join('')}</div>
           </details>
           ${next ? `<div class="row"><button class="primary next-lesson">${escapeHtml(next.label)}</button></div>` : ''}`;
         results.querySelector('.next-lesson')?.addEventListener('click', () => next.go());
@@ -2606,7 +2687,7 @@
         finish?.();
       } else {
         results.innerHTML = `<h3>${done} of ${lines.length} ${unit}s done</h3>
-          <p>The ticked ${unit}s gave the reference result in RStudio. ${unit === 'task' ? 'Do' : 'Run'} the others, then check again. Hints used: <strong>${hints}</strong>.</p>`;
+          <p>The ticked ${unit}s gave the right result in R. ${unit === 'task' ? 'Do' : 'Run'} the others, then check again. Hints used: <strong>${hints}</strong>.</p>`;
       }
     }
 
@@ -2808,16 +2889,40 @@
   function escapeHtml(text) {
     return String(text).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
   }
-  const inline = text => escapeHtml(text).replace(/`([^`]+)`/g, '<code>$1</code>');
-  // `code` becomes <code>; {name} becomes a value RStudio displayed in this run.
+  // Lesson text, one line of it: `code` becomes <code>, **bold** <strong> and *italic* <em>.
+  // Code spans are left alone, so `x * y` stays as it is.
+  const inline = text => escapeHtml(text).split(/(`[^`]+`)/).map(part => (/^`[^`]+`$/.test(part)
+    ? `<code>${part.slice(1, -1)}</code>`
+    : part.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/(^|[^\w*])\*([^*\s](?:[^*]*[^*\s])?)\*(?![\w*])/g, '$1<em>$2</em>'))).join('');
+  // A whole text: a blank line starts a new paragraph, and lines starting "- " make a list.
+  // {name} becomes a value RStudio displayed in this run.
   function format(text, values) {
-    return `<p>${inline(text)
-      .replace(/\{\{(\w+)\}\}|\{(\w+)\}/g, (_m, literal, name) => {
-        if (literal !== undefined) return `{${literal}}`; // {{5}} shows {5}, as in a regular expression
-        if (!(name in values)) throw new Error(`The explanation needs ${name}, which RStudio has not shown yet.`);
-        return `<strong>${escapeHtml(values[name])}</strong>`;
-      })}</p>`;
+    const fill = html => html.replace(/\{\{(\w+)\}\}|\{(\w+)\}/g, (_m, literal, name) => {
+      if (literal !== undefined) return `{${literal}}`; // {{5}} shows {5}, as in a regular expression
+      if (!(name in values)) throw new Error(`The explanation needs ${name}, which RStudio has not shown yet.`);
+      return `<strong>${escapeHtml(values[name])}</strong>`;
+    });
+    const html = [];
+    for (const block of text.trim().split(/\n[ \t]*\n/)) {
+      let para = [];
+      let items = [];
+      const flush = () => {
+        if (para.length) html.push(`<p>${fill(inline(para.join(' ')))}</p>`);
+        if (items.length) html.push(`<ul>${items.map(item => `<li>${fill(inline(item))}</li>`).join('')}</ul>`);
+        para = [];
+        items = [];
+      };
+      for (const line of block.split('\n')) {
+        const item = /^\s*- (.*)$/.exec(line);
+        if (item) { if (para.length) flush(); items.push(item[1]); } else { if (items.length) flush(); para.push(line.trim()); }
+      }
+      flush();
+    }
+    return html.join('');
   }
+  // What a learner reads, without the markup: for reading times.
+  const readable = text => text.replace(/[`*]/g, '').trim();
 
   // When the Console's text last changed, sampled from page load (see consoleWatch).
   const consoleClock = {text: null, changedAt: Date.now()};

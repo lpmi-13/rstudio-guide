@@ -3,7 +3,9 @@
 // the gateway and:
 //
 // - Demonstration, at a fast pace (the coach's localStorage pacing settings): every step runs to
-//   its explanation, and the script ends up holding every statement under its heading, exactly;
+//   its explanation, the script ends up holding every statement under its heading, exactly, and
+//   the coach never presses Save (the script is read from its editor; a lesson that ends in a new
+//   project has left it, saved by RStudio's question on the way out, so it is read from disk);
 // - Guided: the learner types each statement at the Console prompt and does each IDE action with
 //   real clicks (menus, Global Options), presses Next after each step, and asks for Show me once,
 //   on the first statement that spans several lines; every task ticks, by the learner except the
@@ -153,10 +155,11 @@ async function learnerAction(page, run) {
     }
   } else if (run.action === 'new-project') {
     await clickMenu(page, ['File', 'New Project…']);
-    const unsaved = page.getByRole('button', {name: 'Save', exact: true});
+    // RStudio asks about unsaved documents first: Save for one, Save Selected for several.
+    const unsaved = page.getByRole('button', {name: /^Save( Selected)?$/});
     const wizard = page.locator('.gwt-DialogBox:visible', {hasText: 'New Project Wizard'});
-    await Promise.race([wizard.waitFor({timeout: 10000}), unsaved.waitFor({timeout: 10000})]).catch(() => {});
-    if (await unsaved.isVisible()) await unsaved.click();
+    await Promise.race([wizard.waitFor({timeout: 10000}), unsaved.first().waitFor({timeout: 10000})]).catch(() => {});
+    if (await unsaved.first().isVisible()) await unsaved.first().click();
     await wizard.getByText('New Directory', {exact: true}).click();
     await wizard.getByText('New Project', {exact: true}).click();
     await page.locator('#rstudio_new_project_directory_name').fill(run.name);
@@ -169,6 +172,16 @@ async function learnerAction(page, run) {
   } else {
     throw new Error(`the audit can't do the action ${run.action} yet`);
   }
+}
+// What `name` holds as the learner sees it: its editor, shown by clicking its tab, when it is open;
+// otherwise (RStudio has moved to another project) the file.
+async function scriptText(page, name) {
+  const tab = page.locator('#rstudio_Source_pane [role="tab"]', {hasText: name}).first();
+  if (!(await tab.isVisible().catch(() => false))) return fs.readFileSync(path.join(RUN_DIR, 'project', name), 'utf8');
+  await tab.click();
+  await page.waitForFunction(name => [...document.querySelectorAll('#rstudio_Source_pane [role="tab"]')]
+    .some(t => t.getAttribute('aria-selected') === 'true' && t.innerText.trim().replace(/\s*\*$/, '') === name), name, {timeout: 10000});
+  return page.evaluate(() => [...document.querySelectorAll('#rstudio_Source_pane .ace_editor')].find(e => e.offsetParent && e.env?.editor).env.editor.getValue());
 }
 async function openDocument(page) {
   if (!(await page.locator('#rstudio_workbench_panel_files').isVisible())) await page.click('#rstudio_workbench_tab_files');
@@ -260,7 +273,9 @@ async function chooseMode(page, mode) {
     assert(end, `the Demonstration didn't finish in ${(Date.now() - started) / 60000} minutes`);
     assert(end.state === 'waiting', `step ${end.index + 1} failed: ${end.failure}`);
     const stepSeconds = doneAt.map((t, i) => Math.round((t - (i ? doneAt[i - 1] : started)) / 1000));
-    const script = fs.readFileSync(path.join(RUN_DIR, 'project', lesson.script), 'utf8'); // saved after each step
+    const script = await scriptText(page, lesson.script);
+    const saves = await page.evaluate(() => window.__rsCoach.log.filter(e => e.type === 'demo_click' && e.target === 'save').length);
+    assert(saves === 0, `the coach pressed Save ${saves} times`);
     for (const step of lesson.steps) {
       const block = script.split(step.heading)[1]?.split(/\n# Step \d+\. /)[0] ?? '';
       for (const run of step.runs.filter(r => r.code)) assert(block.includes(`\n${run.code}\n`), `step "${step.title}" doesn't hold ${JSON.stringify(run.code)}`);

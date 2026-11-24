@@ -56,7 +56,7 @@ const evidence = page => page.evaluate(() => fetch('/coach/api/evidence', {cache
     await signIn(page, password, null);
     const first = await pickerView(page);
     assert(first.mode === null && first.lesson === null && first.row === null && first.listOpen && first.cards.length === 0, JSON.stringify(first));
-    assert(first.label === 'Choose a lesson' && /^Then choose how to work through it/.test(first.then), JSON.stringify(first));
+    assert(first.label === 'Choose a lesson' && /^Then choose how to work:/.test(first.then), JSON.stringify(first));
     assert(first.parts.length === 1 && first.parts[0].open && first.parts[0].lessons.join() === '91 Engine actions 6 steps,92 Engine check 7 steps', JSON.stringify(first.parts));
     await page.screenshot({path: path.join(OUT, 'picker-first.png')});
     await coachEl(page, '.lesson-pick[data-lesson="engine-actions"]').click();

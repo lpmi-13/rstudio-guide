@@ -13,11 +13,14 @@
 // - every narrated line stays up for its reading time (5 s or more, longer for longer text),
 //   counted down on the button; Advance ends a countdown at once, and with nothing pressed an
 //   explanation counts down and the next step starts by itself;
+// - with Auto-advance off, an explanation waits for Next however long it takes (the switch is
+//   kept across a reload); turned on again, its countdown carries on and the next step starts;
 // - while the coach works, RStudio is dimmed and every click and keystroke is
 //   inside the spotlight; when a step is explained, the dimming has lifted and
 //   an evidence ring marks the Console output or the chart;
 // - code is typed into the script one key at a time, at a person's pace, with each |> of a
-//   statement that teaches Ctrl+Shift+M typed by the shortcut, and saved;
+//   statement that teaches Ctrl+Shift+M typed by the shortcut; the coach never presses Save, so
+//   the script stays unsaved, as a learner's would;
 // - choosing Demonstration, and Start over, start afresh: the script holds only its
 //   step headings and the Console, Environment and Plots are empty, and
 //   Start over then types every step again;
@@ -44,25 +47,32 @@ const escapeRe = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const firstLine = code => code.split('\n')[0];
 const pipesByShortcut = runs => runs.filter(r => r.code && r.keys).reduce((n, r) => n + r.code.split('|>').length - 1, 0);
 
-// The script on disk holds the statements of steps 0..last directly below their heading, in order,
-// each once.
-function verifySaved(scriptPath, manifest, last) {
-  const text = fs.readFileSync(scriptPath, 'utf8');
-  const lines = text.split('\n');
+// The script in the editor holds the statements of steps 0..last directly below their heading, in
+// order, each once. The coach doesn't save it, so the editor, not the file, has the code.
+async function verifyScript(page, manifest, last) {
+  const lines = await editorLines(page);
+  assert(lines, 'no script is open in the Source pane');
+  const text = `${lines.join('\n')}\n`;
   for (const step of manifest.steps.slice(0, last + 1)) {
     const at = lines.indexOf(step.heading);
-    assert(at >= 0, `the saved script has no ${step.heading}`);
+    assert(at >= 0, `the script has no ${step.heading}`);
     const want = step.runs.filter(r => r.code).map(r => r.code).join('\n').split('\n');
     const got = lines.slice(at + 1, at + 1 + want.length);
-    assert(got.join('\n') === want.join('\n'), `below ${step.heading} the saved script has ${JSON.stringify(got)}`);
+    assert(got.join('\n') === want.join('\n'), `below ${step.heading} the script has ${JSON.stringify(got)}`);
     for (const run of step.runs.filter(r => r.code)) {
       const count = text.split(`\n${run.code}\n`).length - 1;
-      assert(count === 1, `the saved script has ${JSON.stringify(firstLine(run.code))} ${count} times`);
+      assert(count === 1, `the script has ${JSON.stringify(firstLine(run.code))} ${count} times`);
     }
   }
 }
+// The coach's clicks on Save, ever: there should be none.
+const saveClicks = page => page.evaluate(() => window.__rsCoach.log.filter(e => e.type === 'demo_click' && e.target === 'save').length);
 const unsavedTabs = page => page.evaluate(() => [...document.querySelectorAll('#rstudio_Source_pane [role="tab"]')]
   .map(t => t.innerText.trim()).filter(t => t.includes('*')));
+const autoSwitch = page => page.evaluate(() => {
+  const root = document.getElementById('rs-coach-host').shadowRoot;
+  return {on: root.querySelector('button.auto')?.getAttribute('aria-checked'), note: root.querySelector('.auto-off') ? !root.querySelector('.auto-off').hidden : null};
+});
 
 const coachView = page => page.evaluate(() => {
   const root = document.getElementById('rs-coach-host').shadowRoot;
@@ -195,7 +205,8 @@ function verifyStep(step, snap, plotBefore, allValues, doc, mark) {
 }
 
 // Everything a learner should see in one finished step: the pointer, the typing (or none, when
-// the step's code was already in the script), the evidence, and the saved script.
+// the step's code was already in the script), the evidence, and the script, which the coach
+// never saved.
 async function verifyStepFully(page, manifest, i, snap, since, {plotBefore, allValues, scriptPath, typed, mark}) {
   const step = manifest.steps[i];
   const doc = await rEvidence(page);
@@ -205,9 +216,9 @@ async function verifyStepFully(page, manifest, i, snap, since, {plotBefore, allV
   const runs = step.runs.filter(r => r.code);
   const typing = verifyTyping(rec, since, snap.t, typed ? runs.map(r => r.code) : [], {shortcuts: typed ? pipesByShortcut(runs) : 0});
   const spotlit = verifySpotlight(rec, since, snap.t);
-  verifySaved(scriptPath, manifest, i);
-  const unsaved = await unsavedTabs(page);
-  assert(unsaved.length === 0, `unsaved changes shown on ${unsaved} when the explanation appeared`);
+  await verifyScript(page, manifest, i);
+  const saves = await saveClicks(page);
+  assert(saves === 0, `the coach pressed Save ${saves} times`);
   return {...checked, clicks, ...typing, spotlitKeys: spotlit.spotlitKeys};
 }
 
@@ -355,12 +366,42 @@ async function runSteps(page, manifest, from, to, tag, {scriptPath, typed = true
       return {mounts, panel: g.panel, ...checks};
     });
 
+    await probe('lesson 1: Auto-advance off holds step 4\'s explanation for Next, also after a reload; on again, the countdown carries on into step 5', async () => {
+      const counting = await coachView(page);
+      assert(/^Next: step 5 · \d+s$/.test(counting.go), `step 4's explanation should be counting down: ${counting.go}`);
+      await coachEl(page, 'button.auto').click();
+      const off = {...await autoSwitch(page), go: (await coachView(page)).go};
+      assert(off.on === 'false' && off.note && off.go === 'Next: step 5', `after turning Auto-advance off: ${JSON.stringify(off)}`);
+      const need = readingMs((await coachView(page)).explain);
+      await page.waitForTimeout(need + 3000); // longer than the whole reading time
+      const held = await page.evaluate(() => ({state: window.__rsCoach.demo.state, index: window.__rsCoach.demo.index}));
+      assert(held.state === 'waiting' && held.index === 3 && (await coachView(page)).go === 'Next: step 5', `step 5 started with Auto-advance off: ${JSON.stringify(held)}`);
+      await page.reload();
+      await page.waitForSelector('#rstudio_console_input', {timeout: 90000});
+      await waitForCoach(page);
+      const reloaded = await autoSwitch(page);
+      assert(reloaded.on === 'false' && reloaded.note, `Auto-advance was not kept across a reload: ${JSON.stringify(reloaded)}`);
+      // On again: nothing counts down after a reload, so the learner presses Next, and step 5's
+      // explanation then counts down into step 6 by itself.
+      await coachEl(page, 'button.auto').click();
+      assert((await autoSwitch(page)).on === 'true', 'Auto-advance did not come back on');
+      const plotBefore = await plotSrc(page);
+      const mark = await rEvidence(page);
+      const since = await now(page);
+      await coachEl(page, 'button.go').click();
+      const snap = await settleStep(page, 4);
+      const checks = await verifyStepFully(page, manifest, 4, snap, since, {plotBefore, allValues: allValuesOf(manifest), scriptPath, typed: true, mark});
+      const after = await coachView(page);
+      assert(/^Next: step 6 · \d+s$/.test(after.go), `with Auto-advance on, step 5's explanation should count down: ${after.go}`);
+      return {heldForMs: need + 3000, readingMs: Math.round(need), afterReload: reloaded, step5: checks.quoted, go: after.go};
+    });
+
     await probe('lesson 1: reload keeps progress; Start over resets the script and R, then types step 1 again; Stop part-way through typing halts the typing and RStudio', async () => {
-      await page.reload(); // within step 4's reading time, so step 5 hasn't started
+      await page.reload(); // within step 5's reading time, so step 6 hasn't started
       await page.waitForSelector('#rstudio_console_input', {timeout: 90000});
       await waitForCoach(page);
       const restored = await coachView(page);
-      assert(restored.steps.slice(0, 4).every(s => s === 'done') && restored.steps[4] !== 'done' && restored.go === 'Next: step 5' && restored.restartShown, JSON.stringify(restored));
+      assert(restored.steps.slice(0, 5).every(s => s === 'done') && restored.steps[5] !== 'done' && restored.go === 'Next: step 6' && restored.restartShown, JSON.stringify(restored));
       const before = await rstudioState(page);
       assert(before.chart && /week/.test(before.environment), `the demonstration left nothing to reset: ${JSON.stringify(before).slice(0, 300)}`);
       const heading = manifest.steps[0].heading;
@@ -464,11 +505,13 @@ async function runSteps(page, manifest, from, to, tag, {scriptPath, typed = true
       return {resetMs: last.ms, done};
     });
 
-    await probe('lesson 3: the saved script holds every statement once, under its heading, with nothing unsaved', async () => {
-      verifySaved(scriptPath, manifest, manifest.steps.length - 1);
+    await probe('lesson 3: the script holds every statement once, under its heading; the coach never pressed Save, so it shows as unsaved', async () => {
+      await verifyScript(page, manifest, manifest.steps.length - 1);
+      const saves = await saveClicks(page);
+      assert(saves === 0, `the coach pressed Save ${saves} times`);
       const dirty = await unsavedTabs(page);
-      assert(dirty.length === 0, `unsaved changes shown on: ${dirty}`);
-      return {statements: manifest.steps.reduce((n, s) => n + s.runs.length, 0), visibleUnsavedMarkers: 0};
+      assert(dirty.some(t => t.startsWith(`${LESSON}.R`)), `the script's tab shows no unsaved marker: ${dirty}`);
+      return {statements: manifest.steps.reduce((n, s) => n + s.runs.length, 0), saveClicks: saves, unsavedTabs: dirty};
     });
     await context.close();
   }
