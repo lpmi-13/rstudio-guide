@@ -1,0 +1,17 @@
+FROM rocker/rstudio:4.6.2@sha256:ab667f419a10edc60f95da38149644d6f9eea266216b51dcce1d4df9e36dfcd6
+
+ARG P3M_SNAPSHOT=https://p3m.dev/cran/__linux__/resolute/2026-11-19
+
+RUN set -eux; \
+    sed -i "s#https://p3m.dev/cran/__linux__/resolute/latest#${P3M_SNAPSHOT}#" /usr/local/lib/R/etc/Rprofile.site; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+      libxml2-dev libcairo2-dev libcurl4-openssl-dev \
+      libharfbuzz-dev libfribidi-dev libfreetype6-dev \
+      libpng-dev libtiff-dev libjpeg-dev libuv1-dev libxtst6 xz-utils; \
+    install2.r --error --skipinstalled -n 4 -r "${P3M_SNAPSHOT}" \
+      tidyverse DBI broom duckdb duckplyr ggrepel gt janitor jsonlite \
+      patchwork quarto reactable readxl reprex rvest styler writexl; \
+    command -v quarto; \
+    command -v pandoc; \
+    rm -rf /var/lib/apt/lists/* /tmp/downloaded_packages
