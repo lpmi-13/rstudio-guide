@@ -79,7 +79,8 @@ normalise <- function(x, depth = 0L) {
 }
 
 # The layers' built data, with columns in name order: ggplot2 orders them by where an aesthetic
-# was mapped, which is a matter of style. Labels as ggplot2 resolves them.
+# was mapped, which is a matter of style. Labels by which ones were set or removed, not by their
+# wording (label_status).
 # Row order doesn't matter either: group_by() |> summarize() and summarize(.by =) give the same
 # chart. A patchwork (patchwork's `p1 + p2`) is all its plots and its layout; ggplot_build() on it
 # would see only the last plot.
@@ -103,9 +104,28 @@ normalise_one_plot <- function(p) {
     }
     normalise(d)
   })
-  labels <- ggplot2::get_labs(p)
-  labels <- labels[sort(names(labels))]
-  list("ggplot", layers, normalise(labels))
+  list("ggplot", layers, label_status(p))
+}
+
+# Which of a chart's labels (title, axis titles, legend titles) the learner set or removed, without
+# their wording: a title says the same thing however it is phrased, and only the analysis is checked
+# exactly (the user's call, 25 November 2026). A label is "set" when it differs from the one ggplot2
+# derives from the mappings, whether by labs(), xlab(), ggtitle() or a scale's name, and "removed"
+# when it was set to NULL or "". Labels left as ggplot2 derives them are left out.
+label_status <- function(p) {
+  full <- ggplot2::get_labs(p)
+  plain <- p
+  plain@labels <- ggplot2::labs()
+  plain@scales <- p@scales$clone() # each scale cloned, so p's own keep their names
+  for (scale in plain@scales$scales) scale$name <- ggplot2::waiver()
+  derived <- ggplot2::get_labs(plain)
+  status <- list()
+  for (name in sort(union(names(full), names(derived)))) {
+    mine <- full[[name]]
+    if (identical(mine, derived[[name]])) next
+    status[[name]] <- if (is.null(mine) || identical(mine, "")) "removed" else "set"
+  }
+  status
 }
 
 fingerprint <- function(x) rlang::hash(normalise(x))

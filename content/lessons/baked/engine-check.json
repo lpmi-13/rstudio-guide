@@ -137,7 +137,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(week) + geom_point(aes(distance_km, duration_min, colour = bike_type), alpha = 0.4)",
      "dim": 1,
-     "fp": "8d846a37a09c9abf5a972ef46ce69f80",
+     "fp": "031bc49f814e429fd8f7ea014f6a9342",
      "fp_any": null
     }
    ],
@@ -145,7 +145,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "8d846a37a09c9abf5a972ef46ce69f80",
+   "fp": "031bc49f814e429fd8f7ea014f6a9342",
    "fp_any": null,
    "index": 4,
    "messages": [],
@@ -185,11 +185,11 @@
    "class": "Date",
    "dim": 1,
    "files": [],
-   "fp": "2cb2203229ad9c7a76a9dd331affdb7f",
+   "fp": "5e2aee2b919d32ecb3f2527aa6a03df1",
    "fp_any": null,
    "index": 6,
    "messages": [],
-   "output": "[1] \"2026-11-21\"",
+   "output": "[1] \"2026-11-25\"",
    "plot": false,
    "step": "console",
    "values": {},
@@ -240,13 +240,13 @@
   }
  ],
  "stamp": {
-  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "evidence": "c0fbcfb64cc3113296087a6da5fc83733a1d214ac7139dac04ddce2ec9a8a311",
   "format": "1",
   "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
   "lesson": "1fd8ac3cf416dd8f15bdef711fbb5db7f4c542d11c0a384e8ad490eb435f7dae",
   "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
   "project": "",
-  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "runner": "962398df9e3b66728216db7d20034c27f692a4dd1b84caccc7505ead8200784b",
   "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
  }
 }

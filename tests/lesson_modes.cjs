@@ -233,7 +233,7 @@ async function chooseMode(page, mode) {
     await coachEl(page, 'button.auto').click(); // this audit runs the full demonstration without presses
   } else {
     const preview = await coachEl(page, '.lesson-preview').textContent();
-    assert(preview.includes('What you\'ll learn') && preview.includes(lessonScript), `missing lesson overview: ${preview}`);
+    assert(!preview.includes('What you\'ll learn') && preview.includes(lessonScript) && await coachEl(page, '.lesson-preview details.steps-box').evaluate(d => d.open), `missing lesson overview, or the summary repeated: ${preview}`);
     await coachEl(page, 'button.begin').click();
   }
 }

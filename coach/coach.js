@@ -34,6 +34,10 @@
   if (insideRStudio) return;
   if (window.__rsCoach) return; // idempotent if the script is loaded twice
   const FUNCTION_DOCS = /* function docs:start */ {
+  "augment": "https://broom.tidymodels.org/reference/augment.lm.html",
+  "comma": "https://scales.r-lib.org/reference/comma.html",
+  "compute_parquet": "https://duckplyr.tidyverse.org/reference/compute_parquet.html",
+  "read_parquet_duckdb": "https://duckplyr.tidyverse.org/reference/read_parquet_duckdb.html",
   "View": "https://search.r-project.org/R/refmans/utils/html/View.html",
   "across": "https://search.r-project.org/CRAN/refmans/dplyr/html/across.html",
   "aes": "https://search.r-project.org/CRAN/refmans/ggplot2/html/aes.html",
@@ -43,7 +47,9 @@
   "any": "https://search.r-project.org/R/refmans/base/html/any.html",
   "arrange": "https://search.r-project.org/CRAN/refmans/dplyr/html/arrange.html",
   "as.numeric": "https://search.r-project.org/R/refmans/base/html/numeric.html",
+  "as_date": "https://search.r-project.org/CRAN/refmans/lubridate/html/as_date.html",
   "barplot": "https://search.r-project.org/R/refmans/graphics/html/barplot.html",
+  "between": "https://search.r-project.org/CRAN/refmans/dplyr/html/between.html",
   "c": "https://search.r-project.org/R/refmans/base/html/c.html",
   "case_when": "https://search.r-project.org/CRAN/refmans/dplyr/html/case_when.html",
   "cat": "https://search.r-project.org/R/refmans/base/html/cat.html",
@@ -54,6 +60,7 @@
   "coalesce": "https://search.r-project.org/CRAN/refmans/dplyr/html/coalesce.html",
   "col_integer": "https://search.r-project.org/CRAN/refmans/readr/html/parse_atomic.html",
   "collect": "https://search.r-project.org/CRAN/refmans/dplyr/html/compute.html",
+  "cols": "https://search.r-project.org/CRAN/refmans/readr/html/cols.html",
   "complete": "https://search.r-project.org/CRAN/refmans/tidyr/html/complete.html",
   "coord_cartesian": "https://search.r-project.org/CRAN/refmans/ggplot2/html/coord_cartesian.html",
   "coord_quickmap": "https://search.r-project.org/CRAN/refmans/ggplot2/html/coord_map.html",
@@ -64,13 +71,16 @@
   "cumsum": "https://search.r-project.org/R/refmans/base/html/cumsum.html",
   "cut": "https://search.r-project.org/R/refmans/base/html/cut.html",
   "day": "https://search.r-project.org/CRAN/refmans/lubridate/html/day.html",
+  "days": "https://search.r-project.org/CRAN/refmans/lubridate/html/period.html",
   "dbConnect": "https://search.r-project.org/CRAN/refmans/DBI/html/dbConnect.html",
   "dbDisconnect": "https://search.r-project.org/CRAN/refmans/DBI/html/dbDisconnect.html",
   "dbGetQuery": "https://search.r-project.org/CRAN/refmans/DBI/html/dbGetQuery.html",
   "dbListTables": "https://search.r-project.org/CRAN/refmans/DBI/html/dbListTables.html",
+  "ddays": "https://search.r-project.org/CRAN/refmans/lubridate/html/duration.html",
   "dense_rank": "https://search.r-project.org/CRAN/refmans/dplyr/html/row_number.html",
   "desc": "https://search.r-project.org/CRAN/refmans/dplyr/html/desc.html",
   "dir_create": "https://search.r-project.org/CRAN/refmans/fs/html/create.html",
+  "dir_info": "https://search.r-project.org/CRAN/refmans/fs/html/dir_ls.html",
   "dir_ls": "https://search.r-project.org/CRAN/refmans/fs/html/dir_ls.html",
   "distinct": "https://search.r-project.org/CRAN/refmans/dplyr/html/distinct.html",
   "dput": "https://search.r-project.org/R/refmans/base/html/dput.html",
@@ -99,6 +109,7 @@
   "geom_boxplot": "https://search.r-project.org/CRAN/refmans/ggplot2/html/geom_boxplot.html",
   "geom_col": "https://search.r-project.org/CRAN/refmans/ggplot2/html/geom_bar.html",
   "geom_density": "https://search.r-project.org/CRAN/refmans/ggplot2/html/geom_density.html",
+  "geom_freqpoly": "https://search.r-project.org/CRAN/refmans/ggplot2/html/geom_histogram.html",
   "geom_histogram": "https://search.r-project.org/CRAN/refmans/ggplot2/html/geom_histogram.html",
   "geom_label_repel": "https://search.r-project.org/CRAN/refmans/ggrepel/html/geom_text_repel.html",
   "geom_line": "https://search.r-project.org/CRAN/refmans/ggplot2/html/geom_path.html",
@@ -125,20 +136,27 @@
   "is.nan": "https://search.r-project.org/R/refmans/base/html/is.finite.html",
   "join_by": "https://search.r-project.org/CRAN/refmans/dplyr/html/join_by.html",
   "label_comma": "https://search.r-project.org/CRAN/refmans/scales/html/label_number.html",
+  "label_number": "https://search.r-project.org/CRAN/refmans/scales/html/label_number.html",
   "labs": "https://search.r-project.org/CRAN/refmans/ggplot2/html/labs.html",
   "lag": "https://search.r-project.org/CRAN/refmans/dplyr/html/lead-lag.html",
   "lapply": "https://search.r-project.org/R/refmans/base/html/lapply.html",
   "lead": "https://search.r-project.org/CRAN/refmans/dplyr/html/lead-lag.html",
   "left_join": "https://search.r-project.org/CRAN/refmans/dplyr/html/mutate-joins.html",
   "library": "https://search.r-project.org/R/refmans/base/html/library.html",
+  "list": "https://search.r-project.org/R/refmans/base/html/list.html",
   "list.files": "https://search.r-project.org/R/refmans/base/html/list.files.html",
   "list_rbind": "https://search.r-project.org/CRAN/refmans/purrr/html/list_c.html",
   "lm": "https://search.r-project.org/R/refmans/stats/html/lm.html",
+  "locale": "https://search.r-project.org/CRAN/refmans/readr/html/locale.html",
+  "log": "https://search.r-project.org/R/refmans/base/html/Log.html",
+  "logical": "https://search.r-project.org/R/refmans/base/html/logical.html",
   "make_date": "https://search.r-project.org/CRAN/refmans/lubridate/html/make_datetime.html",
   "make_datetime": "https://search.r-project.org/CRAN/refmans/lubridate/html/make_datetime.html",
   "map": "https://search.r-project.org/CRAN/refmans/purrr/html/map.html",
+  "max": "https://search.r-project.org/R/refmans/base/html/Extremes.html",
   "mdy": "https://search.r-project.org/CRAN/refmans/lubridate/html/ymd.html",
   "mean": "https://search.r-project.org/R/refmans/base/html/mean.html",
+  "median": "https://search.r-project.org/R/refmans/stats/html/median.html",
   "min": "https://search.r-project.org/R/refmans/base/html/Extremes.html",
   "min_rank": "https://search.r-project.org/CRAN/refmans/dplyr/html/row_number.html",
   "minute": "https://search.r-project.org/CRAN/refmans/lubridate/html/minute.html",
@@ -149,6 +167,7 @@
   "near": "https://search.r-project.org/CRAN/refmans/dplyr/html/near.html",
   "nest": "https://search.r-project.org/CRAN/refmans/tidyr/html/nest.html",
   "now": "https://search.r-project.org/CRAN/refmans/lubridate/html/now.html",
+  "nrow": "https://search.r-project.org/R/refmans/base/html/nrow.html",
   "ordered": "https://search.r-project.org/R/refmans/base/html/factor.html",
   "packageVersion": "https://search.r-project.org/R/refmans/utils/html/packageDescription.html",
   "parse_integer": "https://search.r-project.org/CRAN/refmans/readr/html/parse_atomic.html",
@@ -168,6 +187,7 @@
   "read_html": "https://search.r-project.org/CRAN/refmans/rvest/html/read_html.html",
   "read_json": "https://search.r-project.org/CRAN/refmans/jsonlite/html/read_json.html",
   "read_rds": "https://search.r-project.org/CRAN/refmans/readr/html/read_rds.html",
+  "regex": "https://search.r-project.org/CRAN/refmans/stringr/html/modifiers.html",
   "relocate": "https://search.r-project.org/CRAN/refmans/dplyr/html/relocate.html",
   "rename": "https://search.r-project.org/CRAN/refmans/dplyr/html/rename.html",
   "reprex": "https://search.r-project.org/CRAN/refmans/reprex/html/reprex.html",
@@ -215,12 +235,14 @@
   "tibble": "https://search.r-project.org/CRAN/refmans/tibble/html/tibble.html",
   "today": "https://search.r-project.org/CRAN/refmans/lubridate/html/now.html",
   "tribble": "https://search.r-project.org/CRAN/refmans/tibble/html/tribble.html",
+  "unique": "https://search.r-project.org/R/refmans/base/html/unique.html",
   "unnest_longer": "https://search.r-project.org/CRAN/refmans/tidyr/html/unnest_longer.html",
   "unnest_wider": "https://search.r-project.org/CRAN/refmans/tidyr/html/unnest_wider.html",
   "vapply": "https://search.r-project.org/R/refmans/base/html/lapply.html",
   "walk": "https://search.r-project.org/CRAN/refmans/purrr/html/map.html",
   "walk2": "https://search.r-project.org/CRAN/refmans/purrr/html/map2.html",
   "wday": "https://search.r-project.org/CRAN/refmans/lubridate/html/day.html",
+  "where": "https://search.r-project.org/CRAN/refmans/tidyselect/html/where.html",
   "with_tz": "https://search.r-project.org/CRAN/refmans/lubridate/html/with_tz.html",
   "writeLines": "https://search.r-project.org/R/refmans/base/html/writeLines.html",
   "write_csv": "https://search.r-project.org/CRAN/refmans/readr/html/write_delim.html",
@@ -229,6 +251,44 @@
   "year": "https://search.r-project.org/CRAN/refmans/lubridate/html/year.html",
   "ymd_hms": "https://search.r-project.org/CRAN/refmans/lubridate/html/ymd_hms.html"
 } /* function docs:end */;
+  // Each package's home page, linked where lesson text names the package (tools/build_function_docs.py).
+  const PACKAGE_DOCS = /* package docs:start */ {
+  "DBI": "https://dbi.r-dbi.org",
+  "arrow": "https://arrow.apache.org/docs/r/",
+  "broom": "https://broom.tidymodels.org/",
+  "dbplyr": "https://dbplyr.tidyverse.org/",
+  "dplyr": "https://dplyr.tidyverse.org",
+  "duckdb": "https://r.duckdb.org/",
+  "duckplyr": "https://duckplyr.tidyverse.org",
+  "forcats": "https://forcats.tidyverse.org/",
+  "fs": "https://fs.r-lib.org",
+  "ggplot2": "https://ggplot2.tidyverse.org",
+  "ggrepel": "https://ggrepel.slowkow.com/",
+  "gt": "https://gt.rstudio.com",
+  "hms": "https://hms.tidyverse.org/",
+  "janitor": "https://sfirke.github.io/janitor/",
+  "jsonlite": "https://jeroen.r-universe.dev/jsonlite",
+  "lubridate": "https://lubridate.tidyverse.org",
+  "patchwork": "https://patchwork.data-imaginist.com",
+  "purrr": "https://purrr.tidyverse.org/",
+  "quarto": "https://quarto-dev.github.io/quarto-r/",
+  "reactable": "https://glin.github.io/reactable/",
+  "readr": "https://readr.tidyverse.org",
+  "readxl": "https://readxl.tidyverse.org",
+  "reprex": "https://reprex.tidyverse.org",
+  "rlang": "https://rlang.r-lib.org",
+  "rvest": "https://rvest.tidyverse.org/",
+  "scales": "https://scales.r-lib.org",
+  "stringr": "https://stringr.tidyverse.org",
+  "tibble": "https://tibble.tidyverse.org/",
+  "tidyr": "https://tidyr.tidyverse.org",
+  "tidyselect": "https://tidyselect.r-lib.org",
+  "tidyverse": "https://tidyverse.tidyverse.org",
+  "vctrs": "https://vctrs.r-lib.org/",
+  "writexl": "https://ropensci.r-universe.dev/writexl"
+} /* package docs:end */;
+  // Package names that are also everyday words are linked only as code (`scales`), not in prose.
+  const PLAIN_WORDS = new Set(['arrow', 'scales', 'gt', 'fs', 'reprex', 'quarto', 'DBI', 'hms', 'vctrs', 'rlang', 'broom']);
 
   const coach = (window.__rsCoach = {
     loadedAt: Date.now(),
@@ -242,6 +302,82 @@
   const note = (type, detail = {}) => {
     coach.log.push({type, at: Date.now(), ...detail});
     if (coach.log.length > 300) coach.log.shift();
+  };
+
+  // ---------- RStudio's connection ----------
+  // RStudio's page reaches R through requests to /rpc/… (run this code, list these files) and a
+  // long poll of /events/… that brings back what R did (Console output, a new chart). On a slow or
+  // patchy connection these take seconds, and the coach mustn't give up on R while RStudio is
+  // still waiting for an answer. So the coach watches RStudio's requests, from before RStudio loads:
+  // which calls are unanswered, when anything last came back, and when a request last failed.
+  const net = (coach.net = {rpcs: new Map(), lastAnswer: Date.now(), failures: 0, lastFailure: 0});
+  {
+    const proto = XMLHttpRequest.prototype;
+    const open = proto.open;
+    const send = proto.send;
+    let id = 0;
+    proto.open = function (...args) { this.rsCoachUrl = String(args[1] || ''); return open.apply(this, args); };
+    proto.send = function (...args) {
+      const url = this.rsCoachUrl || '';
+      const kind = /\/rpc\//.test(url) ? 'rpc' : /\/events\//.test(url) ? 'events' : null;
+      if (kind) {
+        const mine = (id += 1);
+        if (kind === 'rpc') net.rpcs.set(mine, {call: url.replace(/^.*\/rpc\//, ''), at: Date.now()});
+        this.addEventListener('loadend', () => {
+          net.rpcs.delete(mine);
+          if (this.status >= 200 && this.status < 400) net.lastAnswer = Date.now();
+          else Object.assign(net, {failures: net.failures + 1, lastFailure: Date.now()});
+        });
+      }
+      return send.apply(this, args);
+    };
+  }
+  // How long RStudio has waited on its oldest unanswered call, in ms (0: none waiting).
+  const netWaitMs = () => {
+    let oldest = Infinity;
+    for (const call of net.rpcs.values()) oldest = Math.min(oldest, call.at);
+    return oldest === Infinity ? 0 : Date.now() - oldest;
+  };
+  // The connection, as the coach waits on R: 'offline' (the browser says so), 'slow' (RStudio has
+  // waited over 2 s for an answer, or nothing has come back for 8 s while it waits), 'failed' (a
+  // request failed in the last 10 s and nothing has come back since), or 'ok'.
+  function connection() {
+    if (navigator.onLine === false) return 'offline';
+    const waiting = netWaitMs();
+    if (waiting > 2000 || (waiting && Date.now() - net.lastAnswer > 8000)) return 'slow';
+    if (net.lastFailure > net.lastAnswer && Date.now() - net.lastFailure < 10000) return 'failed';
+    return 'ok';
+  }
+  // The connection to RStudio is too slow or broken for R's result to arrive in time.
+  class SlowConnection extends Error {}
+
+  // A page that frames RStudio can send Cross-Origin-Opener-Policy: same-origin, as iximiuz Labs
+  // does. Then a window RStudio opens from the frame (an image clicked in the Files pane, say) does
+  // open, but the browser cuts it off from RStudio, and window.open returns null, as it does for a
+  // blocked popup (Chrome, measured 25 November 2026). RStudio says a popup blocker stopped it,
+  // which puzzles a learner looking at the image it opened. A popup blocker only stops a window
+  // that no click asked for, so a null from an open that a click did ask for, in a frame, is a
+  // window that opened: for a few seconds the coach presses Cancel on RStudio's message, before it
+  // is drawn. Any other null keeps RStudio's message, with its Try Again.
+  const openWindow = window.open;
+  window.open = function open(...args) {
+    const asked = Boolean(navigator.userActivation?.isActive); // read first: opening a window uses it up
+    const win = openWindow.apply(this, args);
+    if (win || !asked || window.top === window) return win;
+    note('window_cut_off', {url: String(args[0] || '').slice(0, 200)});
+    const dismiss = () => {
+      for (const dialog of document.querySelectorAll('[role="alertdialog"]')) {
+        if (!/popup blocker/i.test(dialog.textContent)) continue;
+        const cancel = [...dialog.querySelectorAll('button')].find(b => b.textContent.trim() === 'Cancel');
+        if (!cancel) continue;
+        cancel.click();
+        note('popup_message_closed');
+      }
+    };
+    const watcher = new MutationObserver(dismiss);
+    watcher.observe(document.body, {childList: true, subtree: true});
+    setTimeout(() => watcher.disconnect(), 5000);
+    return win;
   };
 
   // RStudio (GWT) handles shortcuts such as Ctrl+2 in a capture-phase listener, so
@@ -442,18 +578,27 @@
         border: 2px solid #bf8700; border-radius: 50%; opacity: 0; }
       .pointer.clicked .ring { animation: ring .5s ease-out; }
       @keyframes ring { from { opacity: 1; transform: scale(.3); } to { opacity: 0; transform: scale(1.7); } }
+      .link { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 2147482996; pointer-events: none; overflow: visible; }
+      .link rect { fill: #cf222e14; stroke: #cf222e; stroke-width: 2.5; }
+      .link path { fill: none; stroke: #cf222e; stroke-width: 2.5; stroke-dasharray: 6 5; animation: link-flow 1s linear infinite; }
+      .link circle { fill: #cf222e; }
+      @keyframes link-flow { to { stroke-dashoffset: -11; } }
       @media (prefers-reduced-motion: reduce) {
+        .link path { animation: none; }
         .dim, .pointer, .pointer svg { transition: none; } .pointer.clicked .ring { animation: none; }
         .entering { animation: ring-fade .25s ease-out both !important; } .entering::before { animation: none !important; }
         .entering::after { animation: none !important; border: 0; }
       }
     </style><div class="dim"></div><div class="box" hidden></div><div class="spot" hidden></div>
+    <svg class="link" hidden aria-hidden="true"><rect class="said" rx="4"></rect><rect class="wrote" rx="4"></rect>
+      <path></path><circle r="4"></circle></svg>
     <div class="pointer" aria-hidden="true"><span class="ring"></span>
       <svg width="22" height="30" viewBox="0 0 22 30"><path d="M1 1v22l5.6-5.4 4 9.4 3.7-1.6-4-9.2H18z"
         fill="#bf8700" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg></div>`;
     overlay.box = root.querySelector('.box');
     overlay.dim = root.querySelector('.dim');
     overlay.spot = root.querySelector('.spot');
+    overlay.link = root.querySelector('.link');
     pointer.el = root.querySelector('.pointer');
     for (const ring of [overlay.box, overlay.spot]) {
       ring.addEventListener('animationend', event => {
@@ -611,6 +756,114 @@
   }
   const clearHighlight = () => highlight(null, 0);
 
+  // A link between a name in R's message and the same name in the learner's code (Guided): a box
+  // round each and a line between them, following both every frame (the Console scrolls, the editor
+  // moves). `said` and `wrote` return rectangles; either can be missing, and then only the other is
+  // boxed. linkWord(null) takes it away.
+  const link = {said: null, wrote: null, frame: 0};
+  function linkWord(said, wrote) {
+    ensureOverlay();
+    Object.assign(link, {said, wrote});
+    cancelAnimationFrame(link.frame);
+    const svg = overlay.link;
+    const tick = () => {
+      const a = link.said?.();
+      const b = link.wrote?.();
+      svg.hidden = !a && !b;
+      const place = (rect, r) => {
+        rect.style.display = r ? '' : 'none';
+        if (r) for (const [k, v] of Object.entries({x: r.left - 3, y: r.top - 2, width: r.right - r.left + 6, height: r.bottom - r.top + 4})) rect.setAttribute(k, v);
+      };
+      place(svg.querySelector('.said'), a);
+      place(svg.querySelector('.wrote'), b);
+      const path = svg.querySelector('path');
+      const dot = svg.querySelector('circle');
+      if (a && b) {
+        // From the middle of the message's word to the middle of the code's word, bowed sideways.
+        const from = {x: (a.left + a.right) / 2, y: a.top - 2};
+        const to = {x: (b.left + b.right) / 2, y: b.bottom + 2};
+        const bow = Math.max(40, Math.abs(to.x - from.x) / 3);
+        path.setAttribute('d', `M${from.x},${from.y} C${from.x - bow},${(from.y + to.y) / 2} ${to.x - bow},${(from.y + to.y) / 2} ${to.x},${to.y}`);
+        dot.setAttribute('cx', to.x);
+        dot.setAttribute('cy', to.y);
+        path.style.display = dot.style.display = '';
+      } else {
+        path.style.display = dot.style.display = 'none';
+      }
+      if (link.said || link.wrote) link.frame = requestAnimationFrame(tick);
+    };
+    if (said || wrote) tick(); else svg.hidden = true;
+  }
+  // The rectangle of characters `from`..`to` of an element's text, clipped to the scrolled box it is
+  // in; null when that part is scrolled out of view.
+  function textRect(el, from, to) {
+    if (!el || from < 0) return null;
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    const range = document.createRange();
+    let pos = 0;
+    let started = false;
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const len = node.nodeValue.length;
+      if (!started && pos + len > from) { range.setStart(node, from - pos); started = true; }
+      if (started && pos + len >= to) { range.setEnd(node, to - pos); break; }
+      pos += len;
+    }
+    if (!started) return null;
+    const r = [...range.getClientRects()].find(rect => rect.width > 0) || range.getBoundingClientRect();
+    let box = el;
+    while (box && box !== document.body && !/auto|scroll/.test(getComputedStyle(box).overflowY)) box = box.parentElement;
+    const clip = (box || el).getBoundingClientRect();
+    return r.width && r.top >= clip.top - 1 && r.bottom <= clip.bottom + 1 ? {left: r.left, top: r.top, right: r.right, bottom: r.bottom} : null;
+  }
+  // Where `name` stands as a whole word in `text`, between `start` and `before`: every place, in
+  // order (wordsAt), or the last (wordAt).
+  function wordsAt(text, name, start = 0, before = text.length) {
+    const re = new RegExp(`(?<![\\w.])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\w])`, 'g');
+    return [...text.slice(start, before).matchAll(re)].map(m => start + m.index);
+  }
+  const wordAt = (text, name, start, before) => wordsAt(text, name, start, before).pop() ?? -1;
+  // The word in R's message (the newest Console text after the statement's echo), and the word in the
+  // code: in the script when the statement is there, otherwise in the Console's echo of it.
+  function linkName(name, code) {
+    if (!name) { linkWord(null, null); return; }
+    const out = () => document.getElementById('rstudio_console_output');
+    const echo = echoOf(code);
+    // The newest place on screen: RStudio's error box also holds a hidden copy of the message.
+    const said = () => {
+      const text = out()?.textContent || '';
+      const at = text.lastIndexOf(echo);
+      if (at < 0) return null;
+      for (const i of wordsAt(text, name, at + echo.length).reverse()) {
+        const r = textRect(out(), i, i + name.length);
+        if (r) return r;
+      }
+      return null;
+    };
+    const wrote = () => {
+      const editor = ide.activeEditor();
+      const lines = editor ? editor.session.getDocument().getAllLines() : [];
+      const top = lines.findIndex(line => line.trim() === code.split('\n')[0].trim());
+      if (top >= 0) { // the statement is in the script: run from there
+        for (let row = top; row < lines.length && row < top + code.split('\n').length; row += 1) {
+          const col = wordAt(lines[row], name);
+          if (col < 0) continue;
+          const renderer = editor.renderer;
+          const at = renderer.textToScreenCoordinates(row, col);
+          const box = renderer.scroller.getBoundingClientRect();
+          const r = {left: at.pageX, top: at.pageY, right: at.pageX + name.length * renderer.characterWidth, bottom: at.pageY + renderer.lineHeight};
+          if (r.top >= box.top - 1 && r.bottom <= box.bottom + 1 && r.left >= box.left - 1) return r;
+          return null; // there, but scrolled out of view
+        }
+      }
+      const text = out()?.textContent || '';
+      const at = text.lastIndexOf(echo);
+      if (at < 0) return null;
+      const i = wordAt(text, name, at, at + echo.length);
+      return i < 0 ? null : textRect(out(), i, i + name.length);
+    };
+    linkWord(said, wrote);
+  }
+
   // ---------- panel ----------
   // Type scale (accessibility audit, 24 November 2026): 15px for what the learner reads (narration,
   // explanations, tasks, hints), 14px for secondary text, never below 13px. Every control shows a
@@ -723,6 +976,11 @@
     .done-mark { font-size: 13px; }
     .lesson-summary { color: #1f2328; }
     .tasks { padding-left: 20px; }
+    .task-count { font-size: 14px; font-weight: 600; color: #0b5cad; }
+    .task-count:empty { display: none; }
+    .task-count.new { animation: phase-in .35s ease-out; }
+    @media (prefers-reduced-motion: reduce) { .task-count.new { animation: none; } }
+    .task-num { font-weight: 600; }
     .hints { display: grid; gap: 6px; }
     .hint-text { font-size: 15px; }
     pre.code { margin: 4px 0 0; padding: 6px 8px; font: 14px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -805,9 +1063,7 @@
           renderGuidedStub(root, session, status);
           return;
         }
-        const res = await fetch('/coach/api/steps', {cache: 'no-store'});
-        if (!res.ok) throw new Error(`steps ${res.status}`);
-        startLessons(root, session, (await res.json()).lessons, status);
+        startLessons(root, session, (await fetchJson('/coach/api/steps', 'steps', status)).lessons, status);
       })
       .catch(error => {
         status('The coach service is unavailable. RStudio still works.');
@@ -818,9 +1074,23 @@
 
   function loadSession() {
     if (coach.session) return Promise.resolve(coach.session);
-    return fetch('/coach/api/session', {cache: 'no-store'})
-      .then(res => { if (!res.ok) throw new Error(`session ${res.status}`); return res.json(); })
+    const status = text => { const el = coach.host?.shadowRoot?.querySelector('.status'); if (el) el.textContent = text; };
+    return fetchJson('/coach/api/session', 'session', status)
       .then(session => { coach.session = session; note('session', session); return session; });
+  }
+  // The coach's files, fetched again with a growing pause (1 s, doubling to 10 s) after a network
+  // error or a server error, which a slow or restarting connection gives. A 4xx means the run has
+  // no such file, so that fails at once. "no-cache" asks the gateway whether the file changed,
+  // so a reload gets a short "not modified" instead of the whole file again.
+  async function fetchJson(url, label, status) {
+    for (let attempt = 1, pause = 1000; ; attempt += 1, pause = Math.min(pause * 2, 10000)) {
+      let res = null;
+      try { res = await fetch(url, {cache: 'no-cache'}); } catch (error) { note('fetch_retry', {url, error: String(error)}); }
+      if (res?.ok) return res.json();
+      if (res && res.status < 500) throw new Error(`${label} ${res.status}`);
+      status(`Loading the lessons. The connection is slow, so the coach is trying again (try ${attempt + 1})…`);
+      await sleep(pause);
+    }
   }
 
   // Dock into RStudio's sidebar when it is shown; float otherwise. Hiding the sidebar
@@ -1194,14 +1464,13 @@
     el.classList.remove('new');
     if (text) { void el.offsetWidth; el.classList.add('new'); }
   };
-  // A lesson's introduction: its title, what it covers, and how this mode works, in a few short
-  // lines. The list of steps folds away (`stepsBox`), so the controls stay in view.
+  // A mode's introduction: the lesson's title and how this mode works. What the lesson covers was
+  // on the picker just before, so it isn't repeated here; the steps say it instead.
   const lessonHeader = (lesson, howto) => `
     <h2>${escapeHtml(lesson.title)}</h2>
-    <h3>What you'll learn</h3>
-    <div class="intro prose">${format(lesson.summary, {})}</div>
     <p class="howto">${inline(howto)}</p>`;
-  // Guided and Solo show the same brief before the task list. The learner can reopen it later.
+  // Guided and Solo show a brief before the task list: the mode, the script and the steps, open.
+  // The learner can reopen it later.
   function showStartOverview(content, lesson, mode, changeMode, switchLabel) {
     const work = document.createElement('div');
     work.className = 'lesson-work';
@@ -1211,11 +1480,9 @@
     preview.className = 'lesson-preview';
     preview.innerHTML = `
       <h2>${escapeHtml(lesson.title)}</h2>
-      <h3>What you'll learn</h3>
-      <div class="intro prose">${format(lesson.summary, {})}</div>
       <p>${escapeHtml(MODES[mode].what)}</p>
       <p class="muted">You'll work in <code>${escapeHtml(lesson.script)}</code>.</p>
-      ${stepsBox(lesson.steps)}
+      ${stepsBox(lesson.steps, true, false)}
       <div class="row"><button class="primary begin">Start ${escapeHtml(MODES[mode].label)}</button><button class="preview-switch">${switchLabel}</button></div>
       ${sourceLine(lesson)}`;
     content.append(preview, work);
@@ -1243,12 +1510,19 @@
   // What the lesson's checklist counts: lines in the older lessons; tasks (statements and IDE
   // actions) in those modelled on the book.
   const unitOf = lesson => (lesson.version === 2 ? 'task' : 'line');
-  const stepList = steps => `<ol class="steps">${steps.map((s, i) => `<li data-step="${i}">${linkedTitle(s.title)}</li>`).join('')}</ol>`;
-  const stepsBox = (steps, open = false) => `<details class="steps-box"${open ? ' open' : ''}><summary>The ${steps.length} steps</summary>${stepList(steps)}</details>`;
+  // `tracked`: the mode marks each step done or current (data-step). An overview's list is only read.
+  const stepList = (steps, tracked = true) => `<ol class="steps">${steps.map((s, i) => `<li${tracked ? ` data-step="${i}"` : ''}>${linkedTitle(s.title)}</li>`).join('')}</ol>`;
+  const stepsBox = (steps, open = false, tracked = true) => `<details class="steps-box"${open ? ' open' : ''}><summary>The ${steps.length} steps</summary>${stepList(steps, tracked)}</details>`;
   // R's message after library(tidyverse) ends with red "Conflicts" lines that look like errors.
   const attachesTidyverse = run => run.evidence === 'attached' && /^tidyverse$/.test(run.expected?.library || '');
   const conflictsNote = () => `<p class="note"><strong>Red ✖ lines under “Conflicts”?</strong> They are normal, not errors. They say that two tidyverse functions, <code>${functionLink('filter')}()</code> and <code>${functionLink('lag')}()</code>, are used instead of base R functions with the same names. You can ignore them.</p>`;
-  const CONFLICTS_NOTE_SHORT = '<p class="note">Red ✖ lines under “Conflicts” after this are normal, not errors. You can ignore them.</p>';
+  const CONFLICTS_NOTE_SHORT = '<p class="note">If red ✖ lines under “Conflicts” appear after this, they are normal, not errors. You can ignore them.</p>';
+  // When the tidyverse was attached already (by an earlier mode: a fresh start empties the
+  // Environment but keeps R's session), library() prints nothing, and the note above would puzzle.
+  const ALREADY_LOADED_NOTE = '<p class="note"><strong>Nothing printed?</strong> The tidyverse was already loaded in this R session, so R had nothing new to say. In a new session, R lists its packages, then some red “Conflicts” lines, which are normal.</p>';
+  // Whether R's message after library(tidyverse) was shown: its Conflicts lines, or nothing at all.
+  // null when the coach can't tell.
+  const showedConflicts = output => (typeof output !== 'string' ? null : /Conflicts|Attaching core tidyverse/.test(output) ? true : output.trim() ? null : false);
   const PLOT_HISTORY_NOTE = '<p class="note"><strong>Where will the earlier chart go?</strong> When you run this chart, the newest chart appears in Plots. The earlier chart stays in this session\'s plot history. Use the left and right arrows above Plots to move between charts. Its code stays in the script, so you can run it again. <a href="https://docs.posit.co/ide/user/ide/guide/ui/ui-panes.html#plots-pane" target="_blank" rel="noopener">About the Plots pane</a>.</p>';
   const drawsChart = run => ['plot', 'ggplot'].includes(run.evidence);
   function firstReplacementChart(lesson) {
@@ -1266,9 +1540,11 @@
     const first = firstReplacementChart(lesson);
     return first && first.s === s && first.r === r ? PLOT_HISTORY_NOTE : '';
   };
-  const stepNotes = step => (step.runs.some(attachesTidyverse) ? conflictsNote() : '');
+  // `conflicts`: whether the Console showed the tidyverse's message (see showedConflicts).
+  const stepNotes = (step, conflicts = null) => (!step.runs.some(attachesTidyverse) ? ''
+    : conflicts === false ? ALREADY_LOADED_NOTE : conflictsNote());
   // A step's explanation, with any note about what RStudio showed.
-  const explainHtml = (step, values) => format(step.explain, values) + stepNotes(step);
+  const explainHtml = (step, values, conflicts = null) => format(step.explain, values) + stepNotes(step, conflicts);
   function endedView(content, text, changeMode, switchLabel) {
     content.innerHTML = `<p class="ended"></p><div class="row"><button class="switch">${switchLabel}</button></div>`;
     content.querySelector('.ended').textContent = text;
@@ -1512,32 +1788,58 @@
   // The gateway serves it to a browser signed in to RStudio. Lessons with "version": 2 are checked
   // against it, so a statement counts whichever way the learner writes it, and a tibble counts
   // however narrow the Console that printed it. Older lessons are checked by what the Console shows.
-  const evidence = {doc: null, at: 0, pending: null, failures: 0};
+  const evidence = {doc: null, at: 0, pending: null, failures: 0, tookMs: 0};
   const EMPTY_EVIDENCE = {session: null, seq: 0, calls: [], state: null};
+  // On a slow connection a fetch takes longer, and the next one waits as long again, so polling
+  // never takes more than half of a slow connection's time.
   function readEvidence(maxAgeMs = 250) {
     if (evidence.pending) return evidence.pending;
-    if (evidence.doc && Date.now() - evidence.at < maxAgeMs) return Promise.resolve(evidence.doc);
-    evidence.pending = fetch('/coach/api/evidence', {cache: 'no-store'})
+    const age = Math.min(Math.max(maxAgeMs, maxAgeMs && evidence.tookMs), 5000);
+    if (evidence.doc && Date.now() - evidence.at < age) return Promise.resolve(evidence.doc);
+    const began = Date.now();
+    // A connection that stalls can hold a request for minutes: give up after 20 s and ask again.
+    const abort = new AbortController();
+    const timer = setTimeout(() => abort.abort(), 20000);
+    evidence.pending = fetch('/coach/api/evidence', {cache: 'no-store', signal: abort.signal})
       .then(res => {
         if (res.status === 404) return EMPTY_EVIDENCE; // R hasn't written any yet
         if (!res.ok) throw new Error(`evidence ${res.status}`);
         return res.json();
       })
-      .then(doc => { Object.assign(evidence, {doc, at: Date.now()}); return doc; })
+      .then(doc => {
+        Object.assign(evidence, {doc, at: Date.now(), tookMs: Date.now() - began});
+        net.lastAnswer = Date.now();
+        return doc;
+      })
       .catch(error => {
         evidence.failures += 1;
         note('evidence_failed', {error: String(error)});
         return evidence.doc || EMPTY_EVIDENCE;
       })
-      .finally(() => { evidence.pending = null; });
+      .finally(() => { clearTimeout(timer); evidence.pending = null; });
     return evidence.pending;
   }
+  // R's record as last read, asking for a newer one meanwhile: for loops that keep their own time
+  // and messages, which a fetch held up by the connection mustn't hold up.
+  const latestEvidence = () => { readEvidence(); return evidence.doc || EMPTY_EVIDENCE; };
   // Where a mode's work starts: R's session and its last call, and each project file's modification
   // time. Only calls after the mark count, and a file counts once it changes.
   async function evidenceMark() {
     const doc = await readEvidence(0);
     return {session: doc.session, seq: doc.seq || 0, at: Date.now(),
       files: Object.fromEntries((doc.state?.files || []).map(f => [f.path, f.mtime]))};
+  }
+  // The same, saying why the coach is waiting if the connection holds the reading up for more than
+  // 2 s, then putting back what the panel said (`said`).
+  async function patientMark(setPhase, said) {
+    let waited = false;
+    const timer = setTimeout(() => { waited = true; setPhase('Waiting for RStudio to answer. The connection may be slow…'); }, 2000);
+    try {
+      return await evidenceMark();
+    } finally {
+      clearTimeout(timer);
+      if (waited && said) setPhase(said);
+    }
   }
   const callKey = (doc, call) => `${doc.session}:${call.seq}`;
   const usesEvidence = run => !['console', 'plot', 'pattern', 'error'].includes(run.evidence);
@@ -1648,7 +1950,12 @@
   const pressedSince = (chord, mark) => Boolean(mark) && (coach.chordAt[chord] || 0) >= mark.at;
   const keysHint = run => (run.keys ? ` Type each <code>${escapeHtml(SHORTCUTS[run.keys].token)}</code> with ${escapeHtml(run.keys)}.` : '');
   // Code in a hint: inline for one line, as a block for a statement over several.
-  const codeHtml = text => (text.includes('\n') ? `<pre class="code">${escapeHtml(text)}</pre>` : `<code>${escapeHtml(text)}</code>`);
+  // Function and package names in it link to their documentation, as in the lesson's text.
+  const codeHtml = text => (text.includes('\n') ? `<pre class="code">${linkNames(escapeHtml(text), {code: true})}</pre>` : `<code>${linkNames(escapeHtml(text), {code: true})}</code>`);
+  // The second hint for a statement: its code with each value left blank (tools/provision.py), so it
+  // shows which functions and arguments to use without the answer. Statements with nothing to blank
+  // out have none.
+  const blanksHint = run => (run.hint_partial ? `Fill in each ___: ${codeHtml(run.hint_partial)}` + keysHint(run) : null);
   // The control a hint points at for an IDE action.
   const actionControl = run => (run.action === 'menu' ? ide.menubar(run.menu[0])
     : run.action === 'option' ? ide.menubar('Tools')
@@ -1684,7 +1991,7 @@
     content.innerHTML = `
       <div class="overview">
         ${lessonHeader(manifest, `Watch the coach type each ${manifest.version === 2 ? 'statement' : 'line'} into \`${manifest.script}\`, run it, and explain the result.`)}
-        ${stepsBox(steps)}
+        ${stepsBox(steps, true)}
         ${sourceLine(manifest)}
       </div>
       <section class="card" hidden>
@@ -1896,6 +2203,7 @@
           await drive.openScript(); // an action (a new file, Render) may have shown another tab
           await drive.doRun(run, step, i);
           if (firstEcho < 0) firstEcho = demo.echoAt;
+          if (run.tour === 'plot-history') await drive.plotHistory();
         }
         // No Save: the script stays as typed, unsaved, as a learner's would. Nothing checks the file.
         explainStep(i, firstEcho);
@@ -1915,7 +2223,9 @@
       const charts = step.runs.some(r => ['plot', 'ggplot'].includes(r.evidence));
       const pane = step.runs.some(r => r.ide?.viewer) ? ide.viewer : step.runs.some(r => r.ide?.help) ? ide.help : null;
       highlight(charts ? ide.plots : pane || (firstEcho >= 0 ? () => consoleRangeRect(firstEcho) : ide.console), Infinity);
-      explainEl.innerHTML = explainHtml(step, demo.values) + (firstReplacementChart(manifest)?.s === i ? PLOT_HISTORY_NOTE : '');
+      // The note about the Plots arrows, unless the coach has just shown them.
+      const toured = step.runs.some(run => run.tour === 'plot-history');
+      explainEl.innerHTML = explainHtml(step, demo.values, demo.conflicts ?? null) + (firstReplacementChart(manifest)?.s === i && !toured ? PLOT_HISTORY_NOTE : '');
       demo.completed = [...new Set([...demo.completed, i])];
       demo.state = 'waiting';
       demo.reloadAt = null;
@@ -1942,7 +2252,8 @@
       demo.failure = error.message;
       clearHighlight();
       setPhase('');
-      explainEl.innerHTML = `<p class="error">The demonstration stopped at this step. ${escapeHtml(error.message)}</p>`;
+      explainEl.innerHTML = `<p class="error">The demonstration stopped at this step. ${escapeHtml(error.message)}</p>`
+        + (error instanceof SlowConnection ? '<p>When the connection is back, press <strong>Try this step again</strong>. The coach runs the code that is already in the script, without typing it again.</p>' : '');
       note('demo_step_failed', {step: step.id, reason: error.message});
       return false;
     }
@@ -2228,15 +2539,17 @@
       // is at the end of the statement's last line, as a learner's is, so it runs from there.
       const runMenu = !ide.runButton() && ide.runMenu();
       const press = runMenu ? 'Pressing **Run › Run Selected Line(s)**' : 'Pressing **Run**';
-      say(count > 1 ? `${press} to send the whole statement, every line of it, to the Console (**Ctrl+Enter** does the same)`
-        : `${press} to send this line to the Console (**Ctrl+Enter** does the same)`);
+      const pressing = count > 1 ? `${press} to send the whole statement, every line of it, to the Console (**Ctrl+Enter** does the same)`
+        : `${press} to send this line to the Console (**Ctrl+Enter** does the same)`;
+      say(pressing);
       // After a Render, RStudio's Background Jobs tab can cover the Console; a learner would bring it back.
       if (!shown(document.getElementById('rstudio_console_input')) && ide.consoleTab()) {
         say('Bringing the Console to the front');
         await clickOn(ide.consoleTab, 'console tab');
+        say(pressing);
       }
       const before = {echoes: countEchoes(ide.consoleText(), run.code), plot: ide.plotImage()?.src || null,
-        mark: usesEvidence(run) ? await evidenceMark() : null};
+        mark: usesEvidence(run) ? await patientMark(setPhase, pressing) : null};
       if (runMenu) {
         if (!(await clickOn(ide.runMenu, 'run menu'))) throw new Error('The Run menu in the Source pane is not visible.');
         const item = () => ide.menuItem(/^Run Selected Line/);
@@ -2247,8 +2560,9 @@
 
       const charts = ['plot', 'ggplot'].includes(run.evidence);
       spotlight(charts ? ide.plots : ide.console);
-      const output = await waitForEvidence(run, before);
-      const echoAt = ide.consoleText().lastIndexOf(echoOf(run.code));
+      const seenOutput = await waitForEvidence(run, before);
+      const output = seenOutput ?? '';
+      const echoAt = seenOutput === null ? -1 : ide.consoleText().lastIndexOf(echoOf(run.code));
       state.echoAt = echoAt;
       if (run.capture) {
         for (const [name, pattern] of Object.entries(run.capture)) {
@@ -2268,9 +2582,11 @@
       const stored = run.evidence === 'assign' ? run.expected?.assigned
         : run.show === 'environment' ? /^\s*([A-Za-z.][\w.]*)\s*(?:<-|=)/.exec(run.code)?.[1] : null;
       const printed = normalise(output);
+      if (attachesTidyverse(run)) state.conflicts = seenOutput === null ? null : showedConflicts(output);
       if (charts) {
         spotlight(ide.plots);
-        say('R drew the chart in the Plots pane');
+        say(state.chartPending ? 'R drew the chart. Over this slow connection, it is still loading in the Plots pane'
+          : 'R drew the chart in the Plots pane');
       } else if (run.ide?.help) {
         spotlight(ide.help);
         say('The help page is open in the Help pane');
@@ -2281,7 +2597,7 @@
         spotlight(() => environmentRowRect(stored) || ide.environment());
         say(`\`${stored}\` now appears in the Environment pane. An assignment prints nothing in the Console`);
       } else {
-        spotlight(() => consoleRangeRect(echoAt));
+        spotlight(echoAt >= 0 ? () => consoleRangeRect(echoAt) : ide.console);
         say(run.evidence === 'error' ? 'R stopped with an error, shown in the Console'
           : run.evidence === 'attached' ? (attachesTidyverse(run) && /Conflicts/.test(output)
             ? 'R loaded the tidyverse. The Console lists its packages, and the red “Conflicts” lines are normal'
@@ -2299,18 +2615,46 @@
     // a chart. An R error stops the statement visibly, unless the statement is meant to fail. R
     // usually answers within a second, so "Pressing Run…" stays up until then; a slower statement
     // says it is running.
+    //
+    // On a slow connection, the Console's echo, R's record and the chart's image each take their
+    // time to arrive. While RStudio is still waiting on the connection, the coach keeps waiting too
+    // (up to 5 minutes), and says so. R's record of the statement counts on its own: once it
+    // matches, the coach waits at most 5 s more for the echo and 10 s more for the chart's image,
+    // then carries on, and says the chart is still loading. Returns the Console output, or null if
+    // the echo never arrived.
     async function waitForEvidence(run, before) {
       const charts = ['plot', 'ggplot'].includes(run.evidence);
-      const deadline = Date.now() + 30000;
-      let slowAt = Date.now() + 1500;
+      const began = Date.now();
+      let deadline = began + 30000;
+      const cap = began + 300000;
+      let slowAt = began + 1500;
+      let saying = '';
       let matchedAt = 0;
+      let recordAt = 0; // when R's record first matched, with no echo or image yet
       let seen = {echo: false, output: '', plot: false, ok: false};
       const echo = echoOf(run.code);
+      const record = usesEvidence(run) && run.evidence !== 'error';
       for (;;) {
         check();
-        if (slowAt && Date.now() > slowAt && !matchedAt) {
-          slowAt = 0;
-          setPhase(charts ? 'R is still drawing the chart…' : 'R is still running the statement…');
+        const link = connection();
+        if (link !== 'ok' && link !== 'failed') deadline = Math.min(cap, Math.max(deadline, Date.now() + 30000));
+        if (Date.now() > slowAt && !matchedAt) {
+          const say = link === 'offline' ? 'The browser is offline. The coach is waiting for the connection to come back…'
+            : link === 'slow' ? `RStudio is still waiting for R's answer. The connection may be slow (${Math.round((Date.now() - began) / 1000)} s)…`
+            : charts ? 'R is still drawing the chart…' : 'R is still running the statement…';
+          if (say !== saying) { saying = say; setPhase(say); }
+        }
+        if (record && !seen.ok) {
+          const match = evidenceMatch(run, latestEvidence(), before.mark);
+          if (match && !recordAt) recordAt = Date.now();
+          const img = ide.plotImage();
+          const newChart = Boolean(img && img.src !== before.plot && img.complete && img.naturalWidth > 0);
+          // R ran it, but its echo (or its chart's image) is still on the way.
+          if (recordAt && Date.now() - recordAt > (charts && !newChart ? 10000 : 5000)) {
+            note('result_by_record', {echo: seen.echo, chart: newChart, waitedMs: Date.now() - began});
+            state.chartPending = charts && !newChart;
+            return seen.echo ? seen.output : null;
+          }
         }
         const text = ide.consoleText();
         if (countEchoes(text, run.code) > before.echoes) {
@@ -2326,16 +2670,21 @@
           else if (run.evidence === 'plot') ok = newChart && sameTokens(output, run.expected_output);
           else if (run.evidence === 'pattern') ok = new RegExp(run.pattern).test(output.trim());
           else if (run.evidence === 'error') ok = Boolean(error) && new RegExp(run.error).test(error);
-          else ok = Boolean(evidenceMatch(run, await readEvidence(), before.mark)) && (run.evidence !== 'ggplot' || newChart);
+          else ok = Boolean(evidenceMatch(run, latestEvidence(), before.mark)) && (run.evidence !== 'ggplot' || newChart);
           seen = {echo: true, output, plot: newChart, ok};
           if (ok) {
             matchedAt = matchedAt || Date.now();
-            if (Date.now() - matchedAt >= 300) return output; // stable: no late error or extra output
+            if (Date.now() - matchedAt >= 300) { state.chartPending = false; return output; } // stable: no late error or extra output
           } else {
             matchedAt = 0;
           }
         }
         if (Date.now() > deadline) {
+          const link = connection();
+          if (link !== 'ok') {
+            throw new SlowConnection(link === 'failed' ? 'RStudio lost its connection while the statement ran.'
+              : `RStudio has waited ${Math.round((Date.now() - began) / 1000)} s for R's answer. The connection may be slow.`);
+          }
           if (!seen.echo) throw new Error('The Console never showed the statement, so RStudio did not run it.');
           if (charts && !seen.plot) throw new Error('No new chart appeared in the Plots pane.');
           if (run.evidence === 'error') throw new Error(`R didn't report the error this statement shows (${run.error}).`);
@@ -2350,10 +2699,36 @@
       }
     }
 
+    // A tour of the chart history, after a chart that replaced another on screen (a run's
+    // "tour": "plot-history"; lesson 1): the Plots pane's left arrow goes back to the earlier chart,
+    // which is still there, and the right arrow returns to the newest. Demonstration only.
+    async function plotHistory() {
+      const arrow = id => () => { const el = byId(id); return el && shown(el) && !el.disabled ? el : null; };
+      const back = arrow('rstudio_tb_previousplot');
+      const forward = arrow('rstudio_tb_nextplot');
+      const showing = () => ide.plotImage()?.src || null;
+      const newest = showing();
+      if (!back()) throw new Error('The Plots pane has no earlier chart to go back to.');
+      say('The earlier chart is still in the Plots pane. Pressing the **left arrow** above it to go back');
+      if (!(await clickOn(back, 'previous plot'))) throw new Error('The left arrow above the Plots pane is not visible.');
+      const loaded = () => { const img = ide.plotImage(); return img && img.src !== newest && img.complete && img.naturalWidth > 0; };
+      if (!(await waitFor(loaded, 10000))) throw new Error('The earlier chart did not appear in the Plots pane.');
+      spotlight(ide.plots);
+      say('This is the chart from before. Every chart drawn in this R session stays in this history');
+      await heed(dwellMs);
+      say('Pressing the **right arrow** to come back to the newest chart');
+      if (!(await clickOn(forward, 'next plot'))) throw new Error('The right arrow above the Plots pane is not visible.');
+      if (!(await waitFor(() => showing() === newest && ide.plotImage().complete, 10000))) throw new Error('The newest chart did not come back.');
+      spotlight(ide.plots);
+      say('The newest chart is back');
+      await heed(dwellMs);
+      note('demo_action', {action: 'plot_history'});
+    }
+
     // IDE actions, worked the way a learner works them: the pointer goes to each menu, dialog and
     // control in turn. Done once the evidence (or RStudio) shows the result.
     async function doAction(run, step, index) {
-      const mark = await evidenceMark();
+      const mark = await patientMark(setPhase, null);
       const purpose = run.purpose ? run.purpose[0].toUpperCase() + run.purpose.slice(1) : 'Working RStudio';
       if (run.action === 'menu') {
         say(`${purpose}: ${run.menu.join(' › ')}`);
@@ -2448,7 +2823,17 @@
           slow = true;
           setPhase('R is restarting. Just after RStudio starts, this can take up to 30 seconds.');
         }
-        if (Date.now() - started > 60000) throw new Error(`RStudio didn't show the result of ${run.action === 'menu' ? run.menu.join(' › ') : run.action}.`);
+        if (Date.now() - started > 60000) {
+          const link = connection();
+          const what = run.action === 'menu' ? run.menu.join(' › ') : run.action;
+          if (['slow', 'offline'].includes(link) && Date.now() - started < 300000) {
+            setPhase(`RStudio is still waiting for an answer about ${what}. The connection may be slow…`);
+          } else if (link !== 'ok') {
+            throw new SlowConnection(`RStudio didn't show the result of ${what}. The connection may be slow.`);
+          } else {
+            throw new Error(`RStudio didn't show the result of ${what}.`);
+          }
+        }
         await sleep(200);
       }
       Object.assign(state.values, run.expected_values || {});
@@ -2554,7 +2939,7 @@
       await waitFor(() => !dialog(), 5000);
     }
 
-    return {openScript, doRun, doAction};
+    return {openScript, doRun, doAction, plotHistory};
   }
 
   // ---------- Guided and Solo: the learner works RStudio ----------
@@ -2625,13 +3010,13 @@
     // since: the first Console entry that gets feedback for this step (undefined: the mode's first).
     // mark: where R's evidence stood when the mode began; claims: the calls (or Console entries)
     // already credited to a statement, so one result never ticks two.
-    const g = (coach.guided = {step: 0, done: {}, hints: {}, values: {}, showing: false, show: null, feedback: '', since: undefined, mark: null, claims: [], off: {}});
+    const g = (coach.guided = {step: 0, done: {}, hints: {}, values: {}, showing: false, show: null, feedback: '', since: undefined, mark: null, claims: [], off: {}, conflicts: null});
     try {
       const saved = JSON.parse(sessionStorage.getItem(storeKey) || 'null');
-      if (saved) Object.assign(g, {step: Math.min(saved.step || 0, steps.length - 1), done: saved.done || {}, hints: saved.hints || {}, values: saved.values || {}, mark: saved.mark || null, claims: saved.claims || [], off: saved.off || {}});
+      if (saved) Object.assign(g, {step: Math.min(saved.step || 0, steps.length - 1), done: saved.done || {}, hints: saved.hints || {}, values: saved.values || {}, mark: saved.mark || null, claims: saved.claims || [], off: saved.off || {}, conflicts: saved.conflicts ?? null});
     } catch (_error) { /* storage blocked */ }
     const persist = () => {
-      try { sessionStorage.setItem(storeKey, JSON.stringify({step: g.step, done: g.done, hints: g.hints, values: g.values, mark: g.mark, claims: g.claims, off: g.off})); } catch (_error) { /* storage blocked */ }
+      try { sessionStorage.setItem(storeKey, JSON.stringify({step: g.step, done: g.done, hints: g.hints, values: g.values, mark: g.mark, claims: g.claims, off: g.off, conflicts: g.conflicts})); } catch (_error) { /* storage blocked */ }
     };
     const stepDone = s => steps[s].runs.every((_run, r) => g.done[key(s, r)]);
     const current = () => steps[g.step].runs.findIndex((_run, r) => !g.done[key(g.step, r)]); // -1: step done
@@ -2644,6 +3029,7 @@
       <p class="howto">${inline(`Write each ${unitOf(lesson) === 'task' ? 'statement' : 'line'} under its step heading in \`${script}\`, then press **Ctrl+Enter** to run it. The coach ticks each ${unitOf(lesson)} when R shows the right result.`)}</p>
       <section class="card">
         <h3></h3>
+        <p class="task-count" aria-live="polite"></p>
         <ol class="tasks"></ol>
         <div class="hints"></div>
         <p class="feedback" aria-live="polite"></p>
@@ -2679,9 +3065,9 @@
       return [
         `Write it on a new line under <code>${escapeHtml(step.heading)}</code> in ${escapeHtml(script)}. Then press <strong>Ctrl+Enter</strong>${/\.qmd$/.test(script) ? ', or choose <strong>Run › Run Selected Line(s)</strong>' : ', or click <strong>Run</strong>'}.` +
           (several && /[([{]\n/.test(run.code) ? ' When you press Enter between brackets, RStudio moves the closing bracket down a line for you. So don\'t type it twice.' : ''),
-        `It starts like this: ${codeHtml(run.hint_partial)}` + keysHint(run),
+        blanksHint(run),
         `The whole ${several ? 'statement' : 'line'} is ${codeHtml(run.hint_line)}` + keysHint(run),
-      ];
+      ].filter(Boolean);
     }
 
     function render() {
@@ -2692,17 +3078,35 @@
       const step = steps[g.step];
       const r = current();
       $('.card h3').innerHTML = `Step ${g.step + 1} of ${steps.length}: ${linkedTitle(step.title)}`;
+      // A step with several tasks says which one is current, so that finishing one task (by Show me,
+      // say) visibly moves on to the next while the step stays the same.
+      const many = step.runs.length > 1;
+      const doneCount = step.runs.filter((_run, k) => g.done[key(g.step, k)]).length;
+      const count = !many || r < 0 ? ''
+        : doneCount ? `${doneCount} of ${step.runs.length} tasks done. Now task ${r + 1}.`
+        : `This step has ${step.runs.length} tasks. Start with task 1.`;
+      const countEl = $('.task-count');
+      if (countEl.textContent !== count) {
+        countEl.textContent = count;
+        countEl.classList.remove('new');
+        if (count && doneCount) { void countEl.offsetWidth; countEl.classList.add('new'); }
+      }
       $('.tasks').innerHTML = step.runs.map((run, k) =>
-        `<li class="${g.done[key(g.step, k)] ? 'done' : k === r ? 'active' : ''}">${inline(run.task)}${chartTaskNote(lesson, g.step, k)}</li>`).join('');
+        `<li class="${g.done[key(g.step, k)] ? 'done' : k === r ? 'active' : ''}">${many ? `<span class="task-num">Task ${k + 1}.</span> ` : ''}${inline(run.task)}${chartTaskNote(lesson, g.step, k)}</li>`).join('');
       const read = r < 0 ? 0 : g.hints[key(g.step, r)] || 0;
       const hints = r < 0 ? [] : hintsFor(g.step, r);
       $('.hints').innerHTML = hints.slice(0, read).map(h => `<p class="hint-text">${h}</p>`).join('');
-      $('.feedback').textContent = r < 0 || g.showing ? '' : g.feedback;
-      $('.explain').innerHTML = r < 0 ? explainHtml(step, {...expectedValues(steps), ...g.values}) : '';
+      // Feedback that ends in {help} suggests a hint while any are left, and Show me after that.
+      const said = r < 0 || g.showing ? '' : g.feedback.replace(/\{help\}$/, read < hints.length ? ', or ask for a hint.' : '. Compare it with the last hint, or press Show me.');
+      $('.feedback').innerHTML = said ? inline(said) : '';
+      // The wrong name, linked between R's message and the code, while the feedback is about it.
+      if (said && g.why?.name) linkName(g.why.name, g.why.code); else linkName(null);
+      $('.explain').innerHTML = r < 0 ? explainHtml(step, {...expectedValues(steps), ...g.values}, g.conflicts) : '';
       hintBtn.hidden = showBtn.hidden = r < 0;
       hintBtn.disabled = g.showing || read >= hints.length;
-      hintBtn.textContent = read >= hints.length ? 'No more hints' : `Hint ${read + 1} of ${hints.length}`;
-      showBtn.textContent = g.showing ? 'Stop' : 'Show me';
+      const which = many && r >= 0 ? ` for task ${r + 1}` : '';
+      hintBtn.textContent = read >= hints.length ? 'No more hints' : `Hint ${read + 1} of ${hints.length}${which}`;
+      showBtn.textContent = g.showing ? 'Stop' : many && r >= 0 ? `Show me task ${r + 1}` : 'Show me';
       nextBtn.hidden = r >= 0 || finished();
       nextBtn.textContent = `Next: step ${g.step + 2}`;
       const debrief = $('.debrief');
@@ -2726,9 +3130,20 @@
       }
     }
 
+    // What the newest library(tidyverse) in the Console printed, for the note in the explanation.
+    function tidyverseOutput() {
+      const view = watch.poll();
+      if (!view) return null;
+      for (let k = view.entries.length - 1; k >= view.from; k -= 1) {
+        if (/^library\((["']?)tidyverse\1\)/.test(codeKey(view.entries[k].code))) return view.entries[k].output;
+      }
+      return null;
+    }
+
     function complete(s, r, by, output, claim = null) {
       const k = key(s, r);
       if (g.done[k]) return;
+      if (attachesTidyverse(steps[s].runs[r])) g.conflicts = showedConflicts(typeof output === 'string' && output ? output : tidyverseOutput());
       Object.assign(g.values, captured(steps[s].runs[r], output));
       g.done[k] = by;
       if (claim) g.claims.push(claim);
@@ -2742,7 +3157,10 @@
 
     // What to tell the learner about the last thing they ran for this step, if it didn't count.
     // null: they haven't run anything since the step started, so keep what the card says.
+    // `diagnosis`: what the coach could tell about it (explainError and the like), for the link.
+    let diagnosis = null;
     function feedbackFor(view) {
+      diagnosis = null;
       const from = Math.max(view.from, g.since ?? view.from);
       for (let k = view.entries.length - 1; k >= from; k -= 1) {
         const entry = view.entries[k];
@@ -2758,16 +3176,31 @@
         }
         const error = consoleError(entry.output);
         const wanted = steps[g.step].runs[current()];
-        if (error && !(wanted?.evidence === 'error')) return `R reported: ${error.replace(/\.$/, '')}. Fix the line, then run it again.`;
+        if (error && !(wanted?.evidence === 'error')) {
+          // The whole output: a tidyverse error's cause comes after lines consoleError leaves out.
+          diagnosis = explainError(entry.output, entry.code, lesson);
+          if (diagnosis) diagnosis.code = entry.code;
+          return `R reported: ${error.replace(/\.$/, '')}. ${diagnosis ? diagnosis.text : 'Fix the line, then run it again.'}`;
+        }
         if (lesson.version !== 2 && steps.some(step => step.runs.some(run => matchRun(run, view, k)?.index === k))) return '';
         if (view.quietMs < 2500) return g.feedback; // a chart may still be loading, or R's evidence arriving
+        // Not "wrong" until R's record has been read from after the Console went quiet (R writes it
+        // within about 2 s): on a slow connection that reading can lag well behind the Console.
+        if (lesson.version === 2 && (evidence.at < consoleClock.changedAt + 2000 || ['slow', 'offline'].includes(connection()))) return g.feedback;
         if (wanted?.keysMissing) {
           const {token, name} = SHORTCUTS[wanted.keys];
           return `That's the right result. This task also asks you to type ${name}, ${token}, with ${wanted.keys}: press it once where the ${token} goes, then run the statement again.`;
         }
         const ran = entry.code.trim().split('\n')[0] + (entry.code.trim().includes('\n') ? ' …' : '');
-        return lesson.version === 2 ? `RStudio ran ${ran}, but R's result isn't what this step asks for. Check the task, or ask for a hint.`
-          : `RStudio ran ${ran}, but that isn't what this line asks for. Check the task, or ask for a hint.`;
+        // Why, where the coach can tell: a warning that changed the result, or the first difference
+        // from the task's code.
+        diagnosis = explainWarning(entry.output, lesson) || explainDifference(entry.code, wanted);
+        if (diagnosis) {
+          diagnosis.code = entry.code;
+          return `RStudio ran \`${ran}\`, but R's result isn't what this task asks for. ${diagnosis.text}`;
+        }
+        return lesson.version === 2 ? `RStudio ran \`${ran}\`, but R's result isn't what this task asks for. Check the task{help}`
+          : `RStudio ran ${ran}, but that isn't what this line asks for. Check the task{help}`;
       }
       return null;
     }
@@ -2793,12 +3226,14 @@
           if (g.done[key(s, r)]) continue;
           const match = runDone(run, view, doc, g.mark, new Set(g.claims), g.off);
           // Only the task Show me is doing counts as the coach's: the learner may move on and run the
-          // next one while the coach is still saving the script.
-          if (match && view.quietMs >= 600) complete(s, r, g.showing && g.show?.k === key(s, r) ? 'coach' : 'learner', match.output, match.key);
+          // next one while the coach is still at work. So does a Show me the connection cut short,
+          // if R's result arrives within 5 minutes.
+          const shown = (g.showing && g.show?.k === key(s, r)) || (g.late?.k === key(s, r) && Date.now() < g.late.until);
+          if (match && view.quietMs >= 600) complete(s, r, shown ? 'coach' : 'learner', match.output, match.key);
         }
         if (g.showing || current() < 0) return;
         const feedback = feedbackFor(view);
-        if (feedback !== null && feedback !== g.feedback) { g.feedback = feedback; render(); }
+        if (feedback !== null && feedback !== g.feedback) { g.feedback = feedback; g.why = diagnosis; render(); }
       } finally {
         polling = false;
       }
@@ -2842,7 +3277,12 @@
         const match = runDone(run, watch.poll() || {entries: [], from: 0, plots: []}, doc, g.mark, new Set(g.claims), null);
         complete(s, r, 'coach', output, match?.key);
       } catch (error) {
-        if (!(error instanceof DemoStopped) && !ended) {
+        if (error instanceof SlowConnection && !ended) {
+          g.late = {k: key(s, r), until: Date.now() + 300000};
+          g.feedback = `${error.message} The code is in the script. If R's result arrives, the coach ticks this task. You can also press Show me again.`;
+          g.since = entriesNow();
+          note('show_me_slow', {step: step.id, reason: error.message});
+        } else if (!(error instanceof DemoStopped) && !ended) {
           g.feedback = `The coach couldn't show this ${run.action ? 'step' : 'line'}. ${error.message}`;
           g.since = entriesNow(); // keep this message until the learner runs something new
           note('show_me_failed', {step: step.id, reason: error.message});
@@ -2875,6 +3315,7 @@
       showPointer(false);
       spotlight(null);
       clearHighlight();
+      linkName(null);
       coach.guided = null;
     };
   }
@@ -2921,7 +3362,8 @@
         li.className = solo.checked ? (solo.checked.seen[k] ? 'done' : 'missing') : '';
         li.querySelector('.hint').hidden = Boolean(solo.hints[k]);
         const run = steps[s].runs[r];
-        li.querySelector('.hint-text').innerHTML = !solo.hints[k] ? '' : run.action === 'type' ? `It starts like this: ${codeHtml(run.hint_partial)}` : run.action ? escapeHtml(run.hint_how) : `It starts like this: ${codeHtml(run.hint_partial)}` + keysHint(run);
+        li.querySelector('.hint-text').innerHTML = !solo.hints[k] ? '' : run.action === 'type' ? `It starts like this: ${codeHtml(run.hint_partial)}` : run.action ? escapeHtml(run.hint_how)
+          : blanksHint(run) || `It's ${codeHtml(run.hint_line)}` + keysHint(run);
       }
       const results = $('.results');
       results.hidden = !solo.checked;
@@ -3095,6 +3537,167 @@
     const m = /(?:^|\n|Rerun with Debug)\s*(Error\b[^\n]*(?:\n(?:! | {2}\S)[^\n]*)*)/.exec(output);
     return m ? normalise(m[1]) : null;
   }
+  // ---------- What went wrong, in Guided ----------
+  // Guided explains what R said, or why the result differs, in terms of the learner's own code: the
+  // name R couldn't find and the closest one the lesson uses, the argument a function or ggplot2
+  // didn't know, the function the task needs that the code doesn't call yet. Each diagnosis is
+  // {text, name}: `name` is the word to link between R's message and the code (linkWord).
+  function editDistance(a, b) {
+    const row = Array.from({length: b.length + 1}, (_v, j) => j);
+    for (let i = 1; i <= a.length; i += 1) {
+      let diagonal = row[0];
+      row[0] = i;
+      for (let j = 1; j <= b.length; j += 1) {
+        const above = row[j];
+        row[j] = Math.min(row[j] + 1, row[j - 1] + 1, diagonal + (a[i - 1] === b[j - 1] ? 0 : 1));
+        diagonal = above;
+      }
+    }
+    return row[b.length];
+  }
+  // The candidate nearest to `name`, if it is near enough to be a slip: at most one edit in three
+  // characters (two for distance_dm and distance_km), never `name` itself.
+  function closest(name, candidates) {
+    let best = null;
+    let bestDistance = Infinity;
+    for (const candidate of new Set(candidates)) {
+      if (!candidate || candidate === name) continue;
+      const d = editDistance(name.toLowerCase(), candidate.toLowerCase());
+      if (d < bestDistance) { best = candidate; bestDistance = d; }
+    }
+    return best && bestDistance <= Math.max(1, Math.floor(Math.min(name.length, best.length) / 3)) ? best : null;
+  }
+  // The parts of some R code, outside comments: function calls, argument names (name = value), other
+  // names, quoted strings, and each named argument's value as written.
+  function codeParts(code) {
+    const parts = {calls: [], args: [], names: [], strings: [], values: {}};
+    const token = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|#[^\n]*|(?<![\w.])([A-Za-z][\w.]*|\.[A-Za-z_][\w.]*)(\s*\()?(\s*=(?!=))?/g;
+    for (const m of code.matchAll(token)) {
+      if (m[1]) { parts.strings.push(m[1].slice(1, -1)); continue; }
+      if (!m[2]) continue; // a comment
+      if (m[3]) parts.calls.push(m[2]);
+      else if (m[4]) {
+        parts.args.push(m[2]);
+        const value = /^\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|[^,()\n]+)/.exec(code.slice(m.index + m[0].length));
+        if (value) parts.values[m[2]] = codeKey(value[1].trim());
+      } else parts.names.push(m[2]);
+    }
+    return parts;
+  }
+  // Every name the lesson's own code uses, for suggestions; and the names its statements assign.
+  function lessonWords(lesson) {
+    const all = {calls: [], args: [], names: [], strings: [], assigned: [], library: null};
+    for (const run of lesson.steps.flatMap(step => step.runs)) {
+      for (const code of [run.code, ...(run.alternatives || [])].filter(Boolean)) {
+        const parts = codeParts(code);
+        for (const key of ['calls', 'args', 'names', 'strings']) all[key].push(...parts[key]);
+        const assigned = /^\s*([A-Za-z.][\w.]*)\s*(?:<-|=(?!=))/.exec(code);
+        if (assigned) all.assigned.push(assigned[1]);
+      }
+      if (run.evidence === 'attached' && !all.library) all.library = run.code;
+    }
+    return all;
+  }
+  // ggplot2's aesthetics and the settings its layers take most often, for "Ignoring unknown …".
+  const AESTHETICS = ['x', 'y', 'colour', 'color', 'fill', 'alpha', 'size', 'shape', 'linetype', 'linewidth', 'group',
+    'label', 'weight', 'xmin', 'xmax', 'ymin', 'ymax', 'xend', 'yend', 'binwidth', 'bins', 'method', 'se', 'position', 'stat', 'width'];
+  const quoteName = name => `\`${name}\``;
+  // Why R's error happened, in the learner's terms, or null when the coach has nothing to add.
+  function explainError(error, code, lesson) {
+    const words = lessonWords(lesson);
+    let m = /object '([^']+)' not found/.exec(error);
+    if (m) {
+      const name = m[1];
+      if (words.assigned.includes(name)) {
+        return {name, text: `${quoteName(name)} is made by an earlier statement in this lesson. Run that statement first, then this one.`};
+      }
+      const better = closest(name, [...words.names, ...words.args, ...words.assigned]);
+      return {name, text: better ? `R can't find ${quoteName(name)}. Did you mean ${quoteName(better)}?`
+        : `R can't find ${quoteName(name)}. Check how it's spelled in the task.`};
+    }
+    m = /could not find function "([^"]+)"/.exec(error);
+    if (m) {
+      const name = m[1];
+      if (words.calls.includes(name) && words.library) {
+        return {name, text: `${quoteName(`${name}()`)} comes from a package that isn't loaded. Run ${quoteName(words.library)} from step 1 first.`};
+      }
+      const better = closest(name, [...words.calls, ...Object.keys(FUNCTION_DOCS)]);
+      return {name, text: better ? `R has no function called ${quoteName(`${name}()`)}. Did you mean ${quoteName(`${better}()`)}?`
+        : `R has no function called ${quoteName(`${name}()`)}. Check how it's spelled in the task.`};
+    }
+    m = /there is no package called\s*[‘'"`]([^’'"`]+)/.exec(error);
+    if (m) {
+      const better = closest(m[1], [...words.names, ...Object.keys(PACKAGE_DOCS)]);
+      return {name: m[1], text: better ? `There's no package called ${quoteName(m[1])}. Did you mean ${quoteName(better)}?`
+        : `There's no package called ${quoteName(m[1])}. Check how it's spelled in the task.`};
+    }
+    m = /unused arguments? \(([A-Za-z.][\w.]*)\s*=/.exec(error);
+    if (m) {
+      const better = closest(m[1], [...words.args, ...AESTHETICS]);
+      return {name: m[1], text: `${quoteName(m[1])} isn't an argument of this function.${better ? ` Did you mean ${quoteName(better)}?` : ''}`};
+    }
+    m = /Column `([^`]+)` doesn't exist/.exec(error);
+    if (m) {
+      const better = closest(m[1], [...words.names, ...words.args]);
+      return {name: m[1], text: `The data has no column called ${quoteName(m[1])}.${better ? ` Did you mean ${quoteName(better)}?` : ''}`};
+    }
+    m = /[`'‘"]?([^\s`'’"]+?)[`'’"]? does not exist in current working directory/.exec(error); // readr's wording, old and new
+    if (m) {
+      const better = closest(m[1], words.strings);
+      return {name: m[1], text: `There's no file ${quoteName(m[1])} in the project.${better ? ` Did you mean ${quoteName(better)}?` : ''}`};
+    }
+    m = /unexpected (symbol|string constant|numeric constant|'\)'|'\]'|'\}'|','|'='|input|'[^']*')(?: in "([^"]*)")?/.exec(error);
+    if (m) {
+      const near = (m[2] || '').split('\n').pop().slice(-30);
+      const where = near ? ` R stopped reading at ${quoteName(near)}.` : '';
+      return {name: null, text: /^'[)\]}]'$/.test(m[1])
+        ? `R found a closing bracket it didn't expect: one too many, or something missing before it.${where}`
+        : `R couldn't read the code.${where} Something is missing just before the end of that: often a comma, an operator such as + or |>, or a bracket.`};
+    }
+    if (/Cannot use `\+` with a single argument/.test(error)) {
+      return {name: null, text: 'A line starts with +. In ggplot2, put each + at the end of the line before it.'};
+    }
+    return null;
+  }
+  // A warning that changed the result: ggplot2 skips a setting or an aesthetic it doesn't know (a
+  // chart drawn with alphas = 0.3 is drawn with no transparency at all).
+  function explainWarning(output, lesson) {
+    const m = /Ignoring unknown (parameters|aesthetics):\s*`([^`]+)`/.exec(output);
+    if (!m) return null;
+    const words = lessonWords(lesson);
+    const better = closest(m[2], [...words.args, ...AESTHETICS]);
+    return {name: m[2], text: `ggplot2 ignored ${quoteName(m[2])}, because it isn't a ${m[1] === 'aesthetics' ? 'mapping' : 'setting'} it knows, so the chart was drawn without it.${better ? ` Did you mean ${quoteName(better)}?` : ''}`};
+  }
+  // No error, but not the task's result: the first difference from the task's code that holds for
+  // every way the lesson accepts (its code and alternatives), so the coach never calls a right
+  // choice wrong. A name close to one the task uses, then a function it needs, then an argument's
+  // value, then an argument it sets.
+  function explainDifference(code, run) {
+    if (!run?.code) return null;
+    const mine = codeParts(code);
+    const ways = [run.code, ...(run.alternatives || [])].map(codeParts);
+    const anyWay = key => ways.flatMap(w => w[key]);
+    for (const name of [...mine.names, ...mine.args]) {
+      if (anyWay('names').includes(name) || anyWay('args').includes(name) || anyWay('calls').includes(name)) continue;
+      const better = closest(name, [...anyWay('names'), ...anyWay('args')]);
+      if (better) return {name, text: `Check ${quoteName(name)}: did you mean ${quoteName(better)}?`};
+    }
+    for (const name of mine.calls) {
+      if (anyWay('calls').includes(name)) continue;
+      const better = closest(name, anyWay('calls'));
+      if (better) return {name, text: `Check ${quoteName(`${name}()`)}: did you mean ${quoteName(`${better}()`)}?`};
+    }
+    const needed = ways[0].calls.find(name => ways.every(w => w.calls.includes(name)) && !mine.calls.includes(name));
+    if (needed) return {name: null, text: `Your code doesn't use ${quoteName(`${needed}()`)} yet, and the task needs it.`};
+    for (const [arg, value] of Object.entries(mine.values)) {
+      const wanted = ways.map(w => w.values[arg]).filter(v => v !== undefined);
+      if (wanted.length && !wanted.includes(value)) return {name: arg, text: `Check the value of ${quoteName(arg)}: the task asks for a different one.`};
+    }
+    const missing = Object.keys(ways[0].values).find(arg => ways.every(w => arg in w.values) && !(arg in mine.values));
+    if (missing) return {name: null, text: `The task also sets ${quoteName(missing)}, and your code doesn't yet.`};
+    return null;
+  }
+
   // A command reduced to what it does: no spaces or comments, one quote style, and = read as <-
   // when it assigns a name, so `x = c(1,2)` and `x <- c(1, 2) # note` compare equal.
   function codeKey(code) {
@@ -3132,12 +3735,19 @@
     const tokens = s => s.split(/\s+/).filter(Boolean).sort().join(' ');
     return tokens(a) === tokens(b);
   }
+  // A wait of 3 s or more is for something RStudio does after a round trip (open a file, clear a
+  // pane): while RStudio is still waiting on a slow connection, it goes on, up to 60 s longer.
+  // Shorter waits only look whether something optional appears (a dialog), and keep their time.
   async function waitFor(fn, ms) {
-    const deadline = Date.now() + ms;
+    let deadline = Date.now() + ms;
+    const cap = deadline + (ms >= 3000 ? 60000 : 0);
     for (;;) {
       const value = fn();
       if (value) return value;
-      if (Date.now() > deadline) return null;
+      if (Date.now() > deadline) {
+        if (Date.now() >= cap || !['slow', 'offline'].includes(connection())) return null;
+        deadline = Math.min(cap, Date.now() + 1000);
+      }
       await sleep(100);
     }
   }
@@ -3146,14 +3756,22 @@
   }
   // Lesson text, one line of it: `code` becomes <code>, **bold** <strong> and *italic* <em>.
   // Code spans are left alone, so `x * y` stays as it is.
-  const functionLink = name => FUNCTION_DOCS[name]
-    ? `<a class="doc-link" href="${escapeHtml(FUNCTION_DOCS[name])}" target="_blank" rel="noopener noreferrer" aria-label="Documentation for ${escapeHtml(name)}()">${escapeHtml(name)}</a>`
-    : escapeHtml(name);
-  const linkCalls = text => text.replace(/\b([A-Za-z][\w.]*)(?=\()/g, (_match, name) => functionLink(name));
-  const linkedTitle = text => linkCalls(escapeHtml(text));
+  const docLink = (url, name, label) => `<a class="doc-link" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(label)}">${escapeHtml(name)}</a>`;
+  const functionLink = name => (FUNCTION_DOCS[name] ? docLink(FUNCTION_DOCS[name], name, `Documentation for ${name}()`) : escapeHtml(name));
+  const packageLink = name => docLink(PACKAGE_DOCS[name], name, `The ${name} package's documentation`);
+  // One pass links both, so a link's own URL is never scanned again: a name followed by "(" is a
+  // function; a package's name is a package (in prose, only if it isn't also an everyday word).
+  // Not after "/" or ".": a path such as data/readr.csv isn't the package.
+  const NAME = /(^|[^\w./])([A-Za-z][\w.]*)(?=(\()|[^\w.(]|$)/g;
+  const linkNames = (text, {code = false} = {}) => text.replace(NAME, (match, before, name, call) => {
+    if (call) return before + functionLink(name);
+    if (name in PACKAGE_DOCS && (code || !PLAIN_WORDS.has(name))) return before + packageLink(name);
+    return match;
+  });
+  const linkedTitle = text => linkNames(escapeHtml(text));
   const inline = text => escapeHtml(text).split(/(`[^`]+`)/).map(part => (/^`[^`]+`$/.test(part)
-    ? `<code>${linkCalls(part.slice(1, -1))}</code>`
-    : linkCalls(part.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    ? `<code>${linkNames(part.slice(1, -1), {code: true})}</code>`
+    : linkNames(part.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
       .replace(/(^|[^\w*])\*([^*\s](?:[^*]*[^*\s])?)\*(?![\w*])/g, '$1<em>$2</em>')))).join('');
   // A whole text: a blank line starts a new paragraph, and lines starting "- " make a list.
   // {name} becomes a value RStudio displayed in this run.

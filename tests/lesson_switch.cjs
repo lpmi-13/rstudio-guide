@@ -90,6 +90,8 @@ const evidence = page => page.evaluate(() => fetch('/coach/api/evidence', {cache
       return link.getBoundingClientRect().top > box.getBoundingClientRect().bottom;
     });
     assert(hidden, 'the script was already in view in the Files pane, so this checks nothing');
+    // Auto-advance starts off (since 24 November 2026); this probe runs the whole demonstration without presses.
+    await coachEl(page, 'button.auto').click();
     await coachEl(page, 'button.go').click();
     const end = await wait(page, () => {
       const d = window.__rsCoach.demo;

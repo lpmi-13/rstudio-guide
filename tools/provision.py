@@ -23,6 +23,7 @@ rather than expected output, so their answers aren't in the page.
 import importlib.util
 import json
 import os
+import re
 import secrets
 import shutil
 import sys
@@ -67,24 +68,44 @@ def strip_comment(code):
     return code.rstrip()
 
 
-def partial_line(line):
-    if "(" in line:
-        return line[: line.index("(") + 1] + "…)"
-    if "<-" in line:
-        return line[: line.index("<-") + 2] + " …"
-    return "…"
+BLANK = "___"
+# R's words that are syntax, not values: they stay in a hint.
+KEYWORDS = {"function", "if", "else", "for", "in", "while", "repeat", "break", "next", "return"}
+TOKEN = re.compile(r"""
+    (?P<string>"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')
+  | (?P<number>(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?L?)
+  | (?P<name>`[^`]+`|[A-Za-z][\w.]*|\.[A-Za-z_][\w.]*)
+  | (?P<other>.)
+""", re.VERBOSE | re.DOTALL)
 
 
-def partial(code):
-    """A hint that shows how a statement starts: plot(5, 5) -> plot(…), x <- y -> x <- …,
-    and over several lines, its first line and how the second starts: trips |> / filter(…)"""
-    lines = [strip_comment(line) for line in code.split("\n")]
-    lines = [line for line in lines if line.strip()]
-    if len(lines) == 1:
-        return partial_line(lines[0])
-    second = lines[1]
-    indent = second[: len(second) - len(second.lstrip())]
-    return f"{lines[0]}\n{indent}{partial_line(second.lstrip())}"
+def blanks(code):
+    """The second hint for a statement: its code with each value left blank, so it shows which
+    functions and arguments to use, and how the statement is built, without the answer:
+    ggplot(week, aes(x = member_type)) + geom_bar() -> ggplot(___, aes(x = ___)) + geom_bar().
+    Function names, argument names (name = …), the name a statement assigns, package names before
+    ::, R's keywords, operators, brackets and empty strings stay; names, strings and numbers become
+    ___ (a string keeps its quotes). None when there is nothing to blank out, as in today()."""
+    text = whole(code)
+    out = []
+    tokens = list(TOKEN.finditer(text))
+    for i, m in enumerate(tokens):
+        kind, value = m.lastgroup, m.group()
+        rest = text[m.end():]
+        if kind == "string":
+            out.append(value if len(value) == 2 else value[0] + BLANK + value[-1])  # "" stays "": nothing goes there
+        elif kind == "number":
+            out.append(BLANK)
+        elif kind == "name":
+            before = "".join(t.group() for t in tokens[:i]).rstrip()
+            assigned = re.match(r"\s*(<-|=(?!=))", rest) and (not before or before.endswith("\n"))
+            keep = (value in KEYWORDS or re.match(r"\s*\(", rest) or re.match(r"\s*=(?!=)", rest)
+                    or rest.startswith("::") or assigned)
+            out.append(value if keep else BLANK)
+        else:
+            out.append(value)
+    hint = "".join(out)
+    return None if hint == text else hint
 
 
 def whole(code):
@@ -243,7 +264,7 @@ def prepare_lesson(scenario, project, root, image, bake, collection):
         step["heading"] = heading(number, step)
         for run in step["runs"]:
             if "code" in run:
-                run["hint_partial"] = partial(run["code"])
+                run["hint_partial"] = blanks(run["code"])
                 run["hint_line"] = whole(run["code"])
             else:
                 run["hint_where"], run["hint_how"] = action_hints(run)

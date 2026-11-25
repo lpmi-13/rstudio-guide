@@ -62,6 +62,7 @@
            "electric_10": "format(round(predict(lm(duration_min ~ distance_km, data = week[week$bike_type == \"electric\", ]), data.frame(distance_km = 10))))"
          },
          "purpose": "colour the trips by bike type, and add a straight line for each",
+         "tour": "plot-history",
          "task": "Draw the scatter plot again, with `colour = bike_type` added to `aes()` and the points at `alpha = 0.3`. Add a straight line for each bike type with `geom_smooth(method = \"lm\")`."}
       ],
       "explain": "`colour = bike_type` is **inside** `aes()`, so it's a **mapping**. Each point gets its colour from its trip's bike type, and ggplot2 adds a legend to say which is which.\n\n`alpha = 0.3` is **outside** `aes()`, so it's a **setting**. Each point is only 30% solid, so you can see through it, and crowded areas look darker.\n\nThe colour mapping is in `ggplot()`, so **every layer uses it**. That's why `geom_smooth()` drew one straight line for each bike type. (The Console's message names its formula, `y ~ x`.) If you mapped the colour in `geom_point()` instead, only the points would be coloured, and there would be one line for all trips.\n\nAt 10 km, the classic line is at about {classic_10} minutes and the electric line at about {electric_10}. **E-bikes are faster.**"

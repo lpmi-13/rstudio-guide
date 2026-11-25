@@ -176,17 +176,17 @@
       "title": "Side by side: patchwork",
       "runs": [
         {
-          "code": "totals <- ggplot(by_hour, aes(x = member_type, y = n, fill = member_type)) +\n  geom_col(show.legend = FALSE) +\n  scale_y_continuous(labels = scales::label_comma()) +\n  labs(x = NULL, y = \"Weekday trips\") +\n  theme_minimal()",
+          "code": "totals <- ggplot(by_hour, aes(x = member_type, y = n, fill = member_type)) +\n  geom_col(show.legend = FALSE) +\n  scale_y_continuous(labels = scales::label_comma()) +\n  labs(x = \"Rider type\", y = \"Weekday trips\") +\n  theme_minimal()",
           "evidence": "assign",
           "alternatives": [
-            "totals = ggplot(by_hour, aes(member_type, n, fill = member_type)) + geom_col(show.legend = FALSE) + scale_y_continuous(labels = scales::label_comma()) + labs(x = NULL, y = 'Weekday trips') + theme_minimal()"
+            "totals = ggplot(by_hour, aes(member_type, n, fill = member_type)) + geom_col(show.legend = FALSE) + scale_y_continuous(labels = scales::label_comma()) + labs(x = 'Rider type', y = 'Weekday trips') + theme_minimal()"
           ],
           "values": {
             "member_total": "format(sum(by_hour$n[by_hour$member_type == \"member\"]), big.mark = \",\")",
             "casual_total": "format(sum(by_hour$n[by_hour$member_type == \"casual\"]), big.mark = \",\")"
           },
           "purpose": "make a bar chart of each rider type's total weekday trips, as `totals`",
-          "task": "Make a bar chart of total `n` by `member_type` in `by_hour`, filled by `member_type`. Use `geom_col(show.legend = FALSE)` and comma y labels. Set the y title to \"Weekday trips\", leave the x title empty, and add `theme_minimal()`. Store it in `totals`."
+          "task": "Make a bar chart of total `n` by `member_type` in `by_hour`, filled by `member_type`. Use `geom_col(show.legend = FALSE)` and comma y labels. Set the x title to \"Rider type\" and the y title to \"Weekday trips\", and add `theme_minimal()`. Store it in `totals`."
         },
         {
           "code": "polished + totals + plot_layout(widths = c(3, 1))",

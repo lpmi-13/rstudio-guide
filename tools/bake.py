@@ -88,7 +88,8 @@ def statements(scenario):
     for number, step in enumerate(scenario["steps"], start=1):
         for run in step["runs"]:
             item = {key: run[key] for key in ("code", "action", "menu", "path", "file", "evidence", "warning", "error",
-                                              "pattern", "order", "values", "capture", "alternatives", "text", "after") if key in run}
+                                              "pattern", "order", "values", "capture", "alternatives", "text", "after",
+                                              "axes") if key in run}
             item.update(index=len(runs), step=step["id"], heading=f"# Step {number}. {step['title']}")
             runs.append(item)
     return runs

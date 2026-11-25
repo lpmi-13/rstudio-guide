@@ -227,7 +227,7 @@ async function guidedStep(page, lesson, s, from = 0) {
       }
       const hinted = await guidedView(page);
       assert(hints.join() === '1,2,3', `hints shown after each click: ${hints}`);
-      assert(hinted.hints[0].includes(lesson.steps[1].heading) && /^It starts like this: glimpse\(/.test(hinted.hints[1]) && hinted.hints[2].includes('glimpse(week)'), JSON.stringify(hinted.hints));
+      assert(hinted.hints[0].includes(lesson.steps[1].heading) && /^Fill in each ___: glimpse\(___\)/.test(hinted.hints[1]) && hinted.hints[2].includes('glimpse(week)'), JSON.stringify(hinted.hints));
       assert(hinted.hintButton.disabled && hinted.hintButton.text === 'No more hints', JSON.stringify(hinted.hintButton));
       const since = await now(page);
       await coachEl(page, 'button.show').click();
@@ -339,7 +339,7 @@ async function guidedStep(page, lesson, s, from = 0) {
       assert(new RegExp(`^1 of ${total} tasks done`).test(first.results) && first.lines['0.0'] === 'done' && first.lines[lastKey] === 'missing' && /Hints used: 0/.test(first.results), JSON.stringify(first));
       await coachEl(page, 'button.hint[data-line="5.0"]').click();
       const hinted = await soloView(page);
-      assert(hinted.hintTexts.length === 1 && /^It starts like this: ggplot\(/.test(hinted.hintTexts[0]), JSON.stringify(hinted.hintTexts));
+      assert(hinted.hintTexts.length === 1 && /^Fill in each ___: ggplot\(___/.test(hinted.hintTexts[0]), JSON.stringify(hinted.hintTexts));
       for (const [s, step] of lesson.steps.entries()) {
         for (const [r, run] of step.runs.entries()) {
           if (s === 0) continue;

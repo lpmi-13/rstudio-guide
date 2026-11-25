@@ -16,8 +16,15 @@ words). Lessons listed under "checked" also keep explanation sentences to 25 wor
 formal words there. The coach's own strings avoid those words too. Code in backticks and {values}
 count as one word each.
 
+Every function a lesson's text writes as a call links to its documentation, unless the lesson
+defines it or tools/build_function_docs.py lists it as not R's (UNLINKED).
+
+Every statement's fill-in-the-blanks hint (tools/provision.py's blanks) gives the statement back when
+each ___ is filled in, and differs from it: a hint never shows more than the answer.
+
   python3 -I tools/check_content.py
 """
+import importlib.util
 import json
 import re
 import sys
@@ -42,7 +49,10 @@ ACTIONS = {
 IDE_CHECKS = ("pref", "value", "restarted", "tab", "viewer", "help", "project", "chord", "editor_text", "editor_mode", "editor_match")
 RUN_KEYS = {"code", "action", "menu", "purpose", "task", "evidence", "show", "capture", "values", "alternatives", "order",
             "warning", "error", "pattern", "path", "file", "ide", "control", "pane", "label", "value", "kind", "to", "keys",
-            "text", "after", "where", "name"}
+            "text", "after", "where", "name", "axes", "tour"}
+# Demonstration-only tours after a statement: "plot-history" goes back to the earlier chart with the
+# Plots pane's left arrow, then forward again (lesson 1). Guided and Solo skip them.
+TOURS = ("plot-history",)
 PLACEHOLDER = re.compile(r"(?<!\{)\{(\w+)\}(?!\})")  # {name}; {{text}} is a literal {text}, as in a regex quantifier
 STATEMENT_KEYS = {"Ctrl+Shift+M": "|>", "Alt+-": "<-"}  # a shortcut a statement can teach, and what it types
 
@@ -110,6 +120,7 @@ def check_lesson(folder, collection, problems):
         problem("a new project must be the lesson's last statement: RStudio reloads into it")
     ids = set()
     values = set()
+    charts_before = []  # the statements so far, for a tour that goes back to an earlier chart
     for step in steps:
         sid = step.get("id")
         where = f"step {sid!r}"
@@ -125,6 +136,14 @@ def check_lesson(folder, collection, problems):
             problem(f"{where}: has {len(runs)} statements; steps have 1-3")
         for k, run in enumerate(runs):
             check_run(run, f"{where}, statement {k + 1}", modes, strict, values, problem)
+            if "tour" in run:
+                if run["tour"] not in TOURS:
+                    problem(f"{where}, statement {k + 1}: tour must be one of {', '.join(TOURS)}")
+                elif not any(r.get("evidence") in ("plot", "ggplot") for r in charts_before):
+                    problem(f"{where}, statement {k + 1}: a plot-history tour needs an earlier chart to go back to")
+                if run.get("evidence") not in ("plot", "ggplot") or "demonstration" not in modes:
+                    problem(f"{where}, statement {k + 1}: a tour follows a chart, in a lesson with Demonstration")
+            charts_before.append(run)
         for name in PLACEHOLDER.findall(step.get("explain", "")):
             if name not in values:
                 problem(f"{where}: the explanation quotes {{{name}}}, which no statement up to here defines")
@@ -156,6 +175,9 @@ def check_run(run, where, modes, strict, values, problem):
     evidence = run.get("evidence")
     if evidence not in EVIDENCE:
         problem(f"{where}: evidence must be one of {', '.join(EVIDENCE)}")
+    # "axes" excuses a chart from the bake's axis check, and says why (a chart with no x and y axes).
+    if "axes" in run and (evidence != "ggplot" or not isinstance(run["axes"], str) or not run["axes"].strip()):
+        problem(f"{where}: axes is a reason (text), on a ggplot statement only")
     if has_action:
         action = run["action"]
         if action not in ACTIONS:
@@ -314,6 +336,40 @@ def check_coach_strings(problems):
             problems.append(f"coach/coach.js:{line}: use a plainer word than {word}")
 
 
+def check_doc_links(problems):
+    """Every call named in lesson text has a documentation link in the coach (build_function_docs.py)."""
+    spec = importlib.util.spec_from_file_location("build_function_docs", ROOT / "tools" / "build_function_docs.py")
+    builder = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(builder)
+    source = (ROOT / "coach" / "coach.js").read_text()
+    linked = json.loads(source.split("/* function docs:start */", 1)[1].split("/* function docs:end */", 1)[0])
+    packages = json.loads(source.split("/* package docs:start */", 1)[1].split("/* package docs:end */", 1)[0])
+    for name in sorted(builder.names_to_link() - linked.keys()):
+        problems.append(f"docs: {name}() has no documentation link; run tools/build_function_docs.py")
+    for name in sorted(set(builder.LINKED_PACKAGES) - packages.keys()):
+        problems.append(f"docs: the {name} package has no link; run tools/build_function_docs.py")
+
+
+def check_hints(problems):
+    """Each fill-in-the-blanks hint is the statement with values left out, never more."""
+    spec = importlib.util.spec_from_file_location("provision", ROOT / "tools" / "provision.py")
+    provision = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(provision)
+    for path in sorted((ROOT / "scenarios").glob("*/scenario.json")):
+        lesson = json.loads(path.read_text())
+        for step in lesson.get("steps", []):
+            for run in step["runs"]:
+                if "code" not in run:
+                    continue
+                hint, answer = provision.blanks(run["code"]), provision.whole(run["code"])
+                if hint is None:
+                    continue
+                pattern = "".join(".+?" if part == provision.BLANK else re.escape(part)
+                                  for part in re.split(f"({re.escape(provision.BLANK)})", hint))
+                if hint == answer or not re.fullmatch(pattern, answer, re.S):
+                    problems.append(f"{path.parent.name}: step {step['id']!r}: the hint {hint!r} doesn't fit {answer!r}")
+
+
 def compiles(pattern, where, problem):
     if not isinstance(pattern, str):
         problem(f"{where} must be a regular expression")
@@ -350,6 +406,8 @@ def main():
         lesson = json.loads((ROOT / "scenarios" / lesson_id / "scenario.json").read_text())
         check_plain(lesson, lambda text, lesson_id=lesson_id: problems.append(f"{lesson_id} (plain language): {text}"))
     check_coach_strings(problems)
+    check_doc_links(problems)
+    check_hints(problems)
     for problem in problems:
         print(f"check_content: {problem}", file=sys.stderr)
     built = sum(1 for lesson in collection if (ROOT / "scenarios" / lesson).is_dir())

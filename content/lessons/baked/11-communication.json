@@ -120,7 +120,7 @@
      "class": "ggplot2::ggplot",
      "code": "base = ggplot(by_hour, aes(hour, n, colour = member_type)) + geom_line()",
      "dim": 1,
-     "fp": "52191b681a89772a8f19de43fa0052bd",
+     "fp": "b77f8b819b9ac77017645bdc2ff896d6",
      "fp_any": null
     }
    ],
@@ -129,7 +129,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "52191b681a89772a8f19de43fa0052bd",
+   "fp": "b77f8b819b9ac77017645bdc2ff896d6",
    "fp_any": null,
    "index": 4,
    "messages": [],
@@ -146,7 +146,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "52191b681a89772a8f19de43fa0052bd",
+   "fp": "b77f8b819b9ac77017645bdc2ff896d6",
    "fp_any": null,
    "index": 5,
    "messages": [],
@@ -164,7 +164,7 @@
      "class": "ggplot2::ggplot",
      "code": "labelled = base + labs(title = 'Members ride at the rush hours, casual riders all afternoon', subtitle = 'Trips started in each hour of a weekday, 2025', x = 'Hour of the day', y = 'Trips', colour = 'Rider', caption = 'Data: Larkhaven Bikes')",
      "dim": 1,
-     "fp": "2dd622bbcef4759f44679e54374b8a7b",
+     "fp": "5e6787b17ae9944ad70ccf2d2077a943",
      "fp_any": null
     }
    ],
@@ -173,7 +173,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "2dd622bbcef4759f44679e54374b8a7b",
+   "fp": "5e6787b17ae9944ad70ccf2d2077a943",
    "fp_any": null,
    "index": 6,
    "messages": [],
@@ -190,7 +190,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "2dd622bbcef4759f44679e54374b8a7b",
+   "fp": "5e6787b17ae9944ad70ccf2d2077a943",
    "fp_any": null,
    "index": 7,
    "messages": [],
@@ -244,7 +244,7 @@
      "class": "ggplot2::ggplot",
      "code": "annotated = labelled + geom_point(data = peaks) + geom_label_repel(data = peaks, mapping = aes(label = label), seed = 1, show.legend = FALSE)",
      "dim": 1,
-     "fp": "4482039db608fbd7011d4903189deae7",
+     "fp": "8150a647213365fe2b25bcdf587d6bd1",
      "fp_any": null
     }
    ],
@@ -253,7 +253,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "4482039db608fbd7011d4903189deae7",
+   "fp": "8150a647213365fe2b25bcdf587d6bd1",
    "fp_any": null,
    "index": 9,
    "messages": [],
@@ -270,7 +270,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "4482039db608fbd7011d4903189deae7",
+   "fp": "8150a647213365fe2b25bcdf587d6bd1",
    "fp_any": null,
    "index": 10,
    "messages": [],
@@ -288,7 +288,7 @@
      "class": "ggplot2::ggplot",
      "code": "scaled = annotated + scale_x_continuous(breaks = c(0, 3, 6, 9, 12, 15, 18, 21, 24), labels = scales::label_number(suffix = ':00')) + scale_y_continuous(labels = scales::label_comma())",
      "dim": 1,
-     "fp": "4482039db608fbd7011d4903189deae7",
+     "fp": "8150a647213365fe2b25bcdf587d6bd1",
      "fp_any": null
     }
    ],
@@ -297,7 +297,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "4482039db608fbd7011d4903189deae7",
+   "fp": "8150a647213365fe2b25bcdf587d6bd1",
    "fp_any": null,
    "index": 11,
    "messages": [],
@@ -314,7 +314,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "4482039db608fbd7011d4903189deae7",
+   "fp": "8150a647213365fe2b25bcdf587d6bd1",
    "fp_any": null,
    "index": 12,
    "messages": [],
@@ -332,7 +332,7 @@
      "class": "ggplot2::ggplot",
      "code": "polished = scaled + theme_minimal() + theme(legend.position = 'top')",
      "dim": 1,
-     "fp": "4482039db608fbd7011d4903189deae7",
+     "fp": "8150a647213365fe2b25bcdf587d6bd1",
      "fp_any": null
     }
    ],
@@ -341,7 +341,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "4482039db608fbd7011d4903189deae7",
+   "fp": "8150a647213365fe2b25bcdf587d6bd1",
    "fp_any": null,
    "index": 13,
    "messages": [],
@@ -358,7 +358,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "4482039db608fbd7011d4903189deae7",
+   "fp": "8150a647213365fe2b25bcdf587d6bd1",
    "fp_any": null,
    "index": 14,
    "messages": [],
@@ -374,9 +374,9 @@
     {
      "assigned": "totals",
      "class": "ggplot2::ggplot",
-     "code": "totals = ggplot(by_hour, aes(member_type, n, fill = member_type)) + geom_col(show.legend = FALSE) + scale_y_continuous(labels = scales::label_comma()) + labs(x = NULL, y = 'Weekday trips') + theme_minimal()",
+     "code": "totals = ggplot(by_hour, aes(member_type, n, fill = member_type)) + geom_col(show.legend = FALSE) + scale_y_continuous(labels = scales::label_comma()) + labs(x = 'Rider type', y = 'Weekday trips') + theme_minimal()",
      "dim": 1,
-     "fp": "dfb05ec579dd9de78e1e409d65555bbb",
+     "fp": "100a24d6e7c8fbb1367f2a45d379ed42",
      "fp_any": null
     }
    ],
@@ -385,7 +385,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "dfb05ec579dd9de78e1e409d65555bbb",
+   "fp": "100a24d6e7c8fbb1367f2a45d379ed42",
    "fp_any": null,
    "index": 15,
    "messages": [],
@@ -406,7 +406,7 @@
      "class": "patchwork",
      "code": "wrap_plots(polished, totals, widths = c(3, 1))",
      "dim": 2,
-     "fp": "cce701f23459d96e2298d82f9e8439c2",
+     "fp": "0586d5780d7fda930fa2d00bd69c9d8d",
      "fp_any": null
     }
    ],
@@ -414,7 +414,7 @@
    "class": "patchwork",
    "dim": 2,
    "files": [],
-   "fp": "cce701f23459d96e2298d82f9e8439c2",
+   "fp": "0586d5780d7fda930fa2d00bd69c9d8d",
    "fp_any": null,
    "index": 16,
    "messages": [],
@@ -427,13 +427,13 @@
   }
  ],
  "stamp": {
-  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "evidence": "c0fbcfb64cc3113296087a6da5fc83733a1d214ac7139dac04ddce2ec9a8a311",
   "format": "1",
   "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
-  "lesson": "4c6ddd289fe06b7e0e2041259f61df4a41963b0146c192cf6c547ad00c6b823f",
+  "lesson": "704e9c7c48b4dd9c60f04d2114104d419088cd2a8dfd179484c287adde741f0b",
   "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
   "project": "",
-  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "runner": "962398df9e3b66728216db7d20034c27f692a4dd1b84caccc7505ead8200784b",
   "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
  }
 }

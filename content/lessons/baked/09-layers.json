@@ -81,7 +81,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(stations) + geom_point(aes(lon, lat, size = docks, colour = neighbourhood))",
      "dim": 1,
-     "fp": "2639fc201e89b39d1a969cc82c9b99ac",
+     "fp": "c6242ef1196ea3972fcf8adb8a6734c8",
      "fp_any": null
     }
    ],
@@ -89,7 +89,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "2639fc201e89b39d1a969cc82c9b99ac",
+   "fp": "c6242ef1196ea3972fcf8adb8a6734c8",
    "fp_any": null,
    "index": 2,
    "messages": [],
@@ -110,7 +110,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(stations, aes(lon, lat, size = docks, colour = neighbourhood)) + geom_point() + coord_quickmap()",
      "dim": 1,
-     "fp": "2639fc201e89b39d1a969cc82c9b99ac",
+     "fp": "c6242ef1196ea3972fcf8adb8a6734c8",
      "fp_any": null
     }
    ],
@@ -118,7 +118,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "2639fc201e89b39d1a969cc82c9b99ac",
+   "fp": "c6242ef1196ea3972fcf8adb8a6734c8",
    "fp_any": null,
    "index": 3,
    "messages": [],
@@ -210,7 +210,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(hourly, aes(hour, n)) + geom_line()",
      "dim": 1,
-     "fp": "27f0e9cb06d006264e1fdcf54f4faf83",
+     "fp": "71d5868c39b46a6496e5f10fa065fd21",
      "fp_any": null
     }
    ],
@@ -218,7 +218,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "27f0e9cb06d006264e1fdcf54f4faf83",
+   "fp": "71d5868c39b46a6496e5f10fa065fd21",
    "fp_any": null,
    "index": 6,
    "messages": [],
@@ -236,7 +236,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(hourly, aes(hour, n, group = day)) + geom_line()",
      "dim": 1,
-     "fp": "06810d2fd0b049d666b1d27973e46855",
+     "fp": "f7a44acfea21b11ea14c6582b5b0dbe8",
      "fp_any": null
     }
    ],
@@ -244,7 +244,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "06810d2fd0b049d666b1d27973e46855",
+   "fp": "f7a44acfea21b11ea14c6582b5b0dbe8",
    "fp_any": null,
    "index": 7,
    "messages": [],
@@ -262,7 +262,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(hourly, aes(hour, n, colour = day)) + geom_line()",
      "dim": 1,
-     "fp": "6ac6be7654ee32644d906fc675fc5671",
+     "fp": "f4dada70565f04c04651419998786d65",
      "fp_any": null
     }
    ],
@@ -270,7 +270,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "6ac6be7654ee32644d906fc675fc5671",
+   "fp": "f4dada70565f04c04651419998786d65",
    "fp_any": null,
    "index": 8,
    "messages": [],
@@ -288,7 +288,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(week, aes(duration_min)) + geom_histogram(binwidth = 2) + facet_grid(rows = vars(member_type), cols = vars(bike_type))",
      "dim": 1,
-     "fp": "751ee493c43b44fd857fb8b207fa90d6",
+     "fp": "90500cff4e6c6ca965f610f2d204135c",
      "fp_any": null
     }
    ],
@@ -296,7 +296,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "751ee493c43b44fd857fb8b207fa90d6",
+   "fp": "90500cff4e6c6ca965f610f2d204135c",
    "fp_any": null,
    "index": 9,
    "messages": [],
@@ -317,7 +317,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(week) + geom_bar(aes(member_type, after_stat(prop), group = 1))",
      "dim": 1,
-     "fp": "b0396c8076b007454228a615d323edb8",
+     "fp": "3739b9286a7198a2e2f1063a6542881c",
      "fp_any": null
     }
    ],
@@ -325,7 +325,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "b0396c8076b007454228a615d323edb8",
+   "fp": "3739b9286a7198a2e2f1063a6542881c",
    "fp_any": null,
    "index": 10,
    "messages": [],
@@ -345,7 +345,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(week, aes(hour(started_at), fill = bike_type)) + geom_bar(position = 'stack')",
      "dim": 1,
-     "fp": "50f90d5b2f4da56d0f2c62250d561f97",
+     "fp": "df1160e36e3c6537e3a74c1f5d3d1879",
      "fp_any": null
     }
    ],
@@ -353,7 +353,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "50f90d5b2f4da56d0f2c62250d561f97",
+   "fp": "df1160e36e3c6537e3a74c1f5d3d1879",
    "fp_any": null,
    "index": 11,
    "messages": [],
@@ -371,7 +371,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(week, aes(hour(started_at), fill = bike_type)) + geom_bar(position = position_fill())",
      "dim": 1,
-     "fp": "99ef82604d70a5d521860da07119bb8a",
+     "fp": "bfc4534a535fc70fe85058fbf615b95d",
      "fp_any": null
     }
    ],
@@ -379,7 +379,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "99ef82604d70a5d521860da07119bb8a",
+   "fp": "bfc4534a535fc70fe85058fbf615b95d",
    "fp_any": null,
    "index": 12,
    "messages": [],
@@ -397,7 +397,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(week, aes(hour(started_at), fill = bike_type)) + geom_bar(position = position_dodge())",
      "dim": 1,
-     "fp": "49c729ae702840a4cec5684ecc25b4e0",
+     "fp": "036bd941eb6c6c61d6673b49814f1408",
      "fp_any": null
     }
    ],
@@ -405,7 +405,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "49c729ae702840a4cec5684ecc25b4e0",
+   "fp": "036bd941eb6c6c61d6673b49814f1408",
    "fp_any": null,
    "index": 13,
    "messages": [],
@@ -423,7 +423,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(week, aes(member_type, duration_min)) + geom_point(alpha = 0.2, position = position_jitter(0.3, 0, seed = 1))",
      "dim": 1,
-     "fp": "ef7b3490dc190502c4c63720aaca539d",
+     "fp": "349ece04c7ea96d146bec1cdb6dde31c",
      "fp_any": null
     }
    ],
@@ -431,7 +431,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "ef7b3490dc190502c4c63720aaca539d",
+   "fp": "349ece04c7ea96d146bec1cdb6dde31c",
    "fp_any": null,
    "index": 14,
    "messages": [],
@@ -444,13 +444,13 @@
   }
  ],
  "stamp": {
-  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "evidence": "c0fbcfb64cc3113296087a6da5fc83733a1d214ac7139dac04ddce2ec9a8a311",
   "format": "1",
   "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
   "lesson": "de3bfc8bbab632b4013d357726dd9d8586bcec349d0971e6b06149e21ec9a848",
   "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
   "project": "",
-  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "runner": "962398df9e3b66728216db7d20034c27f692a4dd1b84caccc7505ead8200784b",
   "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
  }
 }

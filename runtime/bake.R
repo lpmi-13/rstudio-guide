@@ -19,7 +19,9 @@
 #   - evidence the statement can't give: an assignment that assigns nothing, a "file" it didn't
 #     write, a "pattern" its output doesn't match;
 #   - an alternative whose value differs from the statement's;
-#   - in a strict lesson, code that Air would format differently.
+#   - in a strict lesson, code that Air would format differently;
+#   - in a strict lesson, a ggplot with an axis that has no title or fewer than two tick labels, or
+#     a theme that hides them, unless the statement says why with "axes" (axis_problems).
 # The lesson's code runs in the global environment, as in the Console; everything here lives in
 # its own environment so that code (or a simulated Restart R) can't touch it.
 local({
@@ -166,6 +168,35 @@ local({
 
   if (isTRUE(plan$strict)) air_check(plan$runs)
 
+  # A chart a reader can read has both axes titled and labelled (the user's call, 25 November 2026:
+  # no chart may be missing its axis labels). Checked on the chart as drawn: its resolved axis titles,
+  # the tick labels ggplot2 placed, and the theme. A patchwork is checked plot by plot. Returns what is
+  # missing, as text for the bake's failure.
+  axis_problems <- function(p) {
+    if (inherits(p, "patchwork")) return(unique(c(unlist(lapply(p$patches$plots, axis_problems)), one_plot_axes(p))))
+    one_plot_axes(p)
+  }
+  # A patchwork's own plot is its last one: ggplot_build() on the patchwork builds only that.
+  one_plot_axes <- function(p) {
+    built <- suppressMessages(suppressWarnings(ggplot2::ggplot_build(p)))
+    labels <- ggplot2::get_labs(p)
+    theme <- ggplot2::complete_theme(p@theme)
+    params <- built$layout$panel_params[[1]]
+    problems <- character()
+    for (axis in c("x", "y")) {
+      title <- paste(as.character(labels[[axis]] %||% ""), collapse = "")
+      if (!nzchar(trimws(title))) problems <- c(problems, sprintf("its %s axis has no title", axis))
+      ticks <- tryCatch(as.character(unlist(params[[axis]]$get_labels())), error = function(e) character())
+      ticks <- ticks[!is.na(ticks) & nzchar(trimws(ticks))]
+      if (length(ticks) < 2L) problems <- c(problems, sprintf("its %s axis has %d tick label%s", axis, length(ticks), if (length(ticks) == 1L) "" else "s"))
+      side <- if (axis == "x") "bottom" else "left"
+      for (element in sprintf(c("axis.title.%s.%s", "axis.text.%s.%s"), axis, side)) {
+        if (inherits(ggplot2::calc_element(element, theme), "element_blank")) problems <- c(problems, sprintf("its theme hides %s", element))
+      }
+    }
+    problems
+  }
+
   records <- list()
   sourced <- character() # the script's statements so far, for a "source" action
   for (run in plan$runs) {
@@ -279,6 +310,11 @@ local({
       if (identical(evidence, "assign") && is.null(record$assigned)) fail(run, "its evidence is assign, but it assigns no name")
       if (identical(evidence, "attached") && is.null(record$library)) fail(run, "its evidence is attached, but it isn't a library() call")
       if (identical(evidence, "ggplot") && !(inherits(res$value, "ggplot") && res$visible)) fail(run, "its evidence is ggplot, but it doesn't print a ggplot")
+      if (identical(evidence, "ggplot") && isTRUE(plan$strict) && is.null(run$axes) && inherits(res$value, "ggplot")) {
+        for (problem in tryCatch(axis_problems(res$value), error = function(e) sprintf("its axes couldn't be checked: %s", conditionMessage(e)))) {
+          fail(run, sprintf("%s (every chart needs both axes titled and labelled; \"axes\" says why one can't)", problem))
+        }
+      }
       if (identical(evidence, "value") && is.null(record$fp)) fail(run, "its value is too big to fingerprint")
       if (identical(evidence, "file") && !(isTRUE(run$path %in% record$files))) fail(run, sprintf("it should write %s, but didn't", run$path))
       if (identical(evidence, "pattern") && !grepl(run$pattern, res$output, perl = TRUE)) {

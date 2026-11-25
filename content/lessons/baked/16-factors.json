@@ -204,7 +204,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(survey) + geom_bar(aes(satisfaction))",
      "dim": 1,
-     "fp": "9bef2ad8bf00ddfc94942b0489eb1220",
+     "fp": "2629e2b91d14aa3d1a9bec69023a4b06",
      "fp_any": null
     }
    ],
@@ -212,7 +212,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "9bef2ad8bf00ddfc94942b0489eb1220",
+   "fp": "2629e2b91d14aa3d1a9bec69023a4b06",
    "fp_any": null,
    "index": 6,
    "messages": [],
@@ -230,7 +230,7 @@
      "class": "ggplot2::ggplot",
      "code": "ggplot(survey) + geom_bar(aes(y = fct_infreq(home_neighbourhood)))",
      "dim": 1,
-     "fp": "b38173612cdf452ba072f7b17a82a729",
+     "fp": "68099f89c5e5c07f9b34afbc44250531",
      "fp_any": null
     }
    ],
@@ -238,7 +238,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "b38173612cdf452ba072f7b17a82a729",
+   "fp": "68099f89c5e5c07f9b34afbc44250531",
    "fp_any": null,
    "index": 7,
    "messages": [],
@@ -258,7 +258,7 @@
      "class": "ggplot2::ggplot",
      "code": "survey |> group_by(home_neighbourhood) |> summarize(rides = mean(rides_per_week, na.rm = TRUE)) |> ggplot(aes(rides, fct_reorder(home_neighbourhood, rides))) + geom_point()",
      "dim": 1,
-     "fp": "2389f76329ae0904cb3b301ce818d00f",
+     "fp": "332c3032ee7d099a0bfae808ffaa5b6d",
      "fp_any": null
     }
    ],
@@ -266,7 +266,7 @@
    "class": "ggplot2::ggplot",
    "dim": 1,
    "files": [],
-   "fp": "2389f76329ae0904cb3b301ce818d00f",
+   "fp": "332c3032ee7d099a0bfae808ffaa5b6d",
    "fp_any": null,
    "index": 8,
    "messages": [],
@@ -383,13 +383,13 @@
   }
  ],
  "stamp": {
-  "evidence": "4509eae9305c9092de51d6645cc552395234263731fe7d95c2c180865b2de1f3",
+  "evidence": "c0fbcfb64cc3113296087a6da5fc83733a1d214ac7139dac04ddce2ec9a8a311",
   "format": "1",
   "image": "9666693f47d21d48a0d105b60d3bfd7804ede15cbb42dfd1227589871fc0563d",
   "lesson": "800d0c1efb084345c8775b6193246ae1a4d54df55a6552b3cb30a6f6d3fe5ed3",
   "packages": "55c25f97d67df5162bffad7beba1ce16cb47230d7786d90ddfaccbf9f6e19690",
   "project": "",
-  "runner": "b2ec7b9384e5749f1cc54e1371f35e4fe17cced47d9e7b0f7b09a78ed288e7ba",
+  "runner": "962398df9e3b66728216db7d20034c27f692a4dd1b84caccc7505ead8200784b",
   "world": "156c768ba4ac295a78a67b9f18f970ea832025a9c3d280119ed13c20b75ceed3"
  }
 }
