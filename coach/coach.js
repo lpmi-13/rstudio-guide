@@ -590,7 +590,7 @@
         .entering::after { animation: none !important; border: 0; }
       }
     </style><div class="dim"></div><div class="box" hidden></div><div class="spot" hidden></div>
-    <svg class="link" hidden aria-hidden="true"><rect class="said" rx="4"></rect><rect class="wrote" rx="4"></rect>
+    <svg class="link" style="display: none" aria-hidden="true"><rect class="said" rx="4"></rect><rect class="wrote" rx="4"></rect>
       <path></path><circle r="4"></circle></svg>
     <div class="pointer" aria-hidden="true"><span class="ring"></span>
       <svg width="22" height="30" viewBox="0 0 22 30"><path d="M1 1v22l5.6-5.4 4 9.4 3.7-1.6-4-9.2H18z"
@@ -769,7 +769,7 @@
     const tick = () => {
       const a = link.said?.();
       const b = link.wrote?.();
-      svg.hidden = !a && !b;
+      svg.style.display = a || b ? '' : 'none'; // an <svg> has no hidden property
       const place = (rect, r) => {
         rect.style.display = r ? '' : 'none';
         if (r) for (const [k, v] of Object.entries({x: r.left - 3, y: r.top - 2, width: r.right - r.left + 6, height: r.bottom - r.top + 4})) rect.setAttribute(k, v);
@@ -792,7 +792,7 @@
       }
       if (link.said || link.wrote) link.frame = requestAnimationFrame(tick);
     };
-    if (said || wrote) tick(); else svg.hidden = true;
+    if (said || wrote) tick(); else svg.style.display = 'none';
   }
   // The rectangle of characters `from`..`to` of an element's text, clipped to the scrolled box it is
   // in; null when that part is scrolled out of view.
@@ -2502,6 +2502,66 @@
       return {first, last};
     }
 
+    // Show me fixes the learner's own attempt (findAttempt) the way a learner would: the pointer
+    // clicks just after each part that differs, Backspace takes it out one character at a time, and
+    // the right characters are typed in its place. Changes go from the end of the statement back to
+    // its start, so the ones still to do stay where they were. When more than half of it differs,
+    // the coach selects the attempt and types the task's code over it instead. Returns the
+    // statement's rows.
+    async function fixAttempt(editor, attempt, code, headingRow) {
+      const session = editor.session;
+      const changed = attempt.changes.reduce((n, change) => n + change.del + change.ins.length, 0);
+      const rowsOf = text => text.split('\n').length;
+      spotlight(() => editorRowsRect(editor, headingRow, Math.max(attempt.last, attempt.first + rowsOf(code) - 1)));
+      if (attempt.changes.length > 6 || changed > code.length / 2) {
+        say('Your code for this task is quite different from the task\'s, so the coach selects it and writes the task\'s code in its place');
+        await pause(leadMs);
+        await clickInEditor(editor, attempt.first, 0);
+        editor.selection.setSelectionRange({start: {row: attempt.first, column: 0}, end: {row: attempt.last, column: session.getLine(attempt.last).length}});
+        await heed(900);
+        session.remove(editor.getSelectionRange());
+        editor.clearSelection();
+        state.actions += 1;
+        if (attempt.first > 0 && !session.getLine(attempt.first).trim()) session.removeFullLines(attempt.first, attempt.first);
+        note('demo_action', {action: 'replace_attempt', line: attempt.first + 1, changed});
+        return typeStatement(editor, attempt.first - 1, code);
+      }
+      const n = attempt.changes.length;
+      say(`Fixing the code you wrote for this task: ${n === 1 ? 'one change' : `${n} changes`}`);
+      await pause(leadMs);
+      // Where an index of the attempt's text is in the script.
+      const position = at => {
+        const before = attempt.text.slice(0, at).split('\n');
+        return {row: attempt.first + before.length - 1, column: before[before.length - 1].length};
+      };
+      for (const change of [...attempt.changes].reverse()) {
+        const end = position(change.at + change.del);
+        await clickInEditor(editor, end.row, end.column);
+        showPointer(false);
+        for (let k = 0; k < change.del; k += 1) { // Backspace
+          await pause(typeMs * 1.5);
+          const at = editor.getCursorPosition();
+          const back = at.column > 0 ? {row: at.row, column: at.column - 1} : {row: at.row - 1, column: session.getLine(at.row - 1).length};
+          session.remove({start: back, end: at});
+          editor.moveCursorTo(back.row, back.column);
+          state.actions += 1;
+        }
+        for (let k = 0; k < change.ins.length; k += 1) {
+          await pause(keyGap(change.ins, k));
+          editor.insert(change.ins[k], true); // as typed, without RStudio adding a closing bracket
+          state.actions += 1;
+        }
+        editor.renderer.scrollCursorIntoView(null, 0.5);
+        await pause(300);
+      }
+      const last = attempt.first + rowsOf(code) - 1;
+      if (session.getLines(attempt.first, last).join('\n') !== code) {
+        throw new Error(`${script} reads ${JSON.stringify(session.getLines(attempt.first, last).join('\n'))} where the coach fixed it to ${JSON.stringify(code)}. Something else edited it while the coach was fixing it.`);
+      }
+      note('demo_action', {action: 'fix_attempt', line: attempt.first + 1, changes: n, changed});
+      return {first: attempt.first, last};
+    }
+
     // Each statement is narrated by what it is for (the run's `purpose`, from scenario.json), not by
     // where it goes: "Writing code to find the highest temperature".
     async function doRun(run, step, index) {
@@ -2518,7 +2578,12 @@
       const count = run.code.split('\n').length;
       let row = findStatement(lines, block, run.code);
       let last = row + count - 1;
-      if (row >= 0) {
+      const attempt = row < 0 ? findAttempt(lines, block, run, manifest) : null;
+      if (attempt) {
+        // The learner wrote this task already, not quite right: fix it rather than add a second copy.
+        ({first: row, last} = await fixAttempt(editor, attempt, run.code, headingRow));
+        spotlight(() => editorRowsRect(editor, headingRow, last));
+      } else if (row >= 0) {
         // Already there (typed earlier, or by the learner): run it as it is rather than type it twice.
         say(`The code to ${run.purpose} is already in the script, so it runs again as it is`);
         spotlight(() => editorRowsRect(editor, headingRow, last));
@@ -3177,8 +3242,9 @@
         const error = consoleError(entry.output);
         const wanted = steps[g.step].runs[current()];
         if (error && !(wanted?.evidence === 'error')) {
-          // The whole output: a tidyverse error's cause comes after lines consoleError leaves out.
-          diagnosis = explainError(entry.output, entry.code, lesson);
+          // The whole output, on one line: a tidyverse error's cause comes after lines consoleError
+          // leaves out, and R wraps long messages to the Console's width.
+          diagnosis = explainError(normalise(entry.output), entry.code, lesson);
           if (diagnosis) diagnosis.code = entry.code;
           return `R reported: ${error.replace(/\.$/, '')}. ${diagnosis ? diagnosis.text : 'Fix the line, then run it again.'}`;
         }
@@ -3194,7 +3260,7 @@
         const ran = entry.code.trim().split('\n')[0] + (entry.code.trim().includes('\n') ? ' …' : '');
         // Why, where the coach can tell: a warning that changed the result, or the first difference
         // from the task's code.
-        diagnosis = explainWarning(entry.output, lesson) || explainDifference(entry.code, wanted);
+        diagnosis = explainWarning(normalise(entry.output), lesson) || explainDifference(entry.code, wanted);
         if (diagnosis) {
           diagnosis.code = entry.code;
           return `RStudio ran \`${ran}\`, but R's result isn't what this task asks for. ${diagnosis.text}`;
@@ -3491,6 +3557,83 @@
       if (want.every((line, k) => lines[r + k].trimEnd() === line)) return r;
     }
     return -1;
+  }
+  // A line of R without its comment, and how many brackets it leaves open (strings skipped).
+  function scanLine(line) {
+    let depth = 0;
+    let quote = null;
+    for (let i = 0; i < line.length; i += 1) {
+      const c = line[i];
+      if (quote) { if (c === '\\') i += 1; else if (c === quote) quote = null; continue; }
+      if (c === '"' || c === "'" || c === '`') quote = c;
+      else if (c === '#') return {code: line.slice(0, i), depth};
+      else if ('([{'.includes(c)) depth += 1;
+      else if (')]}'.includes(c)) depth -= 1;
+    }
+    return {code: line, depth};
+  }
+  // The statements under a step's heading, as R reads them: one goes on to the next line while a
+  // bracket is open or its line ends with an operator (+, |>, <-, a comma…). Each is {first, last,
+  // text}, rows of the script.
+  function statementsIn(lines, block) {
+    const found = [];
+    let first = -1;
+    let depth = 0;
+    for (let r = block.start; r < block.end; r += 1) {
+      const {code, depth: change} = scanLine(lines[r]);
+      if (first < 0) { if (!code.trim()) continue; first = r; depth = 0; }
+      depth += change;
+      if (depth > 0 || /(\+|-|\*|\/|\^|\|>|%[^%]*%|<-|=|~|&|\||,)\s*$/.test(code.trimEnd())) continue;
+      found.push({first, last: r, text: lines.slice(first, r + 1).join('\n')});
+      first = -1;
+    }
+    if (first >= 0) {
+      let last = block.end - 1;
+      while (last > first && !lines[last].trim()) last -= 1;
+      found.push({first, last, text: lines.slice(first, last + 1).join('\n')});
+    }
+    return found;
+  }
+  // The changes that turn `a` into `b`, one character at a time where they differ (the longest
+  // common subsequence): [{at, del, ins}], `at` an index in `a`, in order. null for texts too long
+  // to compare quickly.
+  function charChanges(a, b) {
+    if (a.length * b.length > 250000) return null;
+    const n = a.length;
+    const m = b.length;
+    const lcs = Array.from({length: n + 1}, () => new Uint16Array(m + 1));
+    for (let i = n - 1; i >= 0; i -= 1) {
+      for (let j = m - 1; j >= 0; j -= 1) lcs[i][j] = a[i] === b[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1]);
+    }
+    const changes = [];
+    let i = 0;
+    let j = 0;
+    let open = null;
+    const flush = () => { if (open) changes.push(open); open = null; };
+    while (i < n || j < m) {
+      if (i < n && j < m && a[i] === b[j]) { flush(); i += 1; j += 1; continue; }
+      open = open || {at: i, del: 0, ins: ''};
+      if (j < m && (i >= n || lcs[i][j + 1] >= lcs[i + 1][j])) { open.ins += b[j]; j += 1; } else { open.del += 1; i += 1; }
+    }
+    flush();
+    return {changes, common: lcs[0][0]};
+  }
+  // The learner's attempt at `run` under its step's heading, for Show me to fix rather than type a
+  // second copy: the statement most like the task's code (by characters in common, with a bonus for
+  // starting the same way, the same function or assigned name), and like it enough. Statements
+  // that are another task's code are left alone.
+  function findAttempt(lines, block, run, lesson) {
+    const others = new Set(lesson.steps.flatMap(step => step.runs).flatMap(r => [r.code, ...(r.alternatives || [])]).filter(Boolean).map(codeKey));
+    const start = code => /^\s*([A-Za-z.][\w.]*)\s*(?:<-|=(?!=)|\()/.exec(code)?.[1];
+    let best = null;
+    for (const statement of statementsIn(lines, block)) {
+      if (others.has(codeKey(statement.text))) continue;
+      const diff = charChanges(statement.text, run.code);
+      if (!diff) continue;
+      const score = (2 * diff.common) / (statement.text.length + run.code.length) + (start(statement.text) === start(run.code) ? 0.2 : 0);
+      if (score >= 0.6 && (!best || score > best.score)) best = {...statement, score, changes: diff.changes};
+    }
+    return best;
   }
   // A step's code goes below its "# Step N." heading, up to the next heading. `last` is the
   // step's last non-blank line (the heading itself if nothing is typed yet).

@@ -95,7 +95,9 @@ case "${1:-up}" in
     LAB_RUN_DIR="$RUN_DIR" python3 -I tools/provision.py "$PWD" "$IMAGE" "$project" "${scenarios[@]}"
     compose up -d --quiet-pull
     for _ in $(seq 1 60); do
-      if curl -fsS -o /dev/null "http://127.0.0.1:$GATEWAY_PORT/auth-sign-in" 2>/dev/null; then
+      # --max-time: a request RStudio accepts but never answers (as after the host sleeps) must not
+      # hold the loop, since the gateway gives RStudio a day to answer (its long polls need that).
+      if curl -fsS --max-time 5 -o /dev/null "http://127.0.0.1:$GATEWAY_PORT/auth-sign-in" 2>/dev/null; then
         wait_for_host_network
         touch "$RUN_DIR/ready" # for launchers
         if [ "${GATEWAY_BIND:-127.0.0.1}" = 127.0.0.1 ]; then where="at http://127.0.0.1:$GATEWAY_PORT/"; else where="(open the RStudio tab)"; fi

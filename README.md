@@ -4,7 +4,7 @@ RStudio Server with an in-IDE coach, lessons modelled on R for Data Science that
 
 **Inspiration for the lessons.** The next set of lessons follows the chapters of [R for Data Science (2e)](https://r4ds.hadley.nz) by Hadley Wickham, Mine Çetinkaya-Rundel and Garrett Grolemund. There is one lesson for each of its 29 chapters, teaching the same concepts. The book guides what the lab teaches; it isn't a source of material. The lessons use their own code, data and explanations, built on current R packages. On 20 November 2026 the first four replaced the two article-based lessons the spike began with, `graphical-tools` and `statistical-tools`, and the other 25 followed on 21 November. This README keeps those lessons' audit records as history. The plan is `plan-docs/R4DS_CHAPTERS_PLAN.md`. The book is free to read online, and it is the best place to go deeper on any of these topics.
 
-**Try it in your browser:** [RStudio coach on iximiuz Labs](https://labs.iximiuz.com/playgrounds/rstudio-guide-16afe14e). It needs a free iximiuz account; allow a few minutes for a cold start. Since 22 November 2026 (rootfs v5) it offers all 29 lessons. The current rootfs v8 opens on the **RStudio** tab, already signed in, with no Terminal tab and no password.
+**Try it in your browser:** [RStudio coach on iximiuz Labs](https://labs.iximiuz.com/playgrounds/rstudio-guide-16afe14e). It needs a free iximiuz account; allow a few minutes for a cold start. Since 22 November 2026 (rootfs v5) it offers all 29 lessons. The current rootfs v9 (26 November 2026, with the feedback round's changes) opens on the **RStudio** tab, already signed in, with no Terminal tab and no password.
 
 | Question | Answer |
 | --- | --- |
@@ -19,7 +19,7 @@ One intermittent failure appeared earlier, before the fix in finding 7: Chromium
 
 ## Work ledger
 
-Where the work stands and what's left, so it can resume from here. Updated 25 November 2026. The plan for the new lessons is `~/projects/plan-docs/R4DS_CHAPTERS_PLAN.md` (its §6 lists the phases). Each finished phase has a decision record in this README, named below.
+Where the work stands and what's left, so it can resume from here. Updated 26 November 2026. The plan for the new lessons is `~/projects/plan-docs/R4DS_CHAPTERS_PLAN.md` (its §6 lists the phases). Each finished phase has a decision record in this README, named below.
 
 ### Done
 
@@ -38,14 +38,14 @@ Where the work stands and what's left, so it can resume from here. Updated 25 No
 | 24 Nov 2026 | The playground opens on RStudio, signed in: `DISABLE_AUTH=true` in its `lab.env`, no Terminal tab or banner, and a starting page in the gateway for the moment before RStudio listens. Tested locally and on a throwaway iximiuz session; v7 publishes this and the later coach changes. | "Sign-in off and the starting page", under "Remote playground" |
 | 24 Nov 2026 | Coach text and accessibility, at the user's request: bigger text and an accessibility audit, a note on the tidyverse's "Conflicts" lines, an **Auto-advance** switch in Demonstration, no saving by the coach, no "put the cursor on its first line" instructions, paragraphs and bold in the coach, a plain-language check, and lesson 1 rewritten in plain language as the pilot. | "Coach text and accessibility (24 November 2026)" |
 | 24 Nov 2026 | Auto-advance defaults off; every mode starts with a short lesson overview; chart history and function help are explained in the coach. All 29 summaries, tasks, purposes and explanation paragraphs meet the shared plain-language checks. The bake stamp now ignores prose edits, avoiding unnecessary R work at startup. Committed as `2ff6ecb` and published in rootfs v8. | "How a step runs" and "The bake" |
+| 25–26 Nov 2026 | The feedback round: 16 points from the user's run through lesson 1, in the six phases of `~/projects/plan-docs/RSTUDIO_COACH_FEEDBACK_PLAN.md`. Quick coach fixes; slow connections; chart labels, axes and the chart history; Guided's diagnoses and hints; Show me fixing the learner's code in place. Then every audit (all passed, including the 16 lesson audits left out on 24 November) and rootfs v9 on the public playground (110 s from start to ready). Phases 1 to 4 are committed as `5fee9e5`; Phase 5, the `run.sh` readiness fix and v9's references aren't committed yet. | "Feedback round (25 November 2026)" |
 
 ### Outstanding, in order
 
-1. **The feedback round of 25 November 2026** (16 points from the user's run through lesson 1), in the six phases of `~/projects/plan-docs/RSTUDIO_COACH_FEEDBACK_PLAN.md`. Phases 1 (quick coach fixes), 2 (slow connections) and 3 (chart labels, axes and the chart history) are done; next are Phase 4 (Guided's diagnostics and hints), 5 (Show me fixes the learner's code in place) and 6 (every audit, then rootfs v9). See "Feedback round (25 November 2026)".
-2. **The user reviews the plain-language pilot**: lesson 1's text (in all three modes) and the coach's own text.
-3. **Finish the sentence-level rewrite of explanations in lessons 2 to 29**, adding each to `checked` in `content/plain-language.json` as it's done. Summaries, tasks, purposes and paragraph lengths now meet the shared rules across all lessons.
-4. **Finish the remaining lesson audits** before release sign-off (16 weren't run on 24 November; see "Coach text and accessibility"). Rootfs v8 is available for user inspection; the remaining audits still gate release sign-off.
-5. **A manual review by the user**, last: the lessons read and the Demonstrations watched as a learner would, and the playground tried by hand (the RStudio tab, which headless tests can't reach inside the iximiuz page).
+1. **The user reviews the plain-language pilot**: lesson 1's text (in all three modes) and the coach's own text.
+2. **Finish the sentence-level rewrite of explanations in lessons 2 to 29**, adding each to `checked` in `content/plain-language.json` as it's done. Summaries, tasks, purposes and paragraph lengths now meet the shared rules across all lessons.
+3. **Decide on lesson 1's histogram axis** (from the feedback round, Phase 3): weekday labels would need `scale_x_datetime()`, which lesson 1 doesn't teach yet.
+4. **A manual review by the user**, last: the lessons read and the Demonstrations watched as a learner would, and the playground tried by hand (the RStudio tab, which headless tests can't reach inside the iximiuz page).
 
 Also open: lessons 9 and 11's Demonstrations run a little over the plan's 10 minutes (10.3 and 10.6); the spikes in `spikes/phase0/` provision the retired `statistical-tools`; the coach's code for the older lesson format is no longer exercised by any audit; Guided says nothing when a Quarto render fails (the error shows only in RStudio's Background Jobs tab); a learner can pass a style lesson (4) with unstyled code, since checks see results; and the points under "Plan deviations and open points" at the end.
 
@@ -380,7 +380,7 @@ On 24 November 2026, after these changes, with no warnings or page errors in any
 | `lesson_switch.cjs`, `no_sign_in.cjs`, `coach_in_ide.cjs` | 6/6, 6/6, and every probe passed |
 | `lesson_modes.cjs` (each lesson in all three modes) | 5/5 for 15 lessons: 1 to 10 and 25 to 29. These cover the lessons where this round changed a path: 1 (rewritten), 4 (typed text no longer saved, new script header), 6 (Source with no save first, and RStudio's question about unsaved changes on New Project), 25 to 27 (Run from the end of function bodies, `map()` calls and loops), and 28 and 29 (Quarto's **Run › Run Selected Line(s)** from the end of a statement, and Render with no save first). |
 
-The other 16 lesson audits (lessons 11 to 24, and the two fixtures) were not run this round, at the user's choice, to get results sooner: they take the same path as lessons 1 to 3. Run them all before publishing the rootfs: `NODE_PATH=$(npm root -g) python3 -I tests/run_lesson_audits.py --jobs 3`.
+The other 16 lesson audits (lessons 11 to 24, and the two fixtures) were not run this round, at the user's choice, to get results sooner: they take the same path as lessons 1 to 3. Run them all before publishing the rootfs: `NODE_PATH=$(npm root -g) python3 -I tests/run_lesson_audits.py --jobs 3`. (All of them ran, and passed, on 25–26 November 2026: see Phase 6 of the feedback round.)
 
 ## Feedback round (25 November 2026)
 
@@ -470,6 +470,43 @@ Guided now says what went wrong in the learner's own terms, links a wrong name b
   - `distance_dm`
   - `alphas = 0.3`
   - a missing `geom_smooth()`
+
+  Its first run found three flaws, all fixed:
+  - RStudio's error box keeps a hidden copy of the message, so the link boxed an invisible word. It now uses the newest occurrence on screen.
+  - readr's current wording ("! `data/x.csv` does not exist in current working directory: `…`") wasn't matched.
+  - R wraps long messages to the Console's width, so the coach now collapses whitespace before matching.
+- **Audit results (Phase 4).** On 25 November 2026, with no warnings or page errors:
+  - `practice_modes.cjs` 21/21.
+  - The lesson audits of lessons 1, 3, 7, 20, 25 and 26: 5/5 each.
+  - `coach_in_ide.cjs` 22/22.
+  - `tests/guided_diagnostics.sh` 10/10 on its third run, after the fixes above.
+
+### Phase 5: Show me fixes the learner's code
+
+Before, Show me reused a statement only when it was in the script exactly as the task writes it, and otherwise typed a new copy below whatever the learner had written. Now, when the learner has already written the task under its step's heading, not quite right, Show me fixes that code where it is (the user's approved default: fix only what differs).
+
+- **Finding the attempt.** The code under the heading is split into statements as R reads them: a statement goes on while a bracket is open or a line ends with an operator such as `+`, `|>`, `<-` or a comma. Statements that are any task's code (or an alternative) are left alone. Of the rest, the attempt is the one most like the task's code: characters in common, plus a bonus for starting the same way, with the same function or assigned name. It must score at least 0.6, so unrelated code is never taken for an attempt.
+- **Fixing it, visibly.** The changes come from the longest common subsequence, character by character. They are made from the end of the statement back to its start, so the ones still to do stay where they were. For each change, the pointer clicks just after the part that differs, Backspace removes it one character at a time, and the right characters are typed, without RStudio adding closing brackets:
+  - `library(tidyvers)` gets one `e`;
+  - `alphas = 0.3` loses its `s`;
+  - a chart written on one line is broken into the task's three.
+  If more than 6 changes are needed, or more than half the statement differs, the coach selects the attempt, says the code is quite different, and types the task's code over it. Then it runs the statement, as before. With no attempt, Show me types the statement below, as before. The coach's log records `fix_attempt` (with the number of changes) or `replace_attempt`.
+- **A repeatable check, `tests/show_me_fixes.sh`** (Playwright CLI, its own slot, port 8794). In lesson 1's Guided mode it writes three attempts in the script and runs each with Ctrl+Enter, then presses Show me. The script must end up with the task's statement once, where the attempt was, and the task must tick as the coach's:
+  - `library(tidyvers)`: fixed in place, with one change;
+  - step 4's chart on one line with `alphas`: fixed into the task's three lines;
+  - a bar chart mostly unlike the task's: written over.
+  5/5 on its first run, once the link fix below was in.
+- **A Phase 4 bug it found.** After Show me fixed step 4, the error link from the `alphas` warning stayed on screen, frozen in stale places. The link was hidden with `hidden`, which an `<svg>` element doesn't have, so it was never hidden. It now uses `style.display`. `tests/guided_diagnostics.sh` now reads the computed style, and checks that the link goes once the task ticks (11/11). `show_me_fixes.sh` checks the same after Show me.
+
+### Phase 6: every audit, then rootfs v9
+
+- **Every audit again, on 25–26 November 2026**, after the last change, with no warnings or page errors in any of them:
+  - The lesson audits (`run_lesson_audits.py --jobs 3`): all 29 lessons and both fixtures, 5/5 each, 72 to 175 s a lesson. This also finishes the 16 audits left out on 24 November.
+  - `demo_mode.cjs` 13/13, `practice_modes.cjs` 21/21, `lesson_switch.cjs` 6/6, `no_sign_in.cjs` 6/6 and `coach_in_ide.cjs` 22/22.
+  - The Playwright CLI checks: `tests/slow_link.sh` 6/6, `tests/guided_diagnostics.sh` 11/11 and `tests/show_me_fixes.sh` 5/5.
+  - `tests/test_publish_rootfs_image.py` 9/9, and `check_content.py` with no problems.
+- **The host slept during the run, and two lessons never started.** The lid closed at 23:27:40, just as lessons 20, 21 and 22 were starting on the three slots, and the machine slept until 00:24 (seen in the system journal). Lesson 22 went on after the wake (3540 s in all) and passed. Lessons 20 and 21 stayed in `run.sh up` until the run's 2-hour limit stopped them. `run.sh up` checks readiness with `curl` once a second for 60 s. That `curl` had no time limit, and the gateway gives RStudio a day to answer, since RStudio's long polls need that. So a request RStudio had accepted but never answered held the loop for good. Each try now gives up after 5 s (`--max-time 5`), so the loop keeps to its 60 s. Lessons 20 and 21 then passed 5/5 on a rerun, with that change in.
+- **Rootfs v9 on the public playground.** Once every audit had passed, `bash iximiuz/publish-rootfs-image.sh` built and pushed `ghcr.io/lpmi-13/rstudio-guide-rootfs:v9` (digest `sha256:5dcc033a…`) on 26 November 2026, in 438 s, then updated `iximiuz/versions.sh`, `iximiuz/manifest.yaml` and the playground `rstudio-guide-16afe14e`. It was built from `5fee9e5` (Phases 1 to 4) plus the working tree's uncommitted edits: Phase 5, the `run.sh` fix and this README. A new session on the owner's tier (`labctl playground start rstudio-guide-16afe14e`) was ready **110 s** after the start command (v8: 115 and 185 s; v5: 76 and 107 s). On its VM, the run reported ready. `/coach/api/steps` returned 200 with 29 lessons. `coach.js` is the new one: 235 KB, 81 KB gzipped, with Phases 2 to 5's code. `run.sh` has the readiness fix. The session was destroyed.
 
 ## Phase 0 spikes for the new lessons (20 November 2026)
 

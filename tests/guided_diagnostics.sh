@@ -41,7 +41,9 @@ console() {
 FEEDBACK='() => document.getElementById("rs-coach-host").shadowRoot.querySelector(".feedback")?.textContent || ""'
 # Whether the link shows both boxes (R's message and the code) and the line between them.
 LINKED='() => { const svg = document.getElementById("rs-coach-overlay")?.shadowRoot.querySelector(".link");
-  return Boolean(svg && !svg.hidden && [".said", ".wrote", "path"].every(s => svg.querySelector(s).style.display !== "none")); }'
+  return Boolean(svg && getComputedStyle(svg).display !== "none" && [".said", ".wrote", "path"].every(s => svg.querySelector(s).style.display !== "none")); }'
+# Whether any part of the link is on screen.
+LINK_SHOWN='() => { const svg = document.getElementById("rs-coach-overlay")?.shadowRoot.querySelector(".link"); return Boolean(svg && getComputedStyle(svg).display !== "none"); }'
 # Wait (up to 40 s) for feedback matching $1; prints it.
 feedback() {
   local text=""
@@ -92,6 +94,8 @@ slip setting 'ggplot(week, aes(x = distance_km, y = duration_min, colour = bike_
 slip layer 'ggplot(week, aes(x = distance_km, y = duration_min, colour = bike_type)) + geom_point(alpha = 0.3)' "doesn't use .?geom_smooth\(\).? yet"
 console 'ggplot(week, aes(x = distance_km, y = duration_min, colour = bike_type)) + geom_point(alpha = 0.3) + geom_smooth(method = "lm")'
 ticked 3.0 && pass "step 4 ticks once put right" || fail "step 4 didn't tick"
+sleep 1
+[ "$(result "$LINK_SHOWN")" = false ] && pass "the link goes once the task ticks" || fail "the link is still on screen after the task ticked"
 
 errors=$(cli console error | grep -ci "uncaught\|pageerror" || true)
 [ "${errors:-0}" -eq 0 ] && pass "no page errors" || fail "page errors: see $OUT"
